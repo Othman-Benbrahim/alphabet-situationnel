@@ -1,0 +1,118 @@
+# Alphabet situationnel — Simulation et sortie (couche 5)
+
+> Version : 0.5.1
+
+> Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
+> simulation conditionnelle en prévision empiriquement validée.
+
+---
+
+## 1. Modèle de sortie complet (mode PRÉVOIR)
+
+La ligne d'ouverture et la ligne de signalement sont celles de `constitution.md` §3 et de S5, sans
+variante ; `moteur.py calculer` les imprime telles quelles en tête de sa sortie humaine.
+
+```
+⚠ Prévision · cet outil prend un risque déclaré.
+⚠ ρ[n] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]   (une par prévision)
+Base : [actifs éligibles / test exclus / archives / fictifs si démonstration]
+Calcul : moteur.py v[version] · date d'information [date]
+
+════ BLOC ANALYTIQUE ════
+Question : [objet, événement, horizon exact, fenêtre, nombre de pas, sémantique]
+Strates examinées : [faits et sources]
+
+| Carte@strate | Équivalent et statut | Fait, objet, source et date | Confiance F/f | Contre-observation | Final |
+A6 · [voisines et raisons]
+Q · [qualificatifs ancrés]
+Cartes inactives : [rejets motivés]
+État présent : [date | fenêtre] [mots]
+Liaisons : [faits et mécanismes]
+Positions : [si ≥3 mots]
+Statut de lecture : [Descriptif | Spéculatif | Nul]
+
+| Événement | Résolution externe | p / non estimé | Intervalle conditionnel | ρ | Comparateur même horizon | Calcul et limites |
+[sous la ligne S5, la probabilité sans cartes et l'écart en points ; un écart nul se dit : la question
+ ne teste que l'inertie ;
+ afficher p en pourcentage entier (une décimale sous 1 % et au-dessus de 99 %) avec son intervalle ;
+ ρ dit d'où vient le chiffre, pas sa fiabilité ; recopier les valeurs non arrondies dans le journal et
+ conserver le JSON complet]
+
+Trajectoires si demandées : [états, probabilités, R1, R2, limites]
+
+════ BLOC SYMBOLIQUE ════
+Signature : [noms ; glyphes facultatifs]
+Lecture : [sans chiffre ni affirmation supplémentaire]
+
+════ À AJOUTER À VOS FICHIERS ════
+journal-previsions.jsonl : [prévisions chiffrées seulement, contrat validation.md]
+journal-lacunes.md : [si motif descriptif réellement hors corpus]
+
+À vérifier auprès de vous : [sources, objets, références, résolutions et limites non levées]
+```
+
+---
+
+## 2. Règles de remplissage
+
+- Descriptif : tous les ancrages F, sources vérifiées et contre-observations traitées.
+  Spéculatif : sinon ; Nul : aucun mot. Le statut des équivalents ne change pas le statut de lecture
+  (A3) : les équivalents non vérifiés sont listés dans « À vérifier auprès de vous ».
+- F/f mesure la qualité de l'ancrage. Une hausse réelle se décrit par une grandeur distincte.
+- p=null : « probabilité non estimée » ; ne pas convertir en 0, 50 % ou 1/3.
+- Intervalle null : « non estimé ». Intervalle existant : approximation conditionnelle à 80 %, qui
+  n'intègre pas toutes les incertitudes ; plus large que `largeur_max_affichage` (§H, 30 points), la
+  probabilité s'écrit `~y % (large : a–b)` (S5), ce que `moteur.py` fait lui-même.
+- Niveau ρ : provenance, pas confiance empirique. Afficher « non encore évalué prospectivement ».
+- Journal : probabilités non arrondies, résultat JSON, empreintes et même horizon pour le comparateur.
+- Dates : la commande refuse une échéance incompatible avec la fenêtre ; reformuler avant calcul.
+- Toute démonstration fictive est explicitement identifiée et exclue de V4.
+
+---
+
+## 3. Trajectoires de l'état (S3)
+
+Noyau à risques concurrents : au plus un changement par pas ; intensité −ln(1−p), statu quo exp(−Σλ),
+répartition des changements proportionnellement aux intensités. Toutes les probabilités sont bornées.
+Le niveau ρ de chaque branche hérite de toutes les estimations entrant dans la normalisation.
+Les apparitions candidates couvrent les strates présentes et celles examinées par `--strates`.
+Un nouveau mot est f : aucun fait nouveau ne l'ancre. Les liaisons invalidées par un retrait sont
+supprimées. Les qualificatifs conservés participent à l'identité des états fusionnés.
+
+Élagage : pas conditionnel <5 % ou hors faisceau de 300. R1 regroupe les états finaux rares ; R2 la
+masse abandonnée. La somme états + R1 + R2 est contrôlée. R2>30 % : avertissement de non-représentativité.
+La date d'information ne progresse pas vers de nouvelles données : la simulation utilise le jeu de
+preuves figé. Les trajectoires sont exploratoires ; pour un événement, utiliser `calculer`.
+
+---
+
+## 4. Rédiger une prévision
+
+Définir objet, événement observable, source de résolution, critère, seuil et date avant calcul.
+Le critère doit mesurer le marqueur local et la grandeur concernée, pas un événement voisin.
+Un composé exige `--resolution` avec ces champs ; pour l'intensification : grandeur, unité,
+comparaison et au moins deux observations numériques datées connues au départ. La fréquence de
+hausse conditionnelle à la persistance est distincte de la fréquence de persistance.
+L'indicateur de bascule prépare une future révision ; il ne réécrit jamais un ancien pari.
+La condition de réfutation définit l'issue de la question, pas l'invalidation d'un modèle probabiliste
+par une observation unique. Si aucun critère externe n'est disponible, ne pas produire de pari chiffré.
+
+---
+
+## 5. Bloc symbolique (P9)
+
+Aucun chiffre, pourcentage ou niveau ρ. Les mots résument seulement les constats et hypothèses du
+bloc analytique, sans ajouter d'intuition prédictive. Référencer une question par son intitulé court.
+La signature peut faciliter la mémorisation ; elle n'est pas un résultat scientifique supplémentaire.
+
+---
+
+## 6. Sorties des autres cas
+
+**LIRE** : état, sources, alternatives et signature ; aucun besoin de moteur probabiliste.
+**CODER** : fiche active validée ou archive à revoir avec motifs, jamais source inventée.
+**SCORER** : rapport JSON, questions exclues, non résolues et épisodes comparables.
+**État nul** : énoncer les faits insuffisants ; ne pas forcer une carte.
+**Sans shell** : lecture et commandes à exécuter ; aucun calcul mental présenté comme sortie moteur.
+**Sans base** : référence externe ancrée → ρ3 ; défaut hypothétique → ρ4 ; composé sans fréquence
+conditionnelle → non estimé. Les chiffres de démonstration ne remplissent pas une base réelle.

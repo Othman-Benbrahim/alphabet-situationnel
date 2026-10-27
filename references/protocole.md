@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.5.1
+> Version : 0.6.10
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -21,6 +21,11 @@ Couche 4 (T1–T6) · Couche 5 (S1–S5) · Couche 6 (V1–V4) · Paramètres (�
 **O1 · Rattachement d'une situation.** Une situation est rattachée aux strates où se trouvent ses
 **faits**, pas à celles de son sujet apparent. Une crise énergétique dont les faits sont des prix, des
 sanctions et des températures relève des strates 6, 7 et 11. Une strate sans fait n'est pas examinée.
+**Pertinence (0.6.0).** Un fait n'ancre une carte que s'il change l'espace d'action de quelqu'un :
+nommer un acteur et l'option qu'il avait avant et n'a plus après, ou l'inverse (champ `option`). Pour
+une carte de dynamique pure, l'acteur peut être « le système » et l'option un chemin (« le retour par
+le même chemin »). Un fait vrai, daté, sourcé, qui ne change aucune option, est du contexte : il ne
+s'ancre pas. Requis pour F, conseillé pour f.
 
 **O2 · Niveau 2 emprunté.** Les disciplines viennent d'une taxonomie scientifique existante
 (`strates.md` §3). Chaque discipline est rattachée à une seule strate. L'outil ne crée pas de
@@ -34,9 +39,10 @@ au niveau 2 ne demande aucune révision.
 ## Couche 1 · Alphabet
 
 **A1 · Ancrage par strate.** Une carte est ancrée dans une strate quand un fait de cette strate remplit
-un marqueur de son **équivalent local** (`equivalences/strate-NN.md`). Si l'équivalent est Proposé ou
-la case Vide, l'ancrage passe par les marqueurs abstraits du noyau (`cartes.md`) et sa force ne
-dépasse pas **Faible**.
+un marqueur de son **équivalent local** (`equivalences/strate-NN.md`). Si la case est Vide, ou si le
+fait ne remplit que les marqueurs abstraits du noyau (`cartes.md`) et pas ceux de l'équivalent local,
+l'ancrage passe par le noyau et sa force ne dépasse pas **Faible**. Un équivalent Proposé permet F,
+signalé non vérifié (A3 ; le plafond général sur Proposé a été levé en 0.4.1).
 
 **A2 · Évolution de l'alphabet.** Une nouvelle carte n'est admise qu'au terme de quatre étapes, dans
 l'ordre ; une étape échouée arrête la procédure.
@@ -69,8 +75,8 @@ existante, ou reste au journal des lacunes. Raison : une carte mono-strate casse
 **Vide et Hors domaine (0.4.8).** Vide dit qu'on n'a rien trouvé ; Hors domaine dit qu'il n'y a rien à
 trouver. Le second est une affirmation plus forte : il ne s'attribue que par décision d'auteur motivée,
 jamais par défaut de recherche, et interdit tout ancrage de la carte dans la strate (le moteur refuse
-le mot). Aucune case n'est Hors domaine en 0.4.8 : l'attribution attend la décision sur les cartes à
-agents (`feuille-de-route.md`, décision 1b).
+le mot). Aucune case n'est Hors domaine : la décision 1b (`feuille-de-route.md`) tient les cartes à agents
+pour universelles, et leurs cases Vides restent à combler.
 
 **Ce que le statut mesure, et ce qu'il ne mesure pas (0.4.1).** Le statut porte sur la
 **correspondance** entre la carte et sa traduction locale : c'est une affirmation bibliographique, qui
@@ -82,7 +88,7 @@ et le statut Descriptif. Le plafond ne protégeait rien : si le marqueur local e
 fausse en f comme en F. Le statut reste affiché et rappelé dans « À vérifier auprès de vous ».
 
 Les 117 anciens « Documentés » à référence « à fournir » sont rétrogradés en **Proposé** en 0.4.0.
-Le bilan est 0 Attesté, 0 Documenté, 196 Proposé, 12 Vide, 0 Hors domaine. Aucun résultat historique n’est réécrit
+Le bilan est 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine. Aucun résultat historique n’est réécrit
 pour fabriquer une attestation. Promotion seulement après lecture de la source et recodage ; la
 bibliographie du noyau ne valide pas automatiquement chaque traduction locale. Les cas fictifs peuvent
 stipuler F sans valeur empirique ; leurs chiffres restent réservés au mode `--demo`.
@@ -124,7 +130,16 @@ Passage des voisines : une ligne `A6 · CARTE@strate : VOISINE → (raison) ; �
 liste « À ne pas confondre avec » de la carte dans `cartes.md`, avec l'un de quatre verdicts :
 `→` (la question tranche pour cette carte), `+` (la voisine est aussi présente, ancrée par d'autres
 faits), `?` (non tranché → au plus Faible), `←` (le fait relève de la voisine et ne compte pas pour
-cette carte). La justification entre parenthèses est obligatoire. **Marqueur rempli, définition
+cette carte). La justification entre parenthèses est obligatoire.
+
+**Garantie (0.6.0).** La ligne A6 est un test d'exclusion : le fait ne relève pas des voisines. Il lui
+manquait le terme positif, sans lequel l'ancrage reste une relation à deux termes (fait → carte) qui ne
+distingue pas la confiance du codeur de ce que la preuve soutient. Un mot F de cas réel porte donc un champ
+`garantie` à trois parties : le **mécanisme** par lequel ce fait est une instance de la carte, ce que la
+carte rend **attendu** (observable s'il est vrai), et ce qui la **contredirait**. Chaque fiche de
+`cartes.md` en donne la forme type. Une garantie dont la partie « contredirait » est exactement la
+contre-observation trouvée (A7) défait l'ancrage. Le moteur vérifie la présence et la forme ; la
+justesse reste un jugement de codeur, mesuré par l'accord A4. **Marqueur rempli, définition
 contredite** : si un fait remplit le libellé du marqueur local mais contredit la définition de la carte
 (`cartes.md`), la carte n'est pas ancrée, ni en F ni en f, et le marqueur est signalé au journal des
 lacunes pour correction ; abaisser à f ne règle pas une contradiction de définition (exemple 12). Un mot F n'admet que `→` et `+` :
@@ -381,7 +396,9 @@ Ce noyau ne représente ni les changements simultanés ni une distribution calib
 | ρ4 | a priori non ancré, lecture symbolique, intuition, état nul | hors graphe |
 
 **S5 · Signalement.** Chaque prévision porte la ligne :
-`⚠ ρ[n] · [source] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]`.
+`⚠ ρ[n] · [barreau] · [source] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]`.
+Le barreau vaut *association* tant qu'aucune transition utilisée n'est documentée comme intervention
+ou contrefactuel (`dynamiques.md`, « Barreau des transitions » ; `barreau` en §H).
 Si l'intervalle est plus large que le seuil de §H, la probabilité s'affiche `~y % (large : a–b)`. Les
 probabilités d'une partition sont arrondies par la méthode du plus fort reste ; les valeurs non
 arrondies figurent dans la colonne Calcul. Un niveau ou une strate « non validé » (V4) reste
@@ -435,7 +452,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.5.1"` |
+| `version` | `"0.6.10"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |
@@ -559,6 +576,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `matrice.COM.RES` | `"f"` |
 | `matrice.RSN.SEU` | `"M"` |
 | `matrice.RSN.CRO` | `"M"` |
+| `barreau.defaut` | `"A"` |
 | `autre_strate.SEU.SEU` | `"M"` |
 | `autre_strate.RES.SEU` | `"M"` |
 | `autre_strate.CRO.CTR` | `"F"` |
@@ -569,6 +587,8 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `n_min_frequence` | `10` |
 | `c_min_rho1` | `3` |
 | `alerte_R2` | `0.3` |
+| `seuil_decision` | `0.5` |
+| `vide_recherches_cloture` | `3` |
 | `pas_max` | `20` |
 <!-- PARAMETRES:END -->
 

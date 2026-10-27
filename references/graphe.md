@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -72,6 +72,22 @@ Les dates d'issue **et de disponibilité des preuves** sont antérieures ou éga
 
 ### 2.3 Combinaison
 
+**Sensibilité (0.6.0).** Le moteur compte une centaine de paramètres non calibrés pour quelques cas :
+le système est sous-déterminé, une infinité de jeux de paramètres reproduisent les cas connus et
+divergent sur le suivant. `calculer` relance donc chaque calcul sous six variantes (multiplicateurs
+d'un cran plus bas et plus haut, inerties − 0,05 et + 0,05, fréquence par défaut × ½ et × 2) et
+imprime la bande obtenue. Elle mesure l'incertitude de **modèle**, que l'intervalle bêta (bruit
+d'échantillonnage) ne couvre pas. Si la bande traverse `seuil_decision` (§H, 50 %), la ligne S5
+écrit « non identifié » : le sens de la réponse dépend d'hypothèses non calibrées. **Bande large
+(0.6.5)** : indépendamment de tout seuil, une bande plus large que `largeur_max_affichage` (§H, 30
+points) est signalée (`bande_large`) ; une bande de 10 à 45 % ne traverse pas 50 % mais ne permet
+aucune lecture. **Portée** : les six variantes déplacent tous les paramètres d'un même type ensemble.
+C'est une sensibilité *paramétrique globale*, pas une incertitude *structurelle* : une seule transition
+fausse parmi les 66 de la matrice déplacerait à peine la bande, et le modèle serait faux quand même.
+Une bande étroite ne dit donc pas que la matrice est juste. Sur l'exemple 1,
+la bande (19–28 %) est plus étroite que l'intervalle bêta (5–43 %) : pour ce calcul, l'incertitude
+d'échantillonnage domine celle des hypothèses.
+
 ```
 p₀ = f × LR / (1 − f + f × LR)
 ```
@@ -81,6 +97,17 @@ Persistance à défaut : r = inertie^(durée / 91,3125 jours). En position *boug
 Disparition : complément de la persistance, sauf référence explicitement propre à la disparition.
 Le moteur distingue ces événements ; il ne réinterprète pas une fréquence de disparition comme une
 fréquence de persistance. L'échelle de risque décrit la provenance et n'atteste aucune calibration.
+
+**Plafond (0.6.9).** `plafond_p0` (§H, 95 %) borne l'effet des cartes, pas la fréquence : il ne
+s'applique que si les multiplicateurs élèvent p au-dessus de la fréquence f, et jamais sous f. Avant
+0.6.9, il s'appliquait à toute probabilité : une persistance d'inertie à 99,5 % sur 7 jours tombait à
+95 % sans que son complément bouge (somme 96,2 %), et 7 pas quotidiens plafonnés donnaient 0,95⁷ ≈ 70 %
+pour la même question (audit du test brésilien, octobre 2026). Propriétés désormais vérifiées par
+autotest : persistance et disparition somment à 1 ; la persistance et l'apparition sans
+multiplicateur ne dépendent pas du découpage temporel. **Limite connue** : avec multiplicateurs,
+l'apparition dépend légèrement du découpage (SEUIL@7 sur 3 mois : 10,2 % en un pas, 10,4 % en 13 pas
+hebdomadaires), parce que λ multiplie la cote et non le taux ; avec une base de cas, dont les fréquences
+sont observées à la fenêtre des cas, l'invariance ne peut pas tenir. Calculer à la fenêtre de la question.
 
 ### 2.4 Un événement sur plusieurs pas
 

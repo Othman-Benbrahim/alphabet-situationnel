@@ -1,6 +1,6 @@
 # Alphabet situationnel — Équivalents par strate (index, couche 1)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Les équivalents locaux des 16 cartes sont rangés **par strate**, un fichier par strate :
 > `equivalences/strate-01.md` à `equivalences/strate-13.md`. Raison : la procédure va des faits vers les
@@ -23,15 +23,21 @@
 
 ## 2. Statuts (règle A3)
 
+**Un équivalent est un objet-frontière, pas une traduction (0.6.0).** Il doit être reconnaissable par
+un praticien de la strate qui ne connaît pas la carte. Une référence de théorie générale qui *parle
+de* la carte ne suffit pas à Documenté : il faut un texte de la discipline qui nomme le phénomène dans
+son vocabulaire. `audit` refuse un équivalent Documenté ou Attesté dont la colonne Référence ne porte
+pas ce nom local entre guillemets « … ».
+
 | Statut | Définition | Ce que le statut permet (A3) |
 |---|---|---|
 | **Attesté** | un cas réel de la base l'ancre avec la force F ; colonne Référence = identifiant du cas | ancrage F ou f ; emprunt T4 |
-| **Documenté** | connu de la littérature du champ ; colonne Référence = référence vérifiable | ancrage F ou f ; emprunt T4 |
+| **Documenté** | connu de la littérature **de la discipline** ; colonne Référence = référence vérifiable d'un texte du champ (manuel, revue), suivie du **nom local** entre guillemets : la phrase par laquelle le champ nomme le phénomène dans son propre vocabulaire, sans le mot de la carte | ancrage F ou f ; emprunt T4 |
 | **Proposé** | plausible, non vérifié | ancrage F ou f, signalé ; aucun emprunt |
 | **Vide** | rien de convaincant trouvé ; l'ancrage passe par le noyau seul | ancrage f ; aucun emprunt |
 | **Hors domaine** | la carte ne s'applique pas aux objets de la strate ; décision d'auteur, motif en colonne Référence | aucun ancrage ; aucun emprunt |
 
-**État courant** (recalculé par `audit`) : 0 Attesté, 0 Documenté, 196 Proposé, 12 Vide, 0 Hors domaine. Les 117
+**État courant** (recalculé par `audit`) : 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine. Les 117
 anciennes cases Documentées sans référence vérifiée ont été rétrogradées en 0.4.0. Leurs références manquantes sont
 conservées comme dette documentaire, jamais comme preuve. Une promotion demande de lire une source
 qui soutient la traduction exacte et ses marqueurs. Prioriser quelques événements dans une strate ;
@@ -49,7 +55,7 @@ un concept mentionné dans une bibliographie générale ne justifie pas toutes s
 | 4 Relations | 0 | 16 | 0 | 0 |
 | 5 Organisations | 0 | 16 | 0 | 0 |
 | 6 Économie | 0 | 16 | 0 | 0 |
-| 7 Géopolitique | 0 | 16 | 0 | 0 |
+| 7 Géopolitique | 13 | 2 | 1 | 0 |
 | 8 Droit | 0 | 15 | 1 | 0 |
 | 9 Culture | 0 | 16 | 0 | 0 |
 | 10 Technique | 0 | 16 | 0 | 0 |
@@ -57,7 +63,35 @@ un concept mentionné dans une bibliographie générale ne justifie pas toutes s
 | 12 Histoire longue | 0 | 15 | 1 | 0 |
 | 13 Politique intérieure | 0 | 16 | 0 | 0 |
 
-Les 12 cases Vides (carte : strates) : RÉCIPROCITÉ (1, 3, 11) ; RÉCURSIVITÉ (1, 2, 11) ; COMMUNAUTÉ (1, 3) ; ÉMERGENCE (3) ; RÉSONANCE (8, 12) ; HIÉRARCHIE (11). Huit sur douze portent sur
-RÉCIPROCITÉ, RÉCURSIVITÉ et COMMUNAUTÉ, cartes qui supposent des agents, et sept sur douze sont dans les
-strates sans agents (1, 2, 11). Question ouverte (`CHANGELOG.md`) : ces cartes sont-elles universelles,
+Les 13 cases Vides (carte : strates) : RÉCIPROCITÉ (1, 3, 11) ; RÉCURSIVITÉ (1, 2, 11) ; COMMUNAUTÉ (1, 3) ; ÉMERGENCE (3) ; RÉSONANCE (7, 8, 12) ; HIÉRARCHIE (11). Huit sur treize portent sur
+RÉCIPROCITÉ, RÉCURSIVITÉ et COMMUNAUTÉ, cartes qui supposent des agents, et sept sur treize sont dans les
+strates sans agents (1, 2, 11). RÉSONANCE est Vide dans trois strates sociales (7, 8, 12) : la
+synchronisation par couplage est peut-être rare hors du vivant, de la psyché et de l'économie. Question posée (`CHANGELOG.md`) : ces cartes sont-elles universelles,
 ou universelles aux seuls systèmes à agents ?
+
+**Clôture d'une case Vide (0.6.5).** Une case Vide déclare ses recherches dans la colonne Référence :
+`recherches : N — (1) … ; (2) …`, chacune avec ses sources, sa date et le marqueur testé. À trois
+recherches indépendantes sans équivalent (`vide_recherches_cloture`, §H), la case est **close, non
+concluant** : elle reste Vide, compte comme traitée pour la complétude d'une strate (`bilan`), et ne se
+rouvre que sur une source nouvelle. Ce critère est symétrique d'A2 (trois occurrences pour ajouter une
+carte) : on ne déclare pas l'échec d'une carte sur moins de preuves qu'il n'en faut pour en ajouter une.
+Il ne conduit pas à Hors domaine pour les cartes à agents (décision 1b) ; pour les autres, Hors domaine
+reste une décision d'auteur motivée. Une case Vide sans mention a zéro recherche documentée.
+
+**Décision 1b (27 octobre 2026) : les cartes à agents sont universelles.** La question ouverte ci-dessus
+est tranchée : leurs cases Vides sont des lacunes de recherche, à combler. Le tableau suivant
+(rapport « Intuition Machine », annexe A) est conservé pour mémoire : ses propositions « Hors domaine »
+pour les cartes à agents sont écartées par cette décision ; les anomalies de définition (ÉMERGENCE@3,
+RÉSONANCE@8 et @12, HIÉRARCHIE@11) et le cas contesté (RÉCURSIVITÉ@2) restent à instruire.
+
+| Case | Cause proposée | Traitement proposé |
+|---|---|---|
+| RÉCIPROCITÉ@1, @11 | pas de boucle normative dans la matière ni le climat | Hors domaine |
+| RÉCURSIVITÉ@1, @11 | pas de représentation de soi | Hors domaine |
+| COMMUNAUTÉ@1 | pas de collectif intentionnel | Hors domaine |
+| RÉCIPROCITÉ@3, COMMUNAUTÉ@3 | la carte exige au moins deux (ou plus de deux) parties ; un individu n'en est qu'une | Hors domaine, motif d'échelle |
+| ÉMERGENCE@3 | statut de la conscience comme émergence non tranché | anomalie à instruire |
+| RÉSONANCE@8, @12 | indécision de définition | anomalie à instruire |
+| RÉSONANCE@7 (0.6.4) | sources lues : la vague révolutionnaire est une diffusion par émulation, pas une synchronisation | lacune de recherche (décision 1b) |
+| HIÉRARCHIE@11 | le climat a des ordres imbriqués ; la définition sociale de la carte (autorité, préséance) contredit sa structure mathématique (ordre partiel) | anomalie de **définition** : Hors domaine détruirait l'information |
+| RÉCURSIVITÉ@2 | le vivant se représente-t-il son fonctionnement ? | cas contesté |

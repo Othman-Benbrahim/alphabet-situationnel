@@ -1,6 +1,6 @@
 # Alphabet situationnel — Les 16 cartes (noyau transversal candidat)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > **Statut 0.4.0.** Les rapprochements mathématiques ci-dessous guident la lecture ; ils ne prouvent
 > ni universalité ni transfert des probabilités. La bibliographie du noyau ne valide pas les équivalents locaux.
@@ -41,6 +41,8 @@ différentes du paramètre) ; état absorbant (chaîne de Markov) ; application 
 
 **Registre anthropologique** — *documenté* : « rites of passage ».
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : un franchissement daté supprime le retour par le même chemin ; *attendu* : aucun retour par le chemin initial ; tout retour passe par un autre chemin, daté ; *contredirait* : un retour documenté par le même chemin.
+
 **À ne pas confondre avec** :
 - *TRANSFORMATION* — Les deux cartes coexistent souvent (une métamorphose traverse un seuil).
   Question : *ce qui organise la situation est-il le point au-delà duquel le retour est fermé
@@ -79,6 +81,8 @@ répétés.
 **Registre anthropologique** — *documenté* : « reciprocal exchanges (of labor, goods, or services) »,
 « gift giving », « trade », « reciprocity, negative (revenge, retaliation) ».
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : un transfert crée une attente de contre-transfert entre les mêmes parties ; *attendu* : un contre-transfert, ou une échéance d'usage, entre les mêmes parties ; *contredirait* : un transfert explicitement sans attente de retour, ou un retour qui passe par un tiers.
+
 **À ne pas confondre avec** :
 - *COMMUNAUTÉ* — Question : *la relation est-elle entre deux parties qui se rendent (→ RÉCIPROCITÉ)
   ou entre un collectif et son bien commun (→ COMMUNAUTÉ) ?*
@@ -110,6 +114,8 @@ système ou imposé par un forçage extérieur (calendrier, saison, échéance).
 - phases du cycle identifiables (on peut dire où l'on en est).
 
 **Registre anthropologique** — *documenté* : « time, cyclicity of », « rituals ».
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : un état revient à intervalles réguliers, entretenu par le système ou forcé par un calendrier ; *attendu* : au moins deux retours datés à intervalle comparable ; *contredirait* : un épisode unique, ou des retours sans régularité.
 
 **À ne pas confondre avec** :
 - *RÉCURSIVITÉ* — Question : *le retour est-il réglé par un rythme ou une échéance (→ PÉRIODICITÉ)
@@ -148,6 +154,8 @@ récursion, Kleene 1938) ; réflexivité sociale et prophétie autoréalisatrice
 of (concern for what others think) », « private inner life ». Documenté au niveau individuel ;
 l'extension aux collectifs n'est pas couverte par Brown.
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : le système prend sa propre opération pour objet et cette prise la modifie ; *attendu* : une représentation de soi datée, suivie d'un changement de l'opération représentée ; *contredirait* : une représentation sans effet sur l'opération représentée.
+
 **À ne pas confondre avec** :
 - *PÉRIODICITÉ* — voir PÉRIODICITÉ.
 - *ÉMERGENCE* — Compatibles (une émergence peut s'appuyer sur des boucles). Question : *ce qui
@@ -179,6 +187,8 @@ auto-organisée (Bak, Tang & Wiesenfeld 1987). *Méthode* (et non structure) : m
 **Registre anthropologique** — *à établir*. La thèse « les cultures ont émergé » relève de la théorie
 de l'ordre spontané (Ferguson 1767, Hayek 1973), pas d'un universel documenté ; la liste de Brown contient
 au contraire des institutions délibérées (« government », « leaders », « succession »).
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : une régularité collective naît d'interactions locales sans prescripteur ; *attendu* : une diffusion de la régularité par imitation ou ajustement local, sans acte d'un centre ; *contredirait* : un acte central (décision, consigne) qui précède et prescrit la régularité.
 
 **À ne pas confondre avec** :
 - *TRANSFORMATION* — **Incompatibles sur un même objet** (voir `antagonismes.md`). Question :
@@ -217,6 +227,8 @@ théorie des graphes.
 **Registre anthropologique** — *documenté* : « dominance/submission », « statuses and roles »,
 « prestige inequalities », « leaders ».
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : une position prime sur une autre, selon un ordre au moins partiellement transitif ; *attendu* : un arbitrage ou une validation de l'une sur l'autre, effectivement suivi ; *contredirait* : un arbitrage ignoré sans conséquence, ou un ordre circulaire.
+
 **À ne pas confondre avec** :
 - *RÉSEAU* — Une hiérarchie est un graphe particulier : les deux peuvent décrire le même objet.
   Question : *ce qui organise la situation est-il un ordre de préséance (→ HIÉRARCHIE) ou la
@@ -251,6 +263,8 @@ graphes, analyse de réseaux.
 statuses », « coalitions », « triangular awareness (assessing relationships among the self and two
 other people) ». Ce cluster est **partagé** avec RÉCIPROCITÉ et COMMUNAUTÉ (confusion fréquente entre ces cartes ; mesurée par l'accord entre codeurs, A4).
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : la topologie des liens détermine les chemins par lesquels un flux passe ; *attendu* : un flux qui passe par un lien ou un pont nommé, ou qui se bloque quand ce lien manque ; *contredirait* : une circulation indépendante des liens nommés.
+
 **À ne pas confondre avec** :
 - *COMMUNAUTÉ* — Question : *ce qui importe est-il la structure des liens (→ RÉSEAU) ou le bien
   commun qui unit (→ COMMUNAUTÉ) ?*
@@ -279,6 +293,8 @@ théorie des groupes.
 
 **Registre anthropologique** — *documenté* : « binary cognitive distinctions », « logical notion of
 "opposite" », « culture/nature distinction », « in-group distinguished from out-group(s) ».
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : deux pôles se définissent l'un par l'autre et organisent le champ ; *attendu* : des alignements exclusifs : rejoindre un pôle écarte de l'autre ; *contredirait* : une troisième position stable, ou des alignements croisés durables.
 
 **À ne pas confondre avec** :
 - *CONTRAINTE* — Question : *y a-t-il deux pôles qui structurent le champ (→ POLARITÉ) ou une règle
@@ -312,6 +328,8 @@ théorie des probabilités et de l'information.
 **Registre anthropologique** — *documenté* : « divination », « magic », « beliefs about fortune and
 misfortune », « future, attempts to predict », « anticipation ».
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : plusieurs états futurs restent possibles et cette indétermination règle les conduites ; *attendu* : des conduites conditionnées à une issue non tranchée (attente, couverture, report) ; *contredirait* : des conduites identiques quelle que soit l'issue, ou une issue déjà connue des acteurs.
+
 **À ne pas confondre avec** :
 - *CONTRAINTE* — **Incompatibles sur une même option** (voir `antagonismes.md`). Question :
   *l'option est-elle encore ouverte (→ INCERTITUDE) ou exclue (→ CONTRAINTE) ?*
@@ -340,6 +358,8 @@ effectivement la solution ; multiplicateur de Lagrange non nul) ; programmation 
 
 **Registre anthropologique** — *documenté* : « taboos », « tabooed foods », « law (rights and
 obligations) », « law (rules of membership) », « sanctions ».
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : une règle ou une limite retire une option de l'espace des possibles ; *attendu* : une option nommée devenue inaccessible, avec un contournement tenté ou une sanction prévue ; *contredirait* : une option restée accessible, seulement plus coûteuse.
 
 **À ne pas confondre avec** :
 - *SEUIL* — voir SEUIL.
@@ -376,6 +396,8 @@ rupture quand l'ensemble change d'échelle.
 « numerals (counting) », « aesthetics », « fairness (equity), concept of » (le partage équitable
 est un jugement de proportion).
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : un rapport entre les grandeurs des parties est conservé ou rompu quand l'ensemble change d'échelle ; *attendu* : deux mesures du même rapport, à deux échelles ou à deux dates ; *contredirait* : un rapport non mesuré, ou des grandeurs non comparables.
+
 **À ne pas confondre avec** :
 - *HIÉRARCHIE* — voir HIÉRARCHIE.
 - *CROISSANCE* — Compatibles (une croissance homothétique conserve les rapports). Question :
@@ -403,6 +425,8 @@ leurs invariants (Klein 1872, programme d'Erlangen). *Domaine* : topologie, géo
 - étapes intermédiaires observées (pas seulement un avant/après).
 
 **Registre anthropologique** — *à établir*. Aucun item de la liste ; « myths » n'est qu'un voisin.
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : une entité existante change de forme par étapes en conservant un invariant nommé ; *attendu* : au moins deux formes datées et l'invariant conservé entre elles ; *contredirait* : une rupture sans invariant (SEUIL, disparition) ou une entité nouvelle (ÉMERGENCE).
 
 **À ne pas confondre avec** :
 - *ÉMERGENCE* — **Incompatibles sur un même objet** (voir ÉMERGENCE).
@@ -440,6 +464,8 @@ stochastiques.
 **Registre anthropologique** — *documenté* : « memory », « myths », « folklore », « death rituals »,
 « mourning », « inheritance rules ».
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : l'état présent dépend du chemin suivi, pas seulement des forces actuelles ; *attendu* : un trait présent inexplicable par les forces actuelles, expliqué par un événement passé daté ; *contredirait* : un état entièrement expliqué par les forces présentes.
+
 **À ne pas confondre avec** :
 - *PÉRIODICITÉ* — voir PÉRIODICITÉ.
 - *TRANSFORMATION* — voir TRANSFORMATION.
@@ -467,6 +493,8 @@ Gompertz 1825) ; point d'inflexion ; capacité limite. *Domaine* : équations di
 **Registre anthropologique** — *partiel* : documenté pour le cycle de vie des **personnes**
 (« age grades », « age statuses », « age terms », « classification of age », « weaning ») ;
 **à établir** pour la croissance et le déclin des collectifs.
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : une grandeur augmente à un taux qui dépend de son propre niveau, jusqu'à une limite ; *attendu* : une série datée, d'une même source, dont l'accroissement suit le niveau atteint ; *contredirait* : une hausse ponctuelle, ou à taux indépendant du niveau.
 
 **À ne pas confondre avec** :
 - *TRANSFORMATION* — voir TRANSFORMATION.
@@ -500,6 +528,8 @@ coopératifs, économie institutionnelle.
 **Registre anthropologique** — *documenté* : « cooperation », « cooperative labor », « coalitions »,
 « group living », « collective identities ».
 
+**Garantie type** (A6, 0.6.0) — *mécanisme* : plus de deux membres coopèrent autour d'un bien commun, avec règles d'appartenance et risque de passager clandestin ; *attendu* : des règles d'appartenance ou de contribution, et un écart de contribution reproché ; *contredirait* : une coopération sans règle, ou à deux parties seulement.
+
 **À ne pas confondre avec** :
 - *RÉSEAU* — voir RÉSEAU.
 - *RÉCIPROCITÉ* — voir RÉCIPROCITÉ.
@@ -529,6 +559,8 @@ de phase). *Domaine* : physique des systèmes non linéaires.
 **Registre anthropologique** — *documenté* : « music », « dance », « rhythm », « music related in part
 to dance », « rituals ». L'entraînement lui-même n'est pas un item de Brown ; il est documenté en
 biologie et en psychologie expérimentale.
+
+**Garantie type** (A6, 0.6.0) — *mécanisme* : des systèmes à rythmes propres se synchronisent par un couplage ; *attendu* : un rapprochement daté des rythmes après un couplage identifié ; *contredirait* : une synchronie imposée par un calendrier commun (PÉRIODICITÉ), ou sans couplage.
 
 **À ne pas confondre avec** :
 - *RÉCIPROCITÉ* — voir RÉCIPROCITÉ.

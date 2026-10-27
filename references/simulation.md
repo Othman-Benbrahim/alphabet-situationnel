@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -14,7 +14,7 @@ variante ; `moteur.py calculer` les imprime telles quelles en tête de sa sortie
 
 ```
 ⚠ Prévision · cet outil prend un risque déclaré.
-⚠ ρ[n] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]   (une par prévision)
+⚠ ρ[n] · [barreau] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]   (une par prévision)
 Base : [actifs éligibles / test exclus / archives / fictifs si démonstration]
 Calcul : moteur.py v[version] · date d'information [date]
 
@@ -24,15 +24,25 @@ Strates examinées : [faits et sources]
 
 | Carte@strate | Équivalent et statut | Fait, objet, source et date | Confiance F/f | Contre-observation | Final |
 A6 · [voisines et raisons]
+Garantie · [pour chaque F : mécanisme · attendu · ce qui contredirait]
+Option · [pour chaque F : acteur · option avant → option après]
 Q · [qualificatifs ancrés]
 Cartes inactives : [rejets motivés]
 État présent : [date | fenêtre] [mots]
 Liaisons : [faits et mécanismes]
 Positions : [si ≥3 mots]
 Statut de lecture : [Descriptif | Spéculatif | Nul]
+Questions qui départagent : [1 à 3 questions ; pour chacune, la carte si oui et la carte si non]
+Ce que l'alphabet ne voit pas ici : [entrées de `angles-morts.md` concernées, ou « rien de répertorié »]
+Coût du codage : [faits examinés et écartés (dont faits sans option changée) ; candidates ouvertes et
+ non retenues ; rejets A7 ; hésitations consignées]
 
 | Événement | Résolution externe | p / non estimé | Intervalle conditionnel | ρ | Comparateur même horizon | Calcul et limites |
-[sous la ligne S5, la probabilité sans cartes et l'écart en points ; un écart nul se dit : la question
+[sous la ligne S5 : la lecture en association (« si le motif observé se répète, alors… ») ; la bande
+ de sensibilité et, si elle traverse 50 %, « non identifié » ; si elle est large (plus de 30 points),
+ le dire : le résultat dépend des hypothèses non calibrées ; si elle est saturée (une variante touche
+ le plafond des cartes), dire que la bande ne mesure rien ; le jugement scellé avant le calcul ;
+ la probabilité sans cartes et l'écart en points ; un écart nul se dit : la question
  ne teste que l'inertie ;
  afficher p en pourcentage entier (une décimale sous 1 % et au-dessus de 99 %) avec son intervalle ;
  ρ dit d'où vient le chiffre, pas sa fiabilité ; recopier les valeurs non arrondies dans le journal et
@@ -60,6 +70,14 @@ journal-lacunes.md : [si motif descriptif réellement hors corpus]
   (A3) : les équivalents non vérifiés sont listés dans « À vérifier auprès de vous ».
 - F/f mesure la qualité de l'ancrage. Une hausse réelle se décrit par une grandeur distincte.
 - p=null : « probabilité non estimée » ; ne pas convertir en 0, 50 % ou 1/3.
+- **Aucun mot de probabilité sans son chiffre** (0.6.6). « Probable », « sérieuse possibilité » ou
+  « peu vraisemblable » ne s'écrivent jamais seuls dans le bloc analytique : Kent (1964) rapporte que
+  les membres de son propre comité lisaient « serious possibility » de 20 % à 80 %. Le chiffre vient en
+  premier ; le mot, s'il est employé, l'accompagne. À l'inverse, un jugement de l'utilisateur donné en
+  mots (« c'est probable ») ne se convertit pas : demander le chiffre avant de sceller. Une table de
+  correspondance réintroduirait l'écart qu'elle prétend réduire.
+- Mots F d'un cas réel actif à source unique (`corroboration: "unique"`) : les lister dans « À vérifier
+  auprès de vous ».
 - Intervalle null : « non estimé ». Intervalle existant : approximation conditionnelle à 80 %, qui
   n'intègre pas toutes les incertitudes ; plus large que `largeur_max_affichage` (§H, 30 points), la
   probabilité s'écrit `~y % (large : a–b)` (S5), ce que `moteur.py` fait lui-même.
@@ -96,6 +114,20 @@ hausse conditionnelle à la persistance est distincte de la fréquence de persis
 L'indicateur de bascule prépare une future révision ; il ne réécrit jamais un ancien pari.
 La condition de réfutation définit l'issue de la question, pas l'invalidation d'un modèle probabiliste
 par une observation unique. Si aucun critère externe n'est disponible, ne pas produire de pari chiffré.
+
+**Événement de calendrier (0.6.9).** Un événement dont la date est fixée par un texte (scrutin,
+proclamation, échéance budgétaire ou légale) n'est pas une transition aléatoire : le moteur, qui ne
+connaît pas le calendrier, le calcule sur un taux générique (test brésilien : « un vainqueur est
+proclamé dans la semaine du second tour », 6,8 %, alors que la proclamation était programmée). Pour un
+tel événement, fournir une référence externe (`--fref` avec sa source, ou `--references`), ou ne pas
+le chiffrer. Déclarer `--temporalite programmee` : sans référence ni cas, le moteur répond « non
+estimée ». **Durée de vie propre (0.6.10)** : même règle pour un phénomène dont la durée de vie n'a
+rien à voir avec la fenêtre de référence de 3 mois (test Polo : un cyclone, ÉMERGENCE@11, « persiste »
+à 96,75 % sur 7 jours par l'inertie trimestrielle générique, et se dissipe le quatrième jour) :
+`--temporalite duree_de_vie`, puis une référence de domaine (durée de vie des cyclones du bassin) ou
+pas de chiffre. Ne pas non plus le coder comme la disparition d'INCERTITUDE : la proclamation lève une
+incertitude, pas la structure ; recours et contestations peuvent la prolonger. La structure qui porte
+un calendrier est PÉRIODICITÉ.
 
 ---
 

@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.5.1'
+  version: '0.6.10'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.5.1. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 17 références principales,
+Version 0.6.10. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
 Exécuter `python3 scripts/moteur.py audit` ; après modification, `python3 scripts/moteur.py autotest`.
 Le premier vérifie les fichiers, versions, paramètres exhaustifs, statuts, matrice et inerties ; le
@@ -49,6 +49,8 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | Ambiguïté ou exemple | l'exemple concerné de `exemples.md` ; un terme dans `glossaire.md` |
 | « Où en est le skill ? », « que reste-t-il à faire ? » | `feuille-de-route.md` et `moteur.py bilan` |
 | Situation française : chercher un fait, une source de résolution, une série chiffrée | `sources-france.md` |
+| Sortie LIRE : « ce que l'alphabet ne voit pas ici » | `angles-morts.md` |
+| Pourquoi une règle 0.6.x existe (garantie, option, barreau, jugement scellé, sensibilité, corroboration) | `apports-theoriques.md` |
 | Politique intérieure (gouvernement, Parlement, partis, élections, mobilisations) | strate 13 : `strates.md` §2 et §4, `equivalences/strate-13.md` |
 
 Lire par rubrique (`rg -n '^##|^\*\*[OAGBTSV][0-9]' references/protocole.md`, ou `grep -nE` avec le même
@@ -66,6 +68,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… calculer --base B --etat "…" --evenement "…" --date-information AAAA-MM-JJ --references R.json` | base validée, références propres à chaque événement |
 | `… calculer … --pas 4 --semantique presence` | présence à l'horizon ; alternatives : au-moins-une-fois, continue selon l'événement |
 | `… calculer … --sans-cartes` | ablation : référence sans multiplicateurs ni sélection d'homologues |
+| `… calculer … --temporalite programmee` (ou `duree_de_vie`) | échéance programmée ou durée de vie propre : « non estimée » sans référence de domaine ni cas |
 | `… trajectoires --etat "…" --pas 2 [--strates 11,8] --json` | exploration à un changement par pas |
 | `… valider B.jsonl` | validation commune aux fiches et au calcul |
 | `… partager C-0042-S07` | partage par empreinte, fixé avant codage |
@@ -73,6 +76,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… equivalences --carte SEUIL` | les 13 équivalents d'une carte (marqueur local, statut) : utile à l'étape 2 |
 | `… scorer J.jsonl` | validation du journal, score des questions et épisodes |
 | `… sceller J.jsonl` | empreinte à publier avant échéance ; ne prouve pas seul la prépublication |
+| `… sceller-jugement --question Q --evenement E --p 0.3 --date AAAA-MM-JJ` | empreinte de votre propre probabilité, à calculer **avant** le moteur ; à recopier dans `jugement_scelle` |
 | `… audit` / `… autotest` / `… parametres` | intégrité / tests / table documentaire générée ; l'audit vérifie la forme et les recoupements internes, pas la justesse du contenu |
 
 `--fref` n'est admis que pour un événement simple, avec `--source-ref`, `--periode-ref`,
@@ -111,7 +115,9 @@ exploration des suites, sans faire passer celle-ci pour une prescription.
 **2. Candidates.** Tester 2 à 4 candidates par strate, dont une contre-candidate ; ouvrir leurs fiches.
 
 **3. Ancrage (A1, A5, A6).** Citer fait, objet, source, date ; attribuer F/f selon la preuve. F exige un
-fait précis et une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?` ;
+fait précis, une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?`, une
+**garantie** (mécanisme, attendu, contredirait : forme type dans la fiche) et une **option** (acteur,
+option avant, option après : un fait qui ne change l'espace d'action de personne ne s'ancre pas) ;
 équivalent Vide : au plus f. Lister les équivalents Proposés dans « À vérifier auprès de vous ». Ne
 jamais rétablir « Documenté » à partir d'un souvenir bibliographique.
 
@@ -120,13 +126,22 @@ appliquer sa conséquence ; une contre-observation substantielle n'est pas compa
 Dans une fiche : champ `portee`, force notée après A7, `force_initiale: "F"` si elle a baissé.
 
 **5. État (G1–G6).** Date, fenêtre, mots, objets, liaisons, lignes A6 et Q ; positions avec ≥3 mots.
+Sortie LIRE, en plus : 1 à 3 questions qui départagent deux cartes (abduction), « ce que l'alphabet
+ne voit pas ici » (`angles-morts.md`), coût du codage (faits écartés, candidates non retenues, rejets A7).
 État nul : pas de prévision par défaut. → LIRE s'arrête ici. → CODER suit `base-de-cas.md` et `valider`.
 
 **6. Événements et résolution.** Définir 2 à 5 questions observables, sans quotas forcés de rupture.
 Figer objet, source, critère, seuil et sémantique temporelle. Une intensification porte sur une
-mesure réelle, jamais sur f → F. Déclarer binaire ou partition ; tester l'exclusivité et l'exhaustivité.
+mesure réelle, jamais sur f → F. Un événement fixé par un calendrier (scrutin, proclamation, échéance)
+ou un phénomène à durée de vie propre (cyclone, grève) exige une référence externe ou reste non
+chiffré : `calculer --temporalite programmee|duree_de_vie` (`simulation.md` §4). Déclarer binaire ou partition ; tester l'exclusivité et l'exhaustivité.
 
-**7. Calcul.** Valider la base ; fixer la date d'information ; exécuter le moteur avec `--json`.
+**7. Calcul.** **D'abord** écrire sa propre probabilité, en chiffre (un « probable » se fait préciser,
+jamais convertir), et la sceller (`sceller-jugement`), **puis**
+valider la base, fixer la date d'information et exécuter le moteur avec `--json` ; l'ordre est la
+condition pour que l'écart jugement / moteur mesure ce que le moteur ajoute (le scellé prouve que le
+jugement n'a pas été modifié, pas qu'il est antérieur : seul un dépôt externe daté le prouve). Recopier la bande de
+sensibilité : si elle traverse 50 %, dire « non identifié ».
 Recopier le résultat complet, ses références, avertissements et empreintes. Aucun cas/source futur.
 Pour un composé sans référence conditionnelle : non estimé. Ne pas recycler une fréquence pour un
 autre événement ni arrondir l'horizon sans l'indiquer. Recopier aussi `p_sans_cartes` : si les cartes
@@ -147,11 +162,16 @@ points à vérifier. Expliquer ce que les données permettent et ce qui reste no
 
 ## Limites
 
+- Le moteur est **associationnel** (barreau A de Pearl) : il extrapole des motifs observés et ne
+  répond ni à « que produirait telle action ? » ni à « que se serait-il passé autrement ? ». Toute
+  sortie se lit « si le motif observé se répète, alors… ».
 - L'alphabet décrit des structures, pas des issues nominatives : qui gagne, quel nom, quel effectif
   exact relèvent du jugement, journalisé à part (`origine: jugement`).
-- Aucun équivalent livré n'a encore une référence vérifiée : 196 Proposé, 12 Vide. Les 117 anciens
-  Documentés sont rétrogradés. Les quatre cas réels sont recodés en `proposition` (conformes, exclus
-  des calculs jusqu'à la lecture de leurs sources par l'auteur).
+- Treize équivalents ont une référence lue, tous en strate 7 : 13 Documenté, 182 Proposé,
+  13 Vide. Les 117 anciens
+  Documentés sont rétrogradés. Aucun cas réel actif : les quatre premiers, codés avant les règles
+  courantes, sont archivés (décision d'auteur, 0.6.8) ; le premier cas actif sera codé sous la version
+  courante, de préférence avant son issue (`feuille-de-route.md`, étape 2).
 - Multiplicateurs et inerties non calibrés ; aucune performance prospective démontrée.
 - Intervalles conditionnels approximatifs ; incertitudes de codage/modèle non intégrées ; pas
   d'intervalle joint pour les composés et les horizons multiples.
@@ -164,12 +184,13 @@ points à vérifier. Expliquer ce que les données permettent et ce qui reste no
 
 Le cadre et le moteur sont complets ; ce qui manque est empirique ou relève de l'auteur.
 `references/feuille-de-route.md` liste les étapes restantes, dans l'ordre : installation (0),
-décision d'auteur restante sur les cartes à agents (1), cas réels (2), strate
+décisions d'auteur (1 : 1a, 1b et 1c prises), cas réels (2), strate
 pilote (3), fréquences externes (4), base réelle et second codeur (5), code différé (6), test à
 l'aveugle. `python3 scripts/moteur.py bilan [--references R.json] [--journal J.jsonl]` mesure les étapes
 2 à 5 et le test à l'aveugle ; les autres sont déclarées au journal de progression du document.
 À une question sur l'avancement, exécuter `bilan` puis lire le journal de progression, plutôt que de
-répondre de mémoire.
+répondre de mémoire. Toute construction ad hoc d'un codage (carte, strate ou règle inventée en
+cours de route) s'inscrit dans `assets/rabbits.jsonl` : c'est une dette, pas une solution.
 
 ## Articulations
 

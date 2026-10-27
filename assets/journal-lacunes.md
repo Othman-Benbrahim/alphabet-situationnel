@@ -41,3 +41,25 @@ Ce qui a été fait en v0.3.0 : l'événement « X@s se transforme » est devenu
 reste celle d'une apparition non ancrée (0,4 % sur 6 jours). La lacune porte donc autant sur
 l'**absence de fréquence de référence** des changements de forme que sur la matrice.
 Source : test régressif du 2026-10-25 (rapport et fiche C-0002-S07 de l'utilisateur ; rejeu).
+
+## Lacune 3 — 2026-10-27 · ancrages des cas réels devenus hors marqueur local (0.6.4) — **close (0.6.8)**
+
+> Close sans recodage : les quatre cas ont été archivés par décision d'auteur (`feuille-de-route.md` §4).
+> Le constat reste valable pour tout nouveau codage : un fait qui ne remplit que le marqueur abstrait
+> s'ancre en f (A1).
+
+Situation : la strate 7 est passée de 0 à 13 équivalents Documentés (0.6.2 à 0.6.4). Les marqueurs
+locaux, alignés sur les sources lues, sont plus étroits qu'avant. Selon A1, un fait qui ne remplit que
+le marqueur abstrait de la carte s'ancre par le noyau, et sa force ne dépasse pas f.
+Ce n'est pas un motif nouveau mais une **dette de codage** : trois mots des propositions sont à
+trancher avant leur activation (`feuille-de-route.md` §4 et §5.1).
+
+| Mot | Fait codé | Marqueur local 0.6.4 | Décision proposée par Claude |
+|---|---|---|---|
+| C-0002-S07 · INCERTITUDE@7 **F** | Zelensky conditionne des élections à un cessez-le-feu ; Trump suspend des sanctions | « refus déclaré de préciser sa réaction » (ambiguïté stratégique) | **recoder f** : des conditions croisées non remplies laissent l'issue ouverte (marqueur abstrait), mais personne ne refuse de dire comment il réagira. Garantie et option deviennent facultatives. Alternative : trouver un fait d'ambiguïté déclarée dans la fenêtre et garder F |
+| C-0003-S07 · CONTRAINTE@7 **F** | suspension des opérations de l'aéroport de Riyad ; avertissement d'évacuation à Sanaa | « option commerciale retirée par une sanction, ou option militaire plafonnée par un traité » | **recoder f** : la contrainte est matérielle (menace de frappe), ce que le noyau couvre et l'équivalent local non. Alternative : ajouter à la strate 7 un second équivalent de CONTRAINTE (« interdiction d'usage imposée par la menace ») — à éviter tant qu'une seule fiche le demande |
+| C-0002-S07 · TRANSFORMATION@7 f | le canal de médiation bilatéral devient trilatéral | « alliance qui change de missions et de moyens par étapes » | **conserver f** : un format de négociation n'est pas une alliance, mais le mot est déjà f et s'ancre par le noyau (une entité qui change de forme en gardant ses parties, A1). Aucun changement ; la lacune 2 reste ouverte |
+
+Correction du CHANGELOG 0.6.4 : il comptait trois ancrages « qui ne remplissent plus le marqueur
+local » ; deux seulement posent problème (les F). Le troisième, déjà f, est conforme à A1.
+Source : audit de la version 0.6.4 (constat O3) et relecture des fiches, 2026-10-27.

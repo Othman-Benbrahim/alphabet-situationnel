@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -18,10 +18,11 @@ modèle complet. Ne pas remplir artificiellement toutes les cases de l'alphabet.
 Trois statuts : `actif`, admissible après contrôles ; `proposition`, recodage complet contrôlé comme
 un cas actif mais dont les sources n'ont pas encore été lues (`sources_verifiees: false`,
 `motif_proposition` requis), exclu des calculs ; `archive_a_revoir`, conservé mais exclu de tout
-calcul et contrôlé seulement comme archive lisible. Les quatre fiches de `assets/cas-reels.jsonl`
-sont des propositions recodées en 0.4.7 ; leur témoignage original est dans
-`assets/cas-reels-originaux.jsonl`. Une proposition devient active quand l'auteur a lu ses sources :
-`sources_verifiees: true`, `statut_donnees: actif` (`feuille-de-route.md`, étape 2). Les 40 cas d'exemple sont fictifs et demandent `--demo`.
+calcul et contrôlé seulement comme archive lisible. Une proposition devient active quand l'auteur a
+lu ses sources : `sources_verifiees: true`, `statut_donnees: actif`. Les quatre fiches de
+`assets/cas-reels.jsonl` sont des archives (0.6.8) : rejeux codés avant les règles courantes, conservés
+comme trace ; leur témoignage original est dans `assets/cas-reels-originaux.jsonl` (`feuille-de-route.md`,
+étape 2). Les 40 cas d'exemple sont fictifs et demandent `--demo`.
 
 ---
 
@@ -32,7 +33,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 ```json
 {
   "id": "C-0041-S07",
-  "version_regles": "0.5.1",
+  "version_regles": "0.6.0",
   "titre": "Cas fictif 1",
   "strates": [
     6,
@@ -49,10 +50,13 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
           "strate": 7,
           "intensite": "F",
           "fait": "Fait fictif n° 1 remplissant un marqueur local de POLARITÉ (strate 7)",
-          "source": "Source fictive n° 1 (exemple construit)",
+          "source": "Source fictive n° 1 ; source fictive n° 1 bis, indépendante de la première (exemple construit)",
+          "corroboration": "independantes",
           "contre_observation": "Contre-observation fictive (marginale)",
           "portee": "marginale",
           "a6": "POLARITÉ@7 : CONTRAINTE → (deux camps nommés, pas une règle qui retire des options) ; SEUIL → (aucun passage irréversible daté)",
+          "garantie": {"mecanisme": "les deux blocs se définissent l'un par l'autre et organisent les votes", "attendu": "alignements exclusifs : rejoindre un bloc écarte de l'autre", "contredirait": "une troisième position stable ou des alignements croisés durables"},
+          "option": {"acteur": "les États tiers", "avant": "rester non alignés", "apres": "choisir un bloc pour obtenir un soutien"},
           "objet": "objet simulé C-0001-GEO strate 7"
         },
         {
@@ -66,6 +70,9 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
           "a6": "CONTRAINTE@6 : SEUIL → (options retirées, aucun nouvel état) ; HIÉRARCHIE → (règle, pas rang) ; POLARITÉ → (règle, pas deux pôles) ; INCERTITUDE → (option fermée, non laissée ouverte) ; TRACE·MÉMOIRE → (plafond décidé, pas héritage)",
           "objet": "objet simulé C-0001-GEO strate 6"
         }
+      ],
+      "questions": [
+        {"question": "Les États tiers forment-ils un troisième groupe stable, hors des deux blocs ?", "si_oui": "RES@7", "si_non": "POL@7"}
       ],
       "liaisons": [],
       "positions": null,
@@ -151,7 +158,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 |---|---|
 | `id` | C-NNNN-SNN ; stable, fixé avant codage ; `id_legacy:true` seulement pour anciens identifiants conservés |
 | `version_regles` | même version mineure que la version courante pour un cas actif (0.5.x en 0.5.0) ; un correctif ne force pas le recodage, car `valider` applique les règles courantes à chaque fiche ; ancienne version mineure conservée dans une archive |
-| `strates` | entiers uniques 1–12, couvrant les strates de tous les états |
+| `strates` | entiers uniques 1–13, couvrant les strates de tous les états |
 | `fenetre` | durée strictement positive ; même fenêtre dans toutes les phrases |
 | `sequence`, `issue` | au moins un état avant l'issue, avec dates de fiche et de phrase identiques |
 | `date`, `disponible_le` | date de l'observation, puis date réelle à laquelle ses preuves sont accessibles |
@@ -161,13 +168,17 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 | `fait`, `source`, `contre_observation` | texte renseigné, pertinent ; la contre-observation dit aussi où l'on a cherché |
 | `portee` | portée de la contre-observation (A7) : `marginale`, `substantielle`, `dominante` ou `aucune` ; `dominante` interdit le mot ; `substantielle` exige `intensite` f et `force_initiale` F (un mot déjà f est rejeté) |
 | `force_initiale` | `"F"` seulement avec une portée substantielle ; sur un mot qui persiste, admis seulement s'il était F, ou déjà rétrogradé depuis F, à l'état précédent |
+| `garantie` | requis pour F (cas réel) : `mecanisme`, `attendu`, `contredirait` (A6) ; forme type dans chaque fiche de `cartes.md` |
+| `option` | requis pour F (cas réel) : `acteur` (« le système » admis), `avant`, `apres` différents (pertinence, O1) |
+| `questions` | requis au premier état non nul d'un cas réel (cas fictif exempté) : liste non vide de `{question, si_oui, si_non}` ; `si_oui` et `si_non` sont deux CARTE@strate **différents**, l'un au moins présent dans l'état. Une question dont les deux réponses mènent à la même carte est décorative et refusée (abduction, `grammaire.md` §7) |
+| `corroboration` | requis pour F d'un cas réel **actif** (une proposition le reçoit à son activation) : `"independantes"` si le fait repose sur au moins deux sources indépendantes, nommées dans `source` et séparées par « ; » ; `"unique"` sinon, admis et signalé dans « À vérifier auprès de vous ». Aucun effet sur le calcul (qualité de l'information, 0.6.6) |
 | `a6` | requis pour F : chaque voisine de `cartes.md`, verdict `→` ou `+`, justification non vide ; contrôle complet sur cas réel, cas fictif exempté |
 | `retraits` | exactement les mots disparus, chacun avec fait et source |
 | `liaisons`, `preuves_liaisons` | mots existants, types compatibles avec les strates, une preuve par liaison |
 | `preuves_qualificatifs` | dictionnaire CARTE@strate → ligne Q pour chaque mot qualifié |
 | `positions`, `preuve_positions` | null ou tient/bouge/manque avec ≥3 mots, contraintes de présence et preuve |
 | `sans_evenement` | `true` seulement si aucun mot n'apparaît, ne disparaît ni ne change de force sur toute la séquence (B4) |
-| `codage` | mode, codeurs distincts ; `independants` et `au_moins_un_humain` booléens s'ils sont présents ; si deux codeurs : indépendance et au moins un humain explicitement attestés |
+| `codage` | `recodage` : qui a proposé le codage quand ce n'est pas le codeur (un modèle, par exemple) ; s'il est renseigné, un cas **actif** exige `recodage_confirme` `{par, date}` : un codeur humain nommé, pas le modèle, a relu ce qui a été proposé (0.6.7). Puis : mode, codeurs distincts ; `independants` et `au_moins_un_humain` booléens s'ils sont présents ; si deux codeurs : indépendance et au moins un humain explicitement attestés |
 | `fictif` | booléen ; tout cas fictif est exclu hors --demo et de V4 |
 | `sources_verifiees` | true pour un cas réel actif ; ne pas déclarer sans avoir consulté les sources |
 | `statut_donnees` | actif, proposition (exige `motif_proposition` et `sources_verifiees: false`) ou archive_a_revoir (exige `motif_archive`) ; seuls les cas actifs entrent dans les calculs |
@@ -191,6 +202,11 @@ archive lisible, jamais présentée comme « active recevable ».
 6. Un second codeur reçoit les faits, jamais le premier codage ; enregistrer son identité et son rôle.
 7. Exécuter `valider`. Toute fiche active invalide bloque le calcul ; ne pas masquer l'erreur.
 8. Si source absente, temporalité ambiguë ou règle ancienne non recodée : archiver avec motif.
+9. **Traceback (0.6.0).** Nommer ce qui, absent de l'alphabet au départ, a été nécessaire pour rendre
+   le cas codable (une carte, une strate, un qualificatif, une règle), ou écrire « rien ». Une
+   construction nécessaire s'inscrit dans `assets/rabbits.jsonl`, avec le fait daté qui la rendait
+   nécessaire ; une difficulté de lecture n'en est pas une. Trois occurrences indépendantes d'une même
+   construction ouvrent A2.
 
 Une validation structurale ne remplace pas A6/A7. Une contre-observation substantielle impose sa
 baisse de confiance ; ne pas écrire « substantielle mais F maintenu ». Les observations nouvelles

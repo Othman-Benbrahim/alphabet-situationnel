@@ -1,6 +1,287 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.5.1
+> Version : 0.6.10
+
+## 0.6.10 — 2026-10-27 · après l'audit V21 et le test Polo
+
+L'audit confirme les corrections de 0.6.9 (112 contrôles indépendants sur les 16 cartes) et relève
+trois limites du journal et un défaut de temporalité. 86 autotests (84 + 2).
+
+- **Journal** : `frequence_de_base` doit égaler `calcul.comparateur` ; un intervalle ajouté au journal
+  alors que le moteur a répondu « non estimé » est refusé ; `resolution.marqueur` doit recopier le
+  marqueur local du calcul ou justifier l'écart (`ecart_marqueur`). La pertinence de la source de
+  résolution reste humaine, par construction ; sa conservation passe par l'empreinte (`sceller`).
+- **Temporalité déclarée** (test Polo et test brésilien). Le moteur ne reconnaît ni une échéance
+  programmée ni une durée de vie propre : un cyclone (ÉMERGENCE@11) « persistait » à 96,75 % sur 7
+  jours par l'inertie trimestrielle générique (0,65^(7/91,3)), et s'est dissipé le quatrième jour
+  (Brier 0,94). `calculer --temporalite programmee|duree_de_vie` répond « non estimée » quand seul le
+  taux générique est disponible (ρ4) ; le journal exige `temporalite` à partir de 0.6.10 et refuse
+  une prévision ρ4 hors `generique`. La déclaration reste humaine ; son effet est contrôlé.
+- La règle de calendrier de 0.6.9 n'était appliquée que par l'assistant : elle passe par ce contrôle.
+- Non fait : estimer des inerties par phénomène. Ce sont des fréquences de domaine, l'étape 4 de la
+  feuille de route ; les inventer reproduirait le défaut corrigé.
+
+## 0.6.9 — 2026-10-27 · après l'audit du test brésilien
+
+Audit d'un rejeu (présidentielle brésilienne, 19 → 26 octobre 2026 ; non aveugle, déclaré par
+l'auditeur). Quatre anomalies logicielles signalées, toutes reproduites, toutes corrigées.
+84 autotests (82 + 2), dont deux de propriétés indépendantes du jeu de paramètres.
+
+- **Plafond à 95 % appliqué à la fréquence** (anomalies 1 et 2). `plafond_p0` bornait toute
+  probabilité, y compris une persistance d'inertie : présence 95 % et absence 1,238 % (somme 96,2 %) ;
+  persistance sur 7 jours 95 % en un pas mais 69,8 % en 7 pas quotidiens (0,95⁷). Il borne désormais
+  l'effet des cartes seulement : il s'applique quand les multiplicateurs élèvent p au-dessus de f, et
+  jamais sous f. Autotest : complémentarité exacte, invariance au découpage de la persistance et de
+  l'apparition sans multiplicateur, sur quatre cartes et quatre fenêtres. Les valeurs des exemples ne
+  changent pas (aucune n'était plafonnée). Limite écrite (`graphe.md` §2.3) : avec multiplicateurs,
+  l'apparition dépend encore un peu du découpage (10,2 % contre 10,4 % sur l'exemple), parce que λ
+  multiplie la cote ; la corriger changerait tous les chiffres pour un gain de cet ordre, et
+  l'invariance ne tiendrait pas avec une base de cas.
+- **Bande saturée** : une bande dont une variante touche le plafond est signalée (`saturee`) ; une
+  bande [95 % ; 95 %] ne mesurait que la saturation.
+- **Journal lié au calcul entier** (anomalies 3 et 4). Avec `calcul` joint, `valider_journal` ne
+  recoupait que p et ρ. Il recoupe désormais événement, état (le JSON de `calculer` porte `etat`), pas,
+  sémantique, échéance, `p_sans_cartes` et intervalle. Autotest sur quatre falsifications.
+- **Événements de calendrier** (`simulation.md` §4, `SKILL.md` étape 6) : un événement fixé par un
+  texte (scrutin, proclamation, échéance) exige une référence externe ou reste non chiffré ; le moteur
+  ne connaît pas le calendrier (« vainqueur proclamé » : 6,8 % sur taux générique). Une proclamation
+  lève une incertitude, elle ne fait pas disparaître INCERTITUDE ; le calendrier relève de PÉRIODICITÉ.
+- Recommandations de données de l'audit (classe de référence dans une strate, test prospectif) :
+  déjà les étapes 2, 4 et le test à l'aveugle de la feuille de route.
+
+## 0.6.8 — 2026-10-27 · les quatre premiers cas réels sont archivés
+
+Décision d'auteur : abandonner les quatre cas réels (France, Ukraine, Yémen, Alberta), en décalage
+avec l'état du projet. Ils passent en `archive_a_revoir` avec leur motif : codés après leur issue
+(rejeux), sous les règles 0.3–0.4, recodés par Claude sans relecture humaine, deux ancrages F hors des
+marqueurs de la strate 7 Documentée. Archivés, pas supprimés : ils sont la trace des lacunes 1 et 2, de
+la strate 13 et de la règle « origine jugement », et les exemples 7 à 10 les citent.
+
+- **Étape 2 redéfinie** : premiers cas réels sous les règles courantes, de préférence prospectifs
+  (codés à leur date, avant l'issue) ; leurs prévisions sont les premières éligibles à V4.
+  `bilan` dit « à commencer » tant qu'aucun cas n'est actif.
+- **Étape 3** : « 16/16 cases traitées » (Vide clos compté), conformément à la règle de 0.6.5.
+- Lacune 3 close sans recodage. `SKILL.md`, `README.md`, `base-de-cas.md`, `exemples.md` mis à jour.
+- Aucun calcul ne change : les quatre cas n'y entraient pas (propositions).
+
+## 0.6.7 — 2026-10-27 · apport *Intuition Machine* (site et QPT)
+
+Même corpus que le rapport de 0.6.0, dont l'ontologie QPT reste refusée ; douze pistes jugées sur le
+skill réel (`apports-theoriques.md` §8). 82 autotests (81 + 1).
+
+- **Retenu, un contrôle** : « unchecked output », une sortie de modèle enregistrée comme fait. Un cas
+  dont le codage a été proposé par un modèle (`codage.recodage`) n'entre dans les calculs qu'avec
+  `codage.recodage_confirme` `{par, date}`, signé par un codeur humain nommé ; « Claude » est refusé
+  comme signataire. Les quatre propositions portent désormais la mention exacte de ce que Claude a
+  écrit (recodage 0.4.7, garanties, options et questions 0.6.0) ; la feuille de route ajoute la
+  relecture à l'étape 2.
+- **Déjà couvert** : système de mots et axiomes, *grounding* contre *knowledge*, dérive de
+  l'évaluation, contexte périmé, saboteur licencié, plafond de procéduralisation.
+- **Différé** : test du témoin (distance de la source à l'événement), après mesure de la
+  corroboration sur cas actifs ; dates de révision des règles, déjà dans l'échelle de dureté.
+- **Refusé** : sceau conditionnel, audit en sept couches et noms pathologiques (renommages),
+  transaction en sept étapes, protocole « Common Ground », opérateur `qml_q`.
+
+## 0.6.6 — 2026-10-27 · apports CIA et *Spiral Semiosis* ; un bogue de validation
+
+Deux synthèses versées par l'auteur, triées par la règle d'importation (un concept n'entre que s'il
+ajoute un contrôle). Détail, corrections préalables et refus motivés : `apports-theoriques.md` §7.
+81 autotests (assertions ajoutées à deux tests existants).
+
+- **`corroboration`** (qualité de l'information, *Tradecraft Primer* ; sources fabriquées, Mulligan
+  2026) : requis pour un mot F de cas réel **actif**, `independantes` (au moins deux sources nommées,
+  séparées par « ; ») ou `unique` (admise, signalée). Aucun effet sur le calcul. Les propositions ne
+  sont pas touchées : le champ se remplit à l'activation, pendant la lecture des sources.
+- **Aucun mot de probabilité sans son chiffre** (Kent 1964) ; un jugement donné en mots se fait
+  préciser avant scellé. Le mode « calibrer » (mot → chiffre par table) est refusé, pour la raison
+  même que donne Kent : « serious possibility » allait de 20 à 80 % dans son propre comité.
+- **Angle mort délibéré** : la véracité d'un fait. Un fait faux bien formé donne une lecture bien formée.
+- **Bogue corrigé** : le refus « F impossible sur un équivalent Vide » (A3) était placé, par une
+  indentation, dans la branche des mots f ; une fiche réelle active pouvait ancrer F sur une case Vide
+  et passer `valider`, le calcul seul la refusant. Trouvé en lisant le code pour brancher
+  `corroboration` ; reproduit, corrigé, couvert par un autotest.
+- **Différé** : mode « scénarios » à la manière d'ACH (0.8, sur cas actifs) ; mode sémiotique du fait
+  (règle, occurrence ; 1.0).
+- **Refusé** : tout poids sur les sources (`fiabilite_source`, `poids_source`, `fabrication_risque`),
+  le test de biais par état inverse, la bande multi-échelle, les phases et les quatre stabilités, la
+  récursion automatique issue → état, le sceau conditionnel, l'API REST. Neuf pistes sur vingt-deux
+  étaient déjà couvertes (A7, `questions`, `option`, barreau, `--json`, CODER).
+
+## 0.6.5 — 2026-10-27 · après l'audit de la 0.6.4
+
+Audit reçu le 27 octobre (auteur des recommandations auditées, caveat d'indépendance déclaré). Tous
+les constats vérifiés sont exacts ; tous sont traités. 81 autotests (79 + 2).
+
+**Majeurs**
+- **M1 · `questions` documenté** : exemple et tableau de `base-de-cas.md` §2, liste de contrôle de
+  `grammaire.md` §7 ; renvoi corrigé dans `apports-theoriques.md`. Un codeur qui suit le schéma passe
+  désormais `valider` du premier coup (l'exemple documenté est validé par `audit`).
+- **M2 · `exemples.md` au format 0.6** : exemple 1 avec la sortie humaine complète (barreau, lecture,
+  sensibilité, résolution) et la bande de chaque événement ; un résultat « non identifié » (SEUIL@7 à
+  trois pas, bande 48–62 %) ; exemple 3 exécuté par le moteur (composé ρ3 : pas de ligne de
+  sensibilité, il ne dépend d'aucun paramètre du modèle). L'exemple 4 reprenait encore le plafond à f
+  sur un équivalent Proposé, levé en 0.4.1 : corrigé.
+- **M3 · `SKILL.md`** ne dit plus la décision 1b « restante ».
+- **M4 · `difficulte` inversée** : 0,5 − |f − 0,5|, qui croît avec la difficulté (0 pour une question
+  jouée d'avance, 0,5 pour une question à 50 %). Code, autotest, `validation.md`, glossaire.
+
+**Mineurs** : strates 1–13 dans le schéma (m1) ; onze termes au glossaire, dont les sept relevés et
+le statut Hors domaine (m2) ; `sceller-jugement` dans la table des commandes (m3) ; renvoi de
+`questions` (m4) ; README : plage du CHANGELOG et `rabbits.jsonl` (m5) ; `rabbits.jsonl` a un cycle de
+vie, `statut` ouvert ou résorbé et `resolution`, contrôlé par `audit` ; les deux entrées sont résorbées,
+avec leur preuve (m6) ; `audit` contrôle désormais le registre des angles morts : quatre colonnes,
+condition de réfutation ou statut « délibéré ». Le contrôle a trouvé une entrée fautive (« compétence
+des acteurs », sans condition de réfutation), complétée (m7) ; A6 : « mot F **de cas réel** » (m8) ;
+« l'ordre est la condition », le scellé prouve l'intégrité, pas l'antériorité (m9).
+
+**Observations**
+- **O1 · second drapeau de sensibilité** : `bande_large` si la bande dépasse `largeur_max_affichage`
+  (30 points), indépendamment de tout seuil de décision.
+- **O2 · portée de la sensibilité écrite** (`graphe.md` §2.3) : paramétrique et globale, pas
+  structurelle ; une seule arête fausse ne la déplace presque pas. Pas de variante par arête : 66
+  calculs de plus pour une information que l'absence de données rend illisible.
+- **O3 · lacune 3 au journal des lacunes** : les deux ancrages F à trancher (INCERTITUDE@7 de C-0002,
+  CONTRAINTE@7 de C-0003), avec la décision proposée (recoder f) et son alternative. Correction du
+  0.6.4 : TRANSFORMATION@7 (C-0002), déjà f, est conforme à A1 ; deux ancrages posent problème, pas trois.
+- **O4 · critère de clôture des cases Vides** (`equivalences.md` §3) : la colonne Référence déclare
+  `recherches : N — …` ; à trois recherches documentées (`vide_recherches_cloture`, §H), la case est
+  close, non concluant, et compte comme traitée dans `bilan`. Cela règle aussi la question laissée
+  ouverte en 0.6.4 : une strate avec une case Vide peut être complète. RÉSONANCE@7 déclare 2 recherches.
+- **O7 · exceptions de barreau exercées** par un autotest (I, C, le plus bas l'emporte).
+- **Liste de contrôle de publication** (`feuille-de-route.md` §10), appliquée à cette version.
+
+**Non retenu** : renommer « probabilité » (l'audit le juge défendable, à revoir en 1.0 ; inchangé) ;
+contrôle sémantique de la garantie (O6 : le contrôle force la déclaration, il ne la juge pas ; c'est
+écrit, et un contrôle de fond automatique prétendrait plus qu'il ne peut).
+
+## 0.6.4 — 2026-10-27 · strate 7 : treize équivalents Documentés
+
+Même méthode : texte en libre accès, lu, passage cité, marqueur aligné sur la source.
+
+- **Documentés** : SEUIL (Morgan et al. 2008, RAND, « escalation thresholds ») ; RÉCURSIVITÉ
+  (Gustafson et al. 2024, « prebuttal ») ; HIÉRARCHIE (Zarakol 2017) ; RÉSEAU (Hafner-Burton, Kahler et
+  Montgomery 2009, « brokerage ») ; CONTRAINTE (TIES 2014 pour les sanctions, Woolf 2010 pour les
+  traités de limitation) ; TRANSFORMATION (Wallander 2000) ; TRACE·MÉMOIRE (CIJ 1986, « uti possidetis »).
+- **Équivalents corrigés par la lecture** : SEUIL (seuils reconnus par les parties ; la rupture
+  diplomatique n'en est pas un), RÉCURSIVITÉ (« Évaluation publiée devenue acte du conflit »,
+  remplace la sécuritisation), HIÉRARCHIE (veto et préséance retirés), RÉSEAU (« État courtier entre
+  groupes »), TRANSFORMATION (« Adaptation d'une alliance » ; la transition de régime relève de la
+  strate 13), TRACE·MÉMOIRE (griefs retirés).
+- **RÉSONANCE@7 → Vide** : aucune synchronisation par couplage documentée entre États ; la vague
+  révolutionnaire est une diffusion. RÉSONANCE est désormais Vide dans trois strates sociales (7, 8, 12).
+- **Restent Proposés** : PÉRIODICITÉ (Payne 2019, texte fermé) ; CROISSANCE (aucune source lue ne
+  montre un taux d'expansion qui dépend de la grandeur atteinte).
+- **A1 corrigé** : le texte plafonnait encore à f tout ancrage sur un équivalent Proposé, ce que 0.4.1
+  avait levé (A3, moteur, autotests). Désormais : f seulement si la case est Vide ou si le fait ne
+  remplit que le marqueur abstrait.
+- **Conséquence signalée, non appliquée** : trois ancrages des cas réels ne remplissent plus le
+  marqueur local précisé (INCERTITUDE@7 et TRANSFORMATION@7 dans C-0002, CONTRAINTE@7 dans C-0003) ;
+  à trancher avec la lecture des sources (`feuille-de-route.md` §5.1).
+
+Bilan des statuts : 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine. Strate 7 : 13/16.
+
+## 0.6.3 — 2026-10-27 · strate 7 : quatre références remplacées par des sources en libre accès
+
+Keohane 1986, Bull 1977, Waltz 1964 et Pan 2003 n'étant lisibles ni par l'auteur ni par Claude, chacun
+est remplacé par un texte de la même discipline en libre accès, lu, passage cité :
+
+- **RÉCIPROCITÉ@7** : Axelrod et Keohane 1985, *World Politics* 38(1), p. 244-245 et 249,
+  « Tit-for-Tat » : coopérer d'abord, puis riposter une fois à chaque défection.
+- **ÉMERGENCE@7** : de Souza 2008, *Brazilian Political Science Review* 2(1), citant Bull 1977, p. 13,
+  « international society ». **Équivalent corrigé** : « Ordre sans gouvernement commun ». Chez Bull, la
+  gestion par les grandes puissances est une institution de cet ordre ; « sans puissance dominante » et
+  « sans traité » contredisaient la source. Bull est cité de seconde main, ce qui est déclaré.
+- **POLARITÉ@7** : Wayman 1984, *Journal of Peace Research* 21(1), p. 63, « cluster bipolarity ». La
+  source distingue la bipolarité de puissance de la bipolarité de blocs ; le marqueur de la case
+  (« deux blocs, alignements exclusifs ») est la seconde.
+- **INCERTITUDE@7** : Chang-Liao et Fang 2021, *The Washington Quarterly* 44(2), p. 46,
+  « strategic ambiguity ».
+
+Bilan des statuts : 0 Attesté, 6 Documenté, 190 Proposé, 12 Vide, 0 Hors domaine. Strate 7 : 6/16.
+
+## 0.6.2 — 2026-10-27 · strate 7 : premières références lues
+
+Les candidates de 0.6.1 ont été cherchées en texte intégral. Seules celles dont le passage a été lu
+sont promues ; le passage est cité dans la colonne Référence.
+
+- **PROPORTION@7 → Documenté** : documentation NMC v5.0 des Correlates of War (Greig et Enterline
+  2017, p. 8-9), « Composite Index of National Capability (CINC) » : la part d'un État dans le total du
+  système, par année. Marqueur aligné sur la carte : un rapport mesuré à deux dates (« cité dans une
+  décision » retiré, la source ne le porte pas).
+- **COMMUNAUTÉ@7 → Documenté** : Olson et Zeckhauser 1966, p. 267-268 : l'alliance produit un bien
+  public, les grands membres en portent « a disproportionate share of the burden ».
+- **RÉSONANCE@7 → à trancher** : Beissinger 2007, lu, décrit la vague révolutionnaire comme une
+  émulation d'exemple (diffusion), sans rythmes propres ni couplage. La source contredit l'équivalent
+  « vagues simultanées » au lieu de le soutenir.
+- Keohane 1986, Bull 1977, Waltz 1964 et Pan 2003 : textes non accessibles en ligne au-delà du résumé ;
+  ils restent Proposés en attente d'une lecture.
+
+Bilan des statuts : 0 Attesté, 2 Documenté, 194 Proposé, 12 Vide, 0 Hors domaine.
+
+## 0.6.1 — 2026-10-27 · décision 1b, strate pilote 7 ouverte
+
+Version corrective : aucune règle ni aucun schéma ne change, les fiches restent en 0.6.0.
+
+- **Décision 1b : les cartes à agents sont universelles** (option A). Leurs 8 cases Vides sont des
+  lacunes à combler, pas des impossibilités ; aucune case n'est Hors domaine. Les propositions
+  « Hors domaine » du rapport *Intuition Machine* sont écartées ; les anomalies de définition
+  (ÉMERGENCE@3, RÉSONANCE@8 et @12, HIÉRARCHIE@11) et le cas contesté RÉCURSIVITÉ@2 restent à
+  instruire. La piste « boucle d'agence » tombe avec la décision.
+- **Strate pilote 7 : 16 références candidates** (`feuille-de-route.md` §5.1), une par carte, avec
+  nom local et écart à trancher. Leur existence et leur résumé sont vérifiés ; aucun texte n'a été lu
+  en entier. Les cases restent donc Proposées (A3) et la colonne Référence pointe vers la candidate.
+  Bilan : 6 prêtes, 8 à ajuster (marqueur ou intitulé), 1 à compléter (CONTRAINTE : traités de
+  limitation), 1 à trancher (TRANSFORMATION : la transition de régime relève peut-être de la strate 13).
+
+## 0.6.0 — 2026-10-27 · trois apports théoriques traduits en contrôles (« déclarer » et « mesurer »)
+
+Version mineure : le schéma des fiches et du journal change. Source : trois analyses du corpus de
+C. E. Perez versées au projet (*Intuition Machine*, *Artificial Fluency*, *Artificial Empathy*).
+Règle d'importation : un concept n'entre que s'il ajoute un contrôle. Détail, sources et pistes
+différées : `references/apports-theoriques.md`. 79 autotests (75 + 4). Aucun chiffre du moteur ne
+change ; la sortie gagne une ligne de lecture et une bande de sensibilité.
+
+**Déclarer**
+- **Barreau de Pearl** dans la ligne S5 (`⚠ ρ1 · association · …`) et ligne « Lecture : association » :
+  le moteur compte des associations, il ne modélise ni intervention ni contrefactuel. Paramètre
+  `barreau` (défaut A, exceptions par transition, aucune aujourd'hui) plutôt que 66 étiquettes identiques.
+- **Garantie** (mécanisme, attendu, contredirait) et **option** (acteur, avant, après), requises pour
+  tout mot F de cas réel (A6, O1). L'interprétant et le test de clôture des rapports sont fusionnés en
+  un seul champ pour éviter deux rubriques redondantes. Refus si « contredirait » est la
+  contre-observation (la carte n'est pas ancrée) ou si l'option ne change pas (fait non pertinent).
+  Forme type dans chacune des 16 fiches de `cartes.md`.
+- **Questions qui départagent** (abduction) au premier état d'un cas réel ; question dont les deux
+  réponses mènent à la même carte refusée.
+- **Documenté exige un nom local** « … » (objet-frontière) ; `audit` le vérifie.
+- **Registre des angles morts** (`angles-morts.md`, entrées réfutables) et **rabbits**
+  (`assets/rabbits.jsonl`, constructions ad hoc à résorber), contrôlés par `audit`.
+- Cause proposée pour chacune des 12 cases Vides (`equivalences.md` §3), sans reclassement : la
+  décision 1b reste à l'auteur.
+
+**Mesurer**
+- **Jugement scellé avant le moteur** : `sceller-jugement`, champ `probabilite_jugement` (null admis)
+  et `jugement_scelle` ; `scorer` rend `moteur_contre_jugement`.
+- **Sensibilité** : six variantes (multiplicateurs d'un cran, inerties ± 0,05, fréquence par défaut
+  × ½ et × 2) ; si la bande traverse 50 %, la ligne S5 écrit « non identifié ».
+- **Difficulté** |f − 0,5| par question et part des références extrêmes (> 70 % : avertissement).
+- Sortie LIRE et PRÉVOIR : questions qui départagent, angles morts, coût du codage.
+
+**Recodage** : les quatre propositions passent en 0.6.0 (garantie et option sur RÉSEAU@5,
+TRACE@5, CONTRAINTE@8, INCERTITUDE@7, CONTRAINTE@7 ; une question par cas), tirées des seuls faits
+déjà présents ; proposition de Claude à confirmer par l'auteur. Base d'exemple revalidée en 0.6.0.
+
+**Constat** : sur l'exemple de démonstration, la bande de sensibilité (19–28 %) est plus étroite que
+l'intervalle bêta (5–43 %). Le rapport prévoyait l'inverse ; l'incertitude dominante est donc
+l'échantillon, pas la paramétrisation — sur cet exemple seulement.
+
+**Différé** (conditions dans `apports-theoriques.md` §4) : Hors domaine attribué et boucle d'agence ;
+échelle de dureté ; séquence H1.6 ; cartes comme règles de transformation et liaisons comme opérateurs
+— à écrire par un rédacteur qui n'a pas vu la matrice : écrites par Claude, qui la connaît, le test
+perdrait sa valeur ; dérivation de l'alphabet, en note de recherche séparée.
+
+**Refusé** : ontologie QPT, correspondance avec les 16 espèces d'agence, normativité sans marqueur,
+critique bayésienne prise comme verdict, citation du corpus dans les fiches. Le nom « probabilité »
+est conservé : le barreau déclaré suffit à en borner la lecture.
 
 ## 0.5.1 — 2026-10-26 · après le second test sur la politique française (sénatoriales)
 

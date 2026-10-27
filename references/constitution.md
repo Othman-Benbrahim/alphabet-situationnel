@@ -1,6 +1,6 @@
 # Alphabet situationnel — Constitution
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Les neuf principes priment sur toutes les règles de `protocole.md`. Une règle qui en contredit un
 > est nulle et doit être corrigée, pas appliquée.
@@ -67,10 +67,16 @@ Toute sortie qui contient une prévision commence par la ligne :
 et chaque prévision porte sa ligne de signalement (`protocole.md`, S5) :
 
 ```
-⚠ ρ[n] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]
+⚠ ρ[n] · [barreau] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]
 ```
 
-Exemple : `⚠ ρ1 · 12 cas distincts (H1) · p₀ 28 % · p 16 % [4–29] · échéance 2026-12-31 · journal P-0042`.
+Exemple : `⚠ ρ1 · association · 12 cas distincts (H1) · p₀ 28 % · p 16 % [4–29] · échéance 2026-12-31 · journal P-0042`.
+
+Le **barreau** (0.6.0) dit quelle sorte de question le chiffre peut trancher, selon l'échelle de Pearl :
+*association* (ce qui s'observe avec quoi), *intervention* (ce que produit une action), *contrefactuel*
+(ce qui se serait passé autrement). Le moteur ne calcule que des associations ; une prévision en est
+une extrapolation et se lit « si le motif observé se répète, alors… », jamais comme l'effet d'une
+action ni comme une certitude sur un futur qui n'a pas eu lieu.
 
 Pourquoi : la valeur d'un pari tient à ce qu'on sait d'où il vient et sur combien de cas il repose.
 Une prévision ρ3 peut être juste, mais le lecteur doit savoir qu'aucun cas passé ne la soutient ; un

@@ -2,8 +2,8 @@
 
 Auteur : Othman Ben Brahim · Licence : MIT (`LICENSE`)
 
-Version 0.5.1 (numéro de `assets/parametres.json`, vérifié par `audit` dans tous les fichiers, README
-compris ; le paquet livré se nomme `alphabet-situationnel-0.5.1.zip` — un zip renommé à la réception se
+Version 0.6.10 (numéro de `assets/parametres.json`, vérifié par `audit` dans tous les fichiers, README
+compris ; le paquet livré se nomme `alphabet-situationnel-0.6.10.zip` — un zip renommé à la réception se
 rattache à sa version par ce numéro ; un zip ne pouvant contenir sa propre empreinte, son SHA-256 est
 communiqué à la livraison, et `audit` vérifie ensuite le contenu décompressé). Historique : 0.4.0 a corrigé le calcul et
 les contrats, 0.4.1 a rétabli les contrôles perdus (F, G6, renvois, homologie), 0.4.2 a rendu A6 et A7
@@ -13,7 +13,11 @@ contrôle les chiffres publiés, 0.4.6 détecte les répétitions et réserve `k
 feuille de route (`references/feuille-de-route.md`, `moteur.py bilan`), 0.4.8 applique les décisions
 d'auteur (strate 12 conservée, statut Hors domaine, licence MIT), 0.5.0 ajoute la strate 13
 (politique intérieure), les sources françaises issues d'EnVrai? et le comparateur inertiel, 0.5.1
-restreint SEUIL@13 et journalise à part les jugements nominatifs.
+restreint SEUIL@13 et journalise à part les jugements nominatifs, 0.6.0 traduit trois apports théoriques
+en contrôles (barreau déclaré, garantie et option des ancrages F, jugement scellé avant le moteur,
+bande de sensibilité, questions qui départagent, angles morts ; `references/apports-theoriques.md`),
+0.6.1 inscrit la décision 1b (cartes à agents universelles) et propose 16 références pour la strate 7,
+0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée.
 Le modèle suit `SKILL.md`. Les anciens faits non revérifiés sont conservés comme archives exclues.
 
 ## Ce que fait l'outil
@@ -31,15 +35,16 @@ SKILL.md                    procédure et chargement par mode
 LICENSE                     licence MIT
 LICENCES-TIERS.md           notice MIT d'EnVrai?, dont sources-france.md reprend des contenus
 README.md                   ce guide
-CHANGELOG.md                historique et révisions 0.4.0–0.5.1
-references/                 17 références (dont feuille-de-route.md et sources-france.md) et 13 fichiers d'équivalents
+CHANGELOG.md                historique et révisions 0.4.0–0.6.10
+references/                 19 références (dont feuille-de-route.md, sources-france.md, angles-morts.md et apports-theoriques.md) et 13 fichiers d'équivalents
 scripts/moteur.py           moteur, validateur, scoreur et autotests intégrés
 assets/parametres.json      source structurée exhaustive des paramètres
 assets/base-de-cas.exemple.jsonl  40 cas fictifs, --demo obligatoire
 assets/journal.exemple.jsonl      journal fictif courant, exclu de V4
-assets/cas-reels.jsonl            4 cas réels recodés en 0.4.7, statut proposition (sources à lire)
+assets/cas-reels.jsonl            4 premiers cas réels, archivés en 0.6.8 (rejeux d'avant les règles courantes), exclus des calculs
 assets/cas-reels-originaux.jsonl  témoignage original de ces 4 cas, archive non réécrite
-assets/journal-lacunes.md         pistes historiques à revérifier
+assets/journal-lacunes.md         pistes historiques à revérifier, ancrages à revoir
+assets/rabbits.jsonl              constructions ad hoc d'un codage, avec statut ouvert ou résorbé
 ```
 
 ## Démarrer

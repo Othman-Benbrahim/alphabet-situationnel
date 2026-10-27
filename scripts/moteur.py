@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.5.1 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.6.10 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -99,6 +99,24 @@ def statuts():
     return dict(st)
 
 
+def recherches_vide():
+    """0.6.5. Critère de clôture des cases Vides (décision 1b) : la colonne Référence d'une case Vide
+    déclare « recherches : N — … » (sources, période, marqueur testé). À N ≥ vide_recherches_cloture
+    (§H), la case est close « non concluant » : elle reste Vide, mais compte comme traitée. Sans ce
+    critère, rien ne distingue « pas encore cherché » de « cherché trois fois, rien trouvé »."""
+    d = os.path.join(RACINE, "references", "equivalences"); r = {}
+    for s in range(1, NS + 1):
+        f = os.path.join(d, f"strate-{s:02d}.md")
+        if not os.path.exists(f): continue
+        for l in open(f, encoding="utf-8"):
+            m = re.match(r"^\| (\S+) \|.*\| Vide \| ([^|]*) \|\s*$", l)
+            if m:
+                n = re.match(r"\s*recherches\s*:\s*(\d+)\s*—", m.group(2))
+                try: r[(carte_id(m.group(1)), s)] = int(n.group(1)) if n else 0
+                except ValueError: pass
+    return r
+
+
 def hors_domaine(k):
     c, s = k.split('@')
     return statuts().get((c, int(s))) == 'Hors domaine'
@@ -160,6 +178,71 @@ def controle_a6(k, ligne):
 
 
 PORTEES = ('marginale', 'substantielle', 'dominante', 'aucune')
+
+
+def controle_questions(qs, fm, requis):
+    """0.6.0. Abduction : une lecture produit les questions que la situation rend posables, chacune
+    départageant deux cartes. Forme : [{question, si_oui, si_non}], si_oui ≠ si_non (CARTE@strate),
+    l'une au moins présente dans l'état. Une question dont les deux réponses mènent à la même carte est
+    décorative et refusée. Exigée pour le premier état non nul d'un cas réel."""
+    if qs is None:
+        return ['questions requises au premier état d’un cas réel : au moins une question qui départage deux cartes'] if requis else []
+    if not isinstance(qs, list) or (requis and not qs):
+        return ['questions = liste non vide de {question, si_oui, si_non}']
+    err = []
+    for q in qs:
+        if not isinstance(q, dict) or not isinstance(q.get('question'), str) or not q['question'].strip():
+            err.append('question sans texte'); continue
+        try:
+            a, b = cle_valide(str(q.get('si_oui', ''))), cle_valide(str(q.get('si_non', '')))
+        except (ValueError, IndexError):
+            err.append(f'« {q["question"][:40]}… » : si_oui et si_non doivent être des CARTE@strate'); continue
+        if a == b:
+            err.append(f'« {q["question"][:40]}… » : les deux réponses mènent à {a}, question décorative')
+        elif a not in fm and b not in fm:
+            err.append(f'« {q["question"][:40]}… » : aucune des deux cartes n’est dans l’état')
+    return err
+
+
+def controle_garantie(k, item, requis):
+    """0.6.0. Garantie : le troisième terme de l'ancrage (interprétant de Peirce et test de clôture) —
+    par quel *mécanisme* le fait est une instance de la carte, ce que la carte rend *attendu*, ce qui la
+    *contredirait*. Option : le filtre de pertinence — un *acteur* (« le système » admis) et l'option
+    qu'il avait *avant* et n'a plus *après*, ou l'inverse. Requis pour un mot F de cas réel ; s'il est
+    fourni pour un mot f, il est contrôlé de la même façon. Le moteur vérifie la forme, pas la justesse."""
+    err = []
+    for champ, cles in (('garantie', ('mecanisme', 'attendu', 'contredirait')), ('option', ('acteur', 'avant', 'apres'))):
+        v = item.get(champ)
+        if v is None:
+            if requis: err.append(f'{k} : champ {champ} requis pour F ({", ".join(cles)})')
+            continue
+        if not isinstance(v, dict) or any(not isinstance(v.get(x), str) or not v[x].strip() for x in cles):
+            err.append(f'{k} : {champ} = objet avec {", ".join(cles)} renseignés')
+    g = item.get('garantie')
+    if isinstance(g, dict) and isinstance(g.get('contredirait'), str) and isinstance(item.get('contre_observation'), str):
+        if ' '.join(g['contredirait'].lower().split()) == ' '.join(item['contre_observation'].lower().split()):
+            err.append(f'{k} : la contre-observation est exactement ce qui contredirait la carte → la carte n\u2019est pas ancrée (A6, A7)')
+    o = item.get('option')
+    if isinstance(o, dict) and isinstance(o.get('avant'), str) and isinstance(o.get('apres'), str):
+        if ' '.join(o['avant'].lower().split()) == ' '.join(o['apres'].lower().split()):
+            err.append(f'{k} : option identique avant et après → le fait ne change l\u2019espace d\u2019action de personne (pertinence, O1)')
+    return err
+
+
+def controle_corroboration(k, item):
+    """0.6.6. Contrôle de la qualité de l'information (CIA, *Tradecraft Primer* ; Mulligan 2026 sur les
+    sources fabriquées par IA générative). Un mot F de cas réel **actif** déclare si son fait repose sur
+    des sources indépendantes ou sur une source unique : `corroboration` = "independantes" (le champ
+    `source` en nomme au moins deux, séparées par « ; ») ou "unique" (admis, signalé à l'utilisateur).
+    Aucun poids, aucun effet sur le calcul : la déclaration seule, qui peut échouer."""
+    v = item.get('corroboration')
+    if v is None:
+        return [f'{k} : champ corroboration requis pour F de cas actif ("independantes" ou "unique")']
+    if v not in ('independantes', 'unique'):
+        return [f'{k} : corroboration = "independantes" ou "unique"']
+    if v == 'independantes' and len([x for x in str(item.get('source', '')).split(';') if x.strip()]) < 2:
+        return [f'{k} : corroboration "independantes" mais une seule source nommée (séparer les sources par « ; »)']
+    return []
 
 
 def controle_a7(k, item, precedent=None):
@@ -481,6 +564,12 @@ def empreinte(x):
     return hashlib.sha256(json.dumps(x, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
 
 
+def empreinte_jugement(question, evenement, probabilite, date):
+    """0.6.0. Scellé du jugement humain, calculé AVANT d'exécuter le moteur (`sceller-jugement`) : il lie
+    la probabilité du codeur à la question et à la date, pour mesurer ensuite ce que le moteur ajoute."""
+    return empreinte({'question':question,'evenement':evenement,'probabilite_jugement':probabilite,'date':date})
+
+
 def empreinte_prevision(prediction):
     # A publication receipt can be added later without changing the frozen substantive forecast.
     return empreinte({k:v for k,v in prediction.items() if k != 'preuve_prepublication'})
@@ -585,6 +674,16 @@ def valider_base(base):
                 propositions += 1
             else:
                 exiger(c.get('sources_verifiees') is True, f'{cid} : sources non vérifiées ; passer en proposition ou archiver en attendant')
+                # 0.6.7 : une sortie de modèle ne devient pas un fait sans relecture (« unchecked output »).
+                # Un cas dont le codage a été proposé par un modèle (codage.recodage renseigné) n'entre dans
+                # les calculs qu'avec la confirmation datée d'un codeur humain nommé.
+                if coding.get('recodage'):
+                    rc=coding.get('recodage_confirme')
+                    exiger(isinstance(rc,dict) and isinstance(rc.get('par'),str) and rc['par'].strip()
+                           and 'claude' not in rc['par'].lower() and isinstance(rc.get('date'),str),
+                           f'{cid} : codage proposé par un modèle ({coding["recodage"][:40]}…) : codage.recodage_confirme '
+                           '{par: codeur humain, date} requis avant activation')
+                    date_iso(rc['date'])
         observed = set(); prev=None; objets = {}; origine_f = {}
         for ix,x in enumerate(states):
             e = lire_etat(x.get('etat')); date_iso(x.get('date'))
@@ -615,10 +714,19 @@ def valider_base(base):
                 if fm[k]=='F':
                     # A6 : F qualifie la lecture (fait précis, voisines tranchées), pas la bibliographie (A3).
                     texte_requis(item.get('a6'), f'{cid}.{k}.a6')
-                    if not c['fictif']:
-                        errs=controle_a6(k,item['a6']); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                    # 0.6.6 : ce refus était placé dans la branche f (indentation) ; une fiche pouvait ancrer F
+                    # sur une case Vide et passer valider, le calcul seul la refusant.
                     ab,s=k.split('@')
                     exiger(stat.get((ab,int(s)))!='Vide', f'{cid} : F impossible sur un équivalent Vide {k} (A3)')
+                    if not c['fictif']:
+                        errs=controle_a6(k,item['a6'])+controle_garantie(k,item,True)
+                        if c.get('statut_donnees')=='actif':errs+=controle_corroboration(k,item)
+                        exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                    elif 'corroboration' in item:
+                        errs=controle_corroboration(k,item); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                elif 'garantie' in item or 'option' in item or 'corroboration' in item:
+                    errs=controle_garantie(k,item,False)+(controle_corroboration(k,item) if 'corroboration' in item else [])
+                    exiger(not errs, f'{cid} : '+' ; '.join(errs))
             exiger(expected <= documented, f'{cid} : mots nouveaux ou modifiés non documentés {sorted(expected-documented)}')
             removed=set(forces(prev))-set(fm) if prev else set()
             retrait=x.get('retraits',[])
@@ -655,6 +763,10 @@ def valider_base(base):
                     exiger((kk not in fm) if label=='manque' else (kk in fm), f'{cid} : position incompatible')
                     if label=='tient': exiger(fm[kk]=='F', f'{cid} : tient exige F')
                 texte_requis(x.get('preuve_positions'), f'{cid} : preuve des positions')
+            if ix==0 and not c['fictif'] and e['mots']:
+                errs=controle_questions(x.get('questions'),fm,True); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+            elif x.get('questions') is not None:
+                errs=controle_questions(x['questions'],fm,False); exiger(not errs, f'{cid} : '+' ; '.join(errs))
             prev=e
         exiger(observed<=set(strata), f'{cid} : strate d’état absente de la fiche')
         if c['sans_evenement']:
@@ -752,7 +864,10 @@ def apriori(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_mat
     capped=lr>P['plafond_LR'];lr=min(lr,P['plafond_LR'])
     p=odds_module(f,lr)
     # Exact externally supplied boundaries are supported; never manufacture a beta law with zero parameters.
-    if 0<p<1: p=min(p,P['plafond_p0'])
+    # 0.6.9 : le plafond borne l'effet des cartes, pas la fréquence. Appliqué à toute p, il ramenait une
+    # persistance d'inertie (99,5 % sur 7 jours) à 95 % sans toucher son complément (somme 96,2 %), et
+    # 7 pas quotidiens plafonnés donnaient 0,95⁷ ≈ 70 % au lieu de la persistance sur 7 jours.
+    if 0<p<1 and p>f: p=min(p,max(f,P['plafond_p0']))
     return {'p0':proba(p),'f_base':f if anchored else None,'reference_interne':f,'ancrage':anchored,
             'reference_externe':external,'cas_reference':cnt,'effectif_reference':neff,'LR':lr,'LR_plafonne':capped,
             'sources':src,'ecartees':removed,'inertie':inert}
@@ -763,6 +878,18 @@ def intervalle_beta(nE,nA,p0):
     if nA<=0 or a<=0 or b<=0: return None
     q=(1-P['intervalle'])/2
     return [proba(beta_quantile(a,b,q)),proba(beta_quantile(a,b,1-q))]
+
+
+BARREAUX = {'A': 'association', 'I': 'intervention documentée', 'C': 'contrefactuel documenté'}
+
+
+def barreau_de(sources, cible):
+    """Barreau de Pearl d'un calcul : le plus bas des transitions utilisées (A < I < C). Sans transition
+    (persistance, disparition), l'inertie est une fréquence observée : association."""
+    b = P['barreau']; ordre = 'AIC'
+    rangs = [b['exceptions'].get(f"{x['mot'].split('@')[0]}>{cible.split('@')[0]}", b['defaut'])
+             for x in sources if '@' in x['mot']]
+    return min(rangs, key=ordre.index) if rangs else b['defaut']
 
 
 def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_materielle=(),asof=None,sans_cartes=False,**unused):
@@ -830,7 +957,44 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
     return {'evenement':cible+' '+typ,'p':proba(prob),'intervalle':intervalle_beta(nE,nA,ap['p0']),
             'rho':rho,'homologie':h if hom else None,'nb_cas_par_niveau':counts,'c_A':cA,'n_A':nA,'n_E':nE,
             'a_priori':ap,'comparateur':ap['f_base'],'transitions':samples,'drapeaux':flags,
-            'incertitude':'intervalle conditionnel approximatif : un cas pèse au plus une observation ; incertitude de codage et de modèle non intégrée'}
+            'incertitude':'intervalle conditionnel approximatif : un cas pèse au plus une observation ; incertitude de codage et de modèle non intégrée',
+            'barreau':barreau_de(ap['sources'],cible)}
+
+
+def sensibilite(etat,typ,cible,base,opts,h,semantique):
+    """0.6.0. Sous-spécification : une centaine de paramètres pour quelques cas, donc une infinité de
+    jeux compatibles. On relance le même calcul sous six variantes plausibles des hypothèses non
+    calibrées et l'on rend la bande obtenue. Elle mesure l'incertitude de modèle, que l'intervalle bêta
+    (bruit d'échantillonnage seul) ne couvre pas. Aucun paramètre nouveau n'est estimé."""
+    import copy
+    sauve={k:copy.deepcopy(P[k]) for k in ('lambda','inertie','f_defaut','inertie_contrainte_materielle')}
+    lam=sauve['lambda']
+    variantes=[
+        ('multiplicateurs un cran plus bas', {'lambda':{'F':lam['M'],'M':lam['f'],'f':1.0}}),
+        ('multiplicateurs un cran plus haut', {'lambda':{'F':lam['F'],'M':lam['F'],'f':lam['M']}}),
+        ('inerties − 0,05', {'inertie':{k:min(.99,max(.01,v-.05)) for k,v in sauve['inertie'].items()},
+                             'inertie_contrainte_materielle':max(.01,sauve['inertie_contrainte_materielle']-.05)}),
+        ('inerties + 0,05', {'inertie':{k:min(.99,max(.01,v+.05)) for k,v in sauve['inertie'].items()},
+                             'inertie_contrainte_materielle':min(.99,sauve['inertie_contrainte_materielle']+.05)}),
+        ('fréquence par défaut × ½', {'f_defaut':sauve['f_defaut']/2}),
+        ('fréquence par défaut × 2', {'f_defaut':min(.99,sauve['f_defaut']*2)}),
+    ]
+    sortie=[]
+    try:
+        for nom,modif in variantes:
+            P.update(copy.deepcopy(sauve));P.update(modif)
+            sortie.append({'variante':nom,'p':horizon_result(etat,typ,cible,base,opts,h,semantique)['p']})
+    finally:
+        P.update(sauve)
+    ps=[x['p'] for x in sortie]
+    s=P['seuil_decision']
+    # 0.6.5 : second drapeau, indépendant de tout seuil de décision. Une bande de 10 à 45 % ne traverse
+    # pas 50 % mais ne permet aucune lecture : sa largeur est jugée à l'aune de largeur_max_affichage (§H).
+    # 0.6.9 : une bande dont une borne touche le plafond des cartes est étroite par saturation, pas par
+    # robustesse ; elle se signale (audit du test brésilien : bande [95 % ; 95 %]).
+    return {'min':min(ps),'max':max(ps),'variantes':sortie,'seuil_decision':s,'traverse_seuil':min(ps)<s<=max(ps),
+            'bande_large':max(ps)-min(ps)>P['largeur_max_affichage'],
+            'saturee':any(abs(p-P['plafond_p0'])<1e-12 for p in ps)}
 
 
 def cumul(a,r,h,q0=0):
@@ -989,10 +1153,64 @@ def valider_journal(data):
                 exiger(type(calc['p']) in (int,float) and abs(calc['p']-x['probabilite'])<1e-12,f'{ident} : probabilite différente du calcul figé')
             if calc.get('rho') is not None:
                 exiger(str(x.get('rho'))==f"ρ{calc['rho']}",f'{ident} : rho différent du calcul figé')
+            # 0.6.9 : le calcul figé prouve la question entière, pas seulement p et ρ. Un calcul étiqueté
+            # pour un autre événement, ou un comparateur sans cartes recopié faux, passaient.
+            if calc.get('evenement') is not None:
+                exiger(isinstance(calc['evenement'],str),f'{ident} : calcul.evenement invalide')
+                exiger(evenement_lire(calc['evenement'])==evenement_lire(x['evenement']),f'{ident} : événement différent du calcul figé')
+            for champ in ('pas','semantique','echeance'):
+                if calc.get(champ) is not None:
+                    exiger(calc[champ]==x.get(champ),f'{ident} : {champ} différent du calcul figé')
+            if 'p_sans_cartes' in calc:
+                a_,b_=calc['p_sans_cartes'],x.get('p_sans_cartes')
+                num=lambda v:type(v) in (int,float) and math.isfinite(v)
+                exiger((a_ is None and b_ is None) or (num(a_) and num(b_) and abs(a_-b_)<1e-12),
+                       f'{ident} : p_sans_cartes différent du calcul figé')
+            if calc.get('etat') is not None:
+                exiger(isinstance(calc['etat'],str),f'{ident} : calcul.etat invalide')
+                e1,e2=lire_etat(calc['etat']),lire_etat(x.get('etat_present'))
+                exiger((e1['date'],e1['fenetre'],forces(e1))==(e2['date'],e2['fenetre'],forces(e2)),f'{ident} : état différent du calcul figé')
+            # 0.6.10 : fréquence de référence, intervalle « non estimé » et marqueur de résolution.
+            if 'comparateur' in calc:
+                a_,b_=calc['comparateur'],x.get('frequence_de_base')
+                exiger((a_ is None and b_ is None) or (type(a_) in (int,float) and type(b_) in (int,float) and abs(a_-b_)<1e-12),
+                       f'{ident} : frequence_de_base différente du comparateur du calcul figé')
+            if 'intervalle' in calc and calc['intervalle'] is None:
+                exiger(x.get('intervalle') is None,f'{ident} : intervalle journalisé alors que le calcul figé ne l’a pas estimé')
+            ml=calc.get('marqueur_local')
+            if isinstance(ml,dict) and isinstance(ml.get('marqueur'),str) and isinstance(x.get('resolution'),dict):
+                r_=x['resolution']
+                exiger(' '.join(str(r_.get('marqueur','')).split())==' '.join(ml['marqueur'].split())
+                       or (isinstance(r_.get('ecart_marqueur'),str) and r_['ecart_marqueur'].strip()),
+                       f'{ident} : resolution.marqueur différent du marqueur local du calcul (S1) ; le recopier ou justifier ecart_marqueur')
+            if 'intervalle' in calc and calc['intervalle'] is not None:
+                ci,xi=calc['intervalle'],x.get('intervalle')
+                ok=lambda v:isinstance(v,list) and len(v)==2 and all(type(u) in (int,float) and math.isfinite(u) for u in v)
+                exiger(ok(ci) and ok(xi) and all(abs(u-v)<1e-12 for u,v in zip(ci,xi)),
+                       f'{ident} : intervalle différent du calcul figé')
         exiger('frequence_de_base' in x,f'{ident} : fréquence de base requise (null si non évaluable)')
         if [int(v) for v in re.findall(r'\d+',x['version_regles'])[:2]]>=[0,5]:
             exiger('p_sans_cartes' in x,f'{ident} : p_sans_cartes requis depuis 0.5 (null pour un composé) : comparateur inertiel')
         if x.get('p_sans_cartes') is not None:proba(x['p_sans_cartes'],ident+'.p_sans_cartes')
+        if [int(v) for v in re.findall(r'\d+',x['version_regles'])[:2]]>=[0,6]:
+            exiger('probabilite_jugement' in x,f'{ident} : probabilite_jugement requis depuis 0.6 (null si aucun jugement scellé)')
+        if x.get('probabilite_jugement') is not None:
+            proba(x['probabilite_jugement'],ident+'.probabilite_jugement')
+            exiger(x.get('jugement_scelle')==empreinte_jugement(x['question'],x['evenement'],x['probabilite_jugement'],x['date']),
+                   f'{ident} : jugement_scelle absent ou différent (sceller-jugement avant le moteur)')
+        # 0.6.10 : temporalité déclarée. Une échéance programmée ou une durée de vie propre ne se chiffre
+        # pas sur le taux générique : ρ4 refusé. Exigée à partir de version_regles 0.6.10.
+        if tuple(int(v) for v in re.findall(r'\d+',x['version_regles'])[:3])>=(0,6,10):
+            exiger(x.get('temporalite') in ('generique','programmee','duree_de_vie'),
+                   f'{ident} : temporalite requise depuis 0.6.10 (generique, programmee ou duree_de_vie)')
+        if x.get('temporalite') not in (None,'generique'):
+            exiger(str(x.get('rho'))!='ρ4',f'{ident} : temporalité {x["temporalite"]} : une prévision ρ4 (taux générique) est refusée ; fournir une référence de domaine')
+        if isinstance(calc,dict) and calc.get('temporalite') is not None:
+            exiger(calc['temporalite']==x.get('temporalite','generique'),f'{ident} : temporalite différente du calcul figé')
+        bs=x.get('bande_sensibilite')
+        if bs is not None:
+            exiger(isinstance(bs,list) and len(bs)==2,f'{ident} : bande_sensibilite [min, max]')
+            proba(bs[0]);proba(bs[1]);exiger(bs[0]<=bs[1],f'{ident} : bande_sensibilite inversée')
         if x['frequence_de_base'] is not None:proba(x['frequence_de_base'],ident+'.frequence_de_base')
         exiger(type(x.get('rejeu')) is bool and type(x.get('fictif')) is bool,f'{ident} : rejeu et fictif explicites requis')
         exiger(re.fullmatch(r'ρ[0-4]',str(x.get('rho',''))) is not None,f'{ident} : rho invalide')
@@ -1065,6 +1283,32 @@ def jugements(units):
             'brier_reponse_indifferente':ref,'incertitude_annoncee':sum(x['incertitude_annoncee'] for x in v)/len(v)}
 
 
+def moteur_contre_jugement(units):
+    """0.6.0. Ce que le moteur ajoute au jugement scellé du codeur (Pearl : enregistrer l'écart entre
+    l'intention et la délibération). Une amélioration moyenne peut cacher des dégradations : on les compte."""
+    v=[x for x in units if x['brier_jugement'] is not None]
+    if not v:return None
+    n=len(v);bj=sum(x['brier_jugement'] for x in v)/n;bm=sum(x['brier'] for x in v)/n
+    return {'questions':n,'brier_jugement':bj,'brier_moteur':bm,
+            'degradations':sum(x['brier']>x['brier_jugement'] for x in v),
+            'ameliorations':sum(x['brier']<x['brier_jugement'] for x in v),
+            'lecture':'le moteur améliore le jugement' if bm<bj else 'le moteur dégrade le jugement' if bm>bj else 'aucun apport mesuré'}
+
+
+def difficulte(units):
+    """0.6.0. Un Brier s'améliore aussi en posant des questions faciles : une fréquence de référence
+    extrême (< 0,1 ou > 0,9) rend « non » ou « oui » presque gratuit. Difficulté = 0,5 − |f − 0,5| (0.6.5 :
+    croît avec la difficulté ; 0 pour une référence à 0 ou 1, 0,5 pour une référence à 50 %), f étant la
+    fréquence de base au même horizon, à défaut la probabilité sans cartes. Score stratifié, rien d'interdit."""
+    v=[x for x in units if x['difficulte'] is not None and x['origine']=='moteur']
+    if not v:return None
+    ext=[x for x in v if x['reference_difficulte']<.1 or x['reference_difficulte']>.9];mod=[x for x in v if x not in ext]
+    tranche=lambda w:None if not w else {'questions':len(w),'brier':sum(x['brier'] for x in w)/len(w)}
+    return {'questions':len(v),'difficulte_moyenne':sum(x['difficulte'] for x in v)/len(v),
+            'part_extremes':len(ext)/len(v),'extremes':tranche(ext),'moderees':tranche(mod),
+            'lecture':'gain non interprétable : plus de 70 % de questions à référence extrême' if len(ext)/len(v)>.7 else 'composition interprétable'}
+
+
 def score_result(data):
     prev,scores,partitions=valider_journal(data);units=[];used=set();unresolved=0;missing=0
     groups=list(partitions.values())+[[x] for x in prev.values() if not x.get('partition')]
@@ -1075,10 +1319,13 @@ def score_result(data):
         origine=items[0].get('origine','moteur')
         bb=None if any(x.get('frequence_de_base') is None for x in items) else sum((x['frequence_de_base']-scores[x['id']]['issue'])**2 for x in items)
         bsc=None if any(x.get('p_sans_cartes') is None for x in items) else sum((x['p_sans_cartes']-scores[x['id']]['issue'])**2 for x in items)
+        bj=None if any(x.get('probabilite_jugement') is None for x in items) else sum((x['probabilite_jugement']-scores[x['id']]['issue'])**2 for x in items)
+        ref=None if len(items)>1 else items[0].get('frequence_de_base') if items[0].get('frequence_de_base') is not None else items[0].get('p_sans_cartes')
         verified=all(x.get('preuve_prepublication') is not None and x.get('empreintes') is not None and x.get('resolution_verifiee') for x in items)
         excluded=origine=='jugement' or any(x['rejeu'] or x['fictif'] for x in items) or not verified
         units.append({'ids':[x['id'] for x in items],'episode_id':items[0]['episode_id'],'origine':origine,'rejeu':any(x['rejeu'] for x in items),
-                      'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,
+                      'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_jugement':bj,
+                      'difficulte':None if ref is None else .5-abs(ref-.5),'reference_difficulte':ref,
                       'hors_V4':excluded,'partition':bool(items[0].get('partition')),
                       'rho':'jugement' if origine=='jugement' else max(x['rho'] for x in items),
                       'cartes':[] if origine=='jugement' else sorted({x['evenement'].split('@')[0] for x in items}),
@@ -1105,7 +1352,9 @@ def score_result(data):
     return {'questions_resolues':len(units),'questions_eligibles':len(eligible),
             'incertitude_annoncee_moyenne':sum(x['incertitude_annoncee'] for x in units)/len(units) if units else None,
             'apport_des_cartes':apport_cartes([x for x in units if x['origine']=='moteur']),
-            'jugements':jugements(units),'questions_hors_V4':len(units)-len(eligible),
+            'jugements':jugements(units),
+            'moteur_contre_jugement':moteur_contre_jugement([x for x in units if x['origine']=='moteur']),
+            'difficulte':difficulte(units),'questions_hors_V4':len(units)-len(eligible),
             'sans_score':missing,'non_resolues':unresolved,'episodes_comparables':len(episodes),'brier_par_episode':b,
             'brier_base_par_episode':bb,'gain':gain,'statut':status,'par_groupe':by,'calibration':calibration,'details':units,
             'limites':['Prépublication déclarée : authenticité à vérifier humainement.',
@@ -1133,18 +1382,18 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('antagonismes.md','3'):'incompatibilités', ('antagonismes.md','4'):'Tensions',
+    ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
     ('constitution.md','2'):'principes', ('constitution.md','3'):'risque', ('constitution.md','4'):'couches',
-    ('constitution.md','5'):"n'est pas", ('constitution.md','6'):'Données personnelles', ('equivalences.md','3'):'Bilan',
+    ('constitution.md','5'):"n'est pas", ('constitution.md','6'):'Données personnelles', ('equivalences.md','2'):'Statuts', ('feuille-de-route.md','5.1'):'Strate 7', ('feuille-de-route.md','4'):'Premiers cas', ('grammaire.md','2'):'Syntaxe', ('equivalences.md','3'):'Bilan',
     ('grammaire.md','4'):'liaisons', ('grammaire.md','5'):'Positions', ('grammaire.md','7'):'bonne formation',
     ('graphe.md','2'):'priori', ('graphe.md','2.1'):'Sources', ('graphe.md','2.2'):'Fréquence',
     ('graphe.md','2.3'):'Combinaison', ('graphe.md','3'):'homologues',
-    ('protocole.md','H'):'Paramètres', ('simulation.md','2'):'remplissage',
+    ('protocole.md','H'):'Paramètres', ('simulation.md','1'):'Modèle de sortie', ('simulation.md','4'):'Rédiger', ('simulation.md','2'):'remplissage',
     ('strates.md','2'):'Fiches', ('strates.md','3'):'taxonomie', ('strates.md','4'):'rattachement',
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
-    ('validation.md','6'):'lacunes', ('validation.md','8'):'aveugle',
+    ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -1249,14 +1498,18 @@ def bilan(base_chemin=None, refs_chemin=None, journal_chemin=None):
     mesurables sont calculées ; les décisions d'auteur restent déclarées dans le document."""
     out=[f'Bilan de la feuille de route · version {P["version"]}']
     st=statuts();par={s:sum(st.get((ab,s)) in ('Attesté','Documenté') for ab in NOMS) for s in range(1,NS+1)}
+    rv=recherches_vide();clos={k for k,n in rv.items() if n>=P['vide_recherches_cloture']}
+    traite={s:par[s]+sum(1 for ab in NOMS if (ab,s) in clos or st.get((ab,s))=='Hors domaine') for s in range(1,NS+1)}
     best=max(par,key=par.get)
     base=charger(base_chemin or RACINE/'assets/cas-reels.jsonl');valider_base(base)
     reels=[c for c in base if not c.get('fictif')]
     n={k:sum(c.get('statut_donnees')==k for c in reels) for k in ('actif','proposition','archive_a_revoir')}
     out.append(f"Étape 2 · cas réels : {n['actif']} actifs · {n['proposition']} propositions (sources à lire) · {n['archive_a_revoir']} archives"
-               +(' → terminée' if reels and n['actif']==len(reels) else ' → en cours' if n['proposition'] else ''))
+               +(' → terminée' if n['actif'] else ' → en cours' if n['proposition'] else ' → à commencer : premier cas sous les règles courantes, de préférence avant son issue'))
     out.append(f"Étape 3 · strate pilote : {par[best]}/16 équivalents Documentés ou Attestés ({'meilleure : strate '+str(best) if par[best] else 'aucune strate entamée'}) ; "
-               f"{sum(v==16 for v in par.values())} strate(s) complète(s) ; emprunt T4 {'possible' if sum(v>0 for v in par.values())>=2 else 'fermé'}")
+               f"{sum(v==16 for v in traite.values())} strate(s) complète(s) (Vide clos et Hors domaine comptés) ; "
+               f"{len(clos)}/{len(rv)} cases Vides closes ({P['vide_recherches_cloture']} recherches documentées) ; "
+               f"emprunt T4 {'possible' if sum(v>0 for v in par.values())>=2 else 'fermé'}")
     if refs_chemin:
         r=lire_json(refs_chemin,'--references');exiger(isinstance(r,dict),'--references : objet attendu')
         out.append(f'Étape 4 · références externes : {len(r)} événements référencés')
@@ -1273,6 +1526,9 @@ def bilan(base_chemin=None, refs_chemin=None, journal_chemin=None):
     if journal_chemin:
         r=score_result(charger(journal_chemin))
         out.append(f"Test à l'aveugle · {r['questions_eligibles']} questions éligibles V4 · {r['episodes_comparables']}/{P['v4_n']} épisodes comparables · {r['statut']}")
+        mj=r['moteur_contre_jugement'];df=r['difficulte']
+        if mj:out.append(f"Mesure · moteur contre jugement scellé : {mj['questions']} questions · {mj['ameliorations']} améliorations · {mj['degradations']} dégradations · {mj['lecture']}")
+        if df:out.append(f"Mesure · questions à référence extrême : {df['part_extremes']:.0%} · {df['lecture']}")
     else:
         out.append("Test à l'aveugle : aucun journal fourni (--journal)")
     out.append('Étapes 0, 1 et 6 (installation, décisions d’auteur, code différé) : état déclaré dans references/feuille-de-route.md')
@@ -1288,7 +1544,7 @@ def schema_documente():
 
 
 def audit():
-    exiger(P['version']=='0.5.1','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.6.10','version du moteur et des paramètres différente')
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
@@ -1302,7 +1558,9 @@ def audit():
             exiger(a in NOMS and isinstance(row,dict),'matrice invalide')
             for b,intensity in row.items():exiger(b in NOMS and intensity in P['lambda'],'transition invalide')
     for v in P['lambda'].values():exiger(math.isfinite(v) and v>0,'multiplicateur positif requis')
-    files=['constitution','protocole','glossaire','strates','cartes-index','cartes','equivalences','antagonismes','grammaire','dynamiques','base-de-cas','graphe','simulation','validation','exemples','feuille-de-route','sources-france']
+    exiger(P['barreau']['defaut'] in BARREAUX and all(re.fullmatch(r'[A-Z]{3}>[A-Z]{3}',k) and v in BARREAUX for k,v in P['barreau']['exceptions'].items()),
+           'barreau : A, I ou C ; exceptions « SRC>CIB »')
+    files=['constitution','protocole','glossaire','strates','cartes-index','cartes','equivalences','antagonismes','grammaire','dynamiques','base-de-cas','graphe','simulation','validation','exemples','feuille-de-route','sources-france','angles-morts','apports-theoriques']
     paths=[RACINE/'references'/f'{x}.md' for x in files]+[RACINE/'references/equivalences'/f'strate-{s:02}.md' for s in range(1,NS+1)]
     for path in paths:
         exiger(path.is_file(),f'fichier absent : {path.relative_to(RACINE)}')
@@ -1329,6 +1587,8 @@ def audit():
             cells=[x.strip() for x in line.strip('|').split('|')]
             if len(cells)==5 and cells[3] in ('Documenté','Attesté'):
                 exiger(cells[4].lower() not in ('à fournir','—',''),f'équivalent non sourcé : {cells[0]}@{s}')
+                exiger(cells[3]=='Attesté' or re.search(r'«[^»]+»',cells[4]) is not None,
+                       f'équivalent Documenté sans nom local « … » : {cells[0]}@{s} (objet-frontière, equivalences.md §2)')
             if len(cells)==5 and cells[3]=='Hors domaine':
                 exiger(cells[4].lower() not in ('à fournir','—',''),f'Hors domaine sans motif : {cells[0]}@{s} (A3 : décision d’auteur motivée)')
     # Check actual local Markdown paths; numbered sections are checked where explicit.
@@ -1336,6 +1596,23 @@ def audit():
         text=path.read_text(encoding='utf-8')
         for target in re.findall(r'\]\(([^)]+\.md)\)',text):
             if '://' not in target:exiger((path.parent/target).is_file(),f'lien absent : {path.name} → {target}')
+    # 0.6.5 : angles morts. Règle de forme du registre : chaque entrée est réfutable, sauf exclusion délibérée.
+    for l in (RACINE/'references/angles-morts.md').read_text(encoding='utf-8').splitlines():
+        if not l.startswith('| ') or l.startswith('| Angle mort') or l.startswith('|---'):continue
+        c=[x.strip() for x in l.strip().strip('|').split('|')]
+        exiger(len(c)==4 and c[0] and c[1] and c[3],f'angles-morts.md : entrée à 4 colonnes renseignées attendue — {l[:60]}')
+        exiger(c[2] not in ('','—','-') or c[3].startswith('délibéré'),
+               f'angles-morts.md : entrée sans condition de réfutation, non déclarée « délibéré » — {c[0][:50]}')
+    for n_,l in enumerate((RACINE/'assets/rabbits.jsonl').read_text(encoding='utf-8').splitlines(),1):
+        if not l.strip():continue
+        r=json.loads(l)
+        exiger(all(isinstance(r.get(k),str) and r[k].strip() for k in ('cas','probleme','construction','necessite','date'))
+               and r.get('type') in ('carte','strate','qualificatif','statut','regle'),f'rabbits.jsonl:{n_} : champs cas, probleme, construction, type, necessite, date')
+        # 0.6.5 : cycle de vie. Un registre sans statut est un historique, pas une dette.
+        exiger(r.get('statut') in ('ouvert','resorbe'),f'rabbits.jsonl:{n_} : statut ouvert ou resorbe')
+        exiger(r['statut']=='ouvert' or (isinstance(r.get('resolution'),str) and r['resolution'].strip()),
+               f'rabbits.jsonl:{n_} : une entrée résorbée dit comment (resolution)')
+        date_iso(r['date'])
     schema=schema_documente()
     try:valider_base([schema])
     except ValueError as e:raise ValueError(f'base-de-cas.md §2 : le schéma documenté ne passe pas valider — {e}') from None
@@ -1390,17 +1667,39 @@ def texte_probabilite(p,itv):
     return f'~{pct(p)} (large : {a}–{b})' if itv[1]-itv[0]>P['largeur_max_affichage'] else f'{pct(p)} [{a}–{b}]'
 
 
+def appliquer_temporalite(result, temporalite):
+    """0.6.10. Le moteur ne sait pas reconnaître qu'une question porte sur une échéance programmée
+    (scrutin, proclamation : test brésilien) ou sur un phénomène à durée de vie propre (cyclone : test
+    Polo, ÉMERGENCE@11 persistant à 96,75 % sur 7 jours par l'inertie trimestrielle générique). Déclarée
+    par le codeur, cette temporalité interdit de chiffrer avec le seul taux générique : sans cas ni
+    référence externe (ρ4), la probabilité devient « non estimée ». La déclaration reste humaine."""
+    result['temporalite']=temporalite
+    if temporalite!='generique' and result.get('rho')==4 and result.get('p') is not None:
+        motif={'programmee':'échéance programmée','duree_de_vie':'durée de vie propre au phénomène'}[temporalite]
+        result.update(p=None,intervalle=None,p_sans_cartes=None,apport_cartes=None,sensibilite=None,
+                      non_estime_motif=f'{motif} : taux générique refusé, référence de domaine requise (--fref ou --references)')
+        result.setdefault('drapeaux',[]).append(f'Non estimé : {motif} ; l’inertie et la fréquence par défaut ne représentent pas ce calendrier ou cette durée de vie (simulation.md §4).')
+    return result
+
+
 def ligne_signalement(result):
     """Ligne S5 (protocole.md, constitution.md §3) :
-    ⚠ ρ[n] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]"""
+    ⚠ ρ[n] · [barreau] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]"""
     h=result.get('homologie');c=result.get('c_A') or 0;ap=result.get('a_priori')
     if c and h=='H3':src=f'{c} cas empruntés (H3)'
     elif c:src=f'{c} cas distincts ({h})'
     elif 'conditionnelle' in result.get('composantes',{}):src='composé : persistance × référence conditionnelle'
+    elif result.get('non_estime_motif'):src=result['non_estime_motif']
     elif result.get('p') is None:src='référence conditionnelle manquante'
     else:src='a priori '+('ancré' if ap and ap.get('ancrage') else 'non ancré')+', aucun cas'
-    p0=f" · p₀ {pct(ap['p0'])}" if ap else ''
-    return (f"⚠ ρ{result['rho']} · {src}{p0} · p {texte_probabilite(result.get('p'),result.get('intervalle'))}"
+    p0=f" · p₀ {pct(ap['p0'])}" if ap and not result.get('non_estime_motif') else ''
+    sb=result.get('sensibilite')
+    if sb and sb['traverse_seuil'] and result.get('p') is not None:
+        ptxt=f"{pct(result['p'])} non identifié (variantes {pct(sb['min'],False)}–{pct(sb['max'])} de part et d'autre de {pct(sb['seuil_decision'])})"
+        return (f"⚠ ρ{result['rho']} · {BARREAUX[result.get('barreau') or P['barreau']['defaut']]} · {src}{p0} · p {ptxt}"
+                f" · échéance {result.get('echeance') or '[date]'} · journal {result.get('journal') or '[à attribuer]'}")
+    bar=BARREAUX[result.get('barreau') or P['barreau']['defaut']]
+    return (f"⚠ ρ{result['rho']} · {bar} · {src}{p0} · p {texte_probabilite(result.get('p'),result.get('intervalle'))}"
             f" · échéance {result.get('echeance') or '[date]'} · journal {result.get('journal') or '[à attribuer]'}")
 
 
@@ -1410,12 +1709,22 @@ def afficher(result,as_json=False):
     print(OUVERTURE)
     print(ligne_signalement(result))
     print(f"Événement : {result['evenement']} · ρ = provenance du chiffre, pas sa fiabilité")
+    if (result.get('barreau') or P['barreau']['defaut'])=='A':
+        print("Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ;"
+              " aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »")
     print('Comparateur au même horizon : '+('non évaluable' if result.get('comparateur') is None else pct(result['comparateur'])))
     if result.get('p_sans_cartes') is not None:
         d=result['apport_cartes']*100
         print(f"Sans cartes (inertie et fréquences seules) : {pct(result['p_sans_cartes'])} — "
               +('les cartes ne changent rien à ce calcul : un bon score ne validerait pas la lecture' if abs(d)<0.05
                 else f"les cartes déplacent la probabilité de {d:+.1f} points".replace('.',',')))
+    sb=result.get('sensibilite')
+    if sb:
+        print(f"Sensibilité du modèle : {pct(sb['min'],False)}–{pct(sb['max'])} sur {len(sb['variantes'])} variantes "
+              "(multiplicateurs d'un cran, inerties ± 0,05, fréquence par défaut × ½ et × 2)"
+              +(f" — non identifié : la bande traverse {pct(sb['seuil_decision'])}" if sb['traverse_seuil'] else '')
+              +(f" — bande large (plus de {pct(P['largeur_max_affichage'])}) : le résultat dépend des hypothèses non calibrées" if sb.get('bande_large') else '')
+              +(f" — saturée : une variante touche le plafond des cartes ({pct(P['plafond_p0'])}), la bande ne mesure plus rien" if sb.get('saturee') else ''))
     if 'a_priori' in result:
         ap=result['a_priori'];print(f"Trace : multiplicateur {ap['LR']:.2f} · homologie {result['homologie'] or '—'} · c_A {result['c_A']} · n_A {result['n_A']:.1f} · n_E {result['n_E']:.1f}")
     ml=result.get('marqueur_local')
@@ -1427,6 +1736,8 @@ def afficher(result,as_json=False):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);subs=parser.add_subparsers(dest='cmd',required=True)
     for name in ('audit','autotest','parametres'):subs.add_parser(name)
+    sj=subs.add_parser('sceller-jugement');sj.add_argument('--question',required=True);sj.add_argument('--evenement',required=True)
+    sj.add_argument('--p',type=float,required=True);sj.add_argument('--date',required=True)
     for name in ('valider','scorer','sceller'):
         s=subs.add_parser(name);s.add_argument('fichier')
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
@@ -1442,6 +1753,7 @@ def main():
         c.add_argument('--echeance');c.add_argument('--journal');c.add_argument('--strates',default='')
         c.add_argument('--json',action='store_true');c.add_argument('--demo',action='store_true')
         c.add_argument('--sans-cartes',action='store_true')
+        c.add_argument('--temporalite',choices=('generique','programmee','duree_de_vie'),default='generique')
         if name=='calculer':c.add_argument('--evenement',required=True)
     a=parser.parse_args()
     if a.cmd=='audit':audit();return
@@ -1457,6 +1769,10 @@ def main():
         for s in range(1,NS+1):print(s,marqueur_local(ab,s))
         return
     if a.cmd=='scorer':print(scorer(a.fichier));return
+    if a.cmd=='sceller-jugement':
+        proba(a.p,'--p');date_iso(a.date)
+        print(json.dumps({'probabilite_jugement':a.p,'jugement_scelle':empreinte_jugement(a.question,a.evenement,a.p,a.date),
+                          'instruction':'Recopier ces deux champs dans la ligne de prévision, puis seulement lancer le moteur.'},ensure_ascii=False));return
     if a.cmd=='sceller':
         data=charger(a.fichier);valider_journal(data)
         predictions=[x for x in data if x['type']=='prevision']
@@ -1516,7 +1832,9 @@ def main():
                 # Sans lui, un bon Brier peut ne venir que du statu quo (exemple 11).
                 nu=horizon_result(etat,typ,cible,active,dict(opts,sans_cartes=True),a.pas,sem)
                 result['p_sans_cartes']=nu['p'];result['apport_cartes']=result['p']-nu['p']
-        result['echeance']=end;result['journal']=a.journal
+                result['sensibilite']=sensibilite(etat,typ,cible,active,opts,a.pas,sem)
+        result['echeance']=end;result['journal']=a.journal;result['etat']=a.etat
+        result=appliquer_temporalite(result,a.temporalite)
     if a.cmd=='calculer':
         ml=marqueur_local(*cible.split('@'))
         st_=statuts().get((cible.split('@')[0],int(cible.split('@')[1])))
@@ -1541,6 +1859,7 @@ def autotest():
                            'mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'deux camps observés',
                                     'source':'source de test fictive','contre_observation':'médiation observée, marginale','portee':'marginale','objet':'conflit-test'}] if not j else None,
                            'retraits':[],'liaisons':[],'positions':None})
+        states[0]['questions']=[{'question':'Une médiation impose-t-elle une règle commune ?','si_oui':'CTR@7','si_non':'POL@7'}]
         return {'id':cid,'version_regles':P['version'],'titre':'Cas technique fictif','strates':[7],'fenetre':'3 mois',
                 'sequence':states[:-1],'issue':states[-1],'sans_evenement':True,'fictif':True,'statut_donnees':'actif',
                 'codage':{'mode':'manuel','codeurs':['test']},'usage':'apprentissage'}
@@ -1550,7 +1869,7 @@ def autotest():
            'indicateur_bascule':'rappel d’un ambassadeur','refutation':'aucune rupture','semantique':'presence',
            'etat_present':'[2026-01-01 | 3 mois] POLARITÉ@7[f]','probabilite':.2,'intervalle':None,'rho':'ρ4',
            'resolution':{'source':'registre public','critere':'rupture publiée','seuil':'une publication','marqueur':'rupture diplomatique','objet':'relation A-B'},
-           'resolution_verifiee':True,'frequence_de_base':.3,'p_sans_cartes':None,'rejeu':False,'fictif':True,'partition':None,
+           'resolution_verifiee':True,'frequence_de_base':.3,'p_sans_cartes':None,'probabilite_jugement':None,'temporalite':'generique','rejeu':False,'fictif':True,'partition':None,
            'empreintes':None,'preuve_prepublication':None}
         x.update(kw);return x
     def score(i='P-1',issue=0):return {'type':'score','id':i,'date':'2026-04-02','issue':issue,'preuve':'registre consulté'}
@@ -1672,7 +1991,18 @@ def autotest():
             c=fake_case();m=c['sequence'][0]['mots'][0];c['fictif']=False;c['sources_verifiees']=True
             m['intensite']='F';m['a6']='POLARITÉ@7 : CONTRAINTE → (deux camps, pas une règle) ; SEUIL → (aucun passage irréversible)'
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
-            self.assertEqual(valider_base([c])['actifs'],1)
+            with self.assertRaises(ValueError):valider_base([c])            # garantie et option manquantes (0.6.0)
+            m.update(garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'})
+            with self.assertRaises(ValueError):valider_base([c])            # corroboration manquante (0.6.6)
+            m['corroboration']='independantes'
+            with self.assertRaises(ValueError):valider_base([c])            # une seule source nommée
+            m['source']='source A ; source B';self.assertEqual(valider_base([c])['actifs'],1)
+            m['corroboration']='unique';self.assertEqual(valider_base([c])['actifs'],1)
+            c2=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)')
+            st=statuts();cle_=_STATUTS_CACHE['cle'];st[('POL',7)]='Vide';_STATUTS_CACHE.update(st=st)
+            try:
+                with self.assertRaises(ValueError):valider_base([c2])         # F sur case Vide refusé à la validation (0.6.6)
+            finally:_STATUTS_CACHE.clear()
             self.assertEqual(statuts().get(('COM',1)),'Vide')
         def test_a6_neighbours_required(self):
             c=fake_case();m=c['sequence'][0]['mots'][0];c['fictif']=False;c['sources_verifiees']=True
@@ -1715,7 +2045,7 @@ def autotest():
             self.assertEqual(r['homologie'],'H1')
         def _f_case(self,a6,**mot):
             c=fake_case();m=c['sequence'][0]['mots'][0];c['fictif']=False;c['sources_verifiees']=True
-            m.update(intensite='F',a6=a6,**mot)
+            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique');m.update(mot)
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
             return c
         def test_a6_verdicts(self):
@@ -1793,7 +2123,7 @@ def autotest():
             with contextlib.redirect_stdout(out):afficher(r)
             lignes=out.getvalue().splitlines()
             self.assertEqual(lignes[0],'⚠ Prévision · cet outil prend un risque déclaré.')
-            self.assertEqual(lignes[1],'⚠ ρ1 · 10 cas distincts (H1) · p₀ 23 % · p ~22 % (large : 5–43) · échéance 2026-12-01 · journal P-0101')
+            self.assertEqual(lignes[1],'⚠ ρ1 · association · 10 cas distincts (H1) · p₀ 23 % · p ~22 % (large : 5–43) · échéance 2026-12-01 · journal P-0101')
         def test_intervalle_large(self):
             self.assertEqual(texte_probabilite(.22,[.05,.43]),'~22 % (large : 5–43)')
             self.assertEqual(texte_probabilite(.22,[.15,.30]),'22 % [15–30]')
@@ -1813,6 +2143,14 @@ def autotest():
         def test_bilan(self):
             t=bilan(journal_chemin=RACINE/'assets/journal.exemple.jsonl')
             self.assertIn('Étape 2',t);self.assertIn('Étape 3',t);self.assertIn("Test à l'aveugle",t)
+        def test_recodage_confirme(self):
+            c=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)')
+            c['codage']['recodage']='Claude — proposition 0.6.0'
+            with self.assertRaises(ValueError):valider_base([c])
+            c['codage']['recodage_confirme']={'par':'Claude','date':'2026-10-27'}
+            with self.assertRaises(ValueError):valider_base([c])            # un modèle ne se confirme pas lui-même
+            c['codage']['recodage_confirme']={'par':'codeur-1','date':'2026-10-27'}
+            self.assertEqual(valider_base([c])['actifs'],1)
         def test_proposition(self):
             c=fake_case();c['fictif']=False;c['statut_donnees']='proposition';c['sources_verifiees']=False;c['motif_proposition']='recodage à vérifier'
             r=valider_base([c]);self.assertEqual((r['actifs'],r['propositions']),(0,1))
@@ -1854,6 +2192,88 @@ def autotest():
             e=lire_etat('[2026-01-01 | 3 mois] SEUIL@13[f]')
             with self.assertRaises(ValueError) as c:calculer(e,'apparait','SEU@13',[])
             self.assertIn('déjà présent',str(c.exception))
+        def test_garantie_option(self):
+            ok={'mecanisme':'m','attendu':'a','contredirait':'c'};op={'acteur':'x','avant':'pouvait','apres':'ne peut plus'}
+            self.assertEqual(controle_garantie('POL@7',{'garantie':ok,'option':op,'contre_observation':'z'},True),[])
+            self.assertTrue(controle_garantie('POL@7',{'garantie':dict(ok,attendu=''),'option':op},True))
+            self.assertTrue(controle_garantie('POL@7',{'garantie':ok,'option':dict(op,apres='pouvait')},True))
+            self.assertTrue(controle_garantie('POL@7',{'garantie':ok,'option':op,'contre_observation':'C'},True))
+            self.assertEqual(controle_garantie('POL@7',{},False),[])
+        def test_jugement_scelle(self):
+            p=forecast(version_regles='0.6.0');p.pop('probabilite_jugement')
+            with self.assertRaises(ValueError):valider_journal([p])
+            p=forecast(version_regles='0.6.0',probabilite_jugement=.6,probabilite=.2)
+            with self.assertRaises(ValueError):valider_journal([p])          # scellé absent
+            p['jugement_scelle']=empreinte_jugement(p['question'],p['evenement'],.6,p['date'])
+            r=score_result([p,score()]);mj=r['moteur_contre_jugement']
+            self.assertEqual((mj['ameliorations'],mj['degradations']),(1,0))
+            self.assertAlmostEqual(r['difficulte']['difficulte_moyenne'],.3)   # f=0,3 → 0,5−0,2 (0.6.5)
+        def test_sensibilite(self):
+            e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[f]');avant=json.dumps(P,sort_keys=True)
+            s=sensibilite(e,'apparait','SEU@7',[],{},1,'presence')
+            self.assertEqual(len(s['variantes']),6);self.assertLessEqual(s['min'],s['max'])
+            self.assertEqual(json.dumps(P,sort_keys=True),avant)               # paramètres restaurés
+            self.assertEqual(s['bande_large'],s['max']-s['min']>P['largeur_max_affichage'])
+        def test_barreau_exception(self):
+            # 0.6.5 (audit O7) : la mécanique des exceptions n'avait jamais été exercée.
+            src=[{'mot':'POL@7'},{'mot':'CTR@6'}]
+            self.assertEqual(barreau_de(src,'SEU@7'),'A');self.assertEqual(barreau_de([],'SEU@7'),'A')
+            sauve=json.dumps(P['barreau'])
+            try:
+                P['barreau']['exceptions']={'POL>SEU':'I','CTR>SEU':'C'}
+                self.assertEqual(barreau_de(src,'SEU@7'),'I')                  # le plus bas des barreaux utilisés
+                P['barreau']['exceptions']={'POL>SEU':'C','CTR>SEU':'C'}
+                self.assertEqual(barreau_de(src,'SEU@7'),'C')
+            finally:P['barreau']=json.loads(sauve)
+        def test_proprietes_numeriques(self):
+            # 0.6.9 (audit, test brésilien) : propriétés indépendantes du jeu de paramètres.
+            for carte in ('POLARITÉ@13','INCERTITUDE@13','SEUIL@7','CONTRAINTE@7'):
+                k=cle_valide(carte)
+                for fen in ('1 jour','7 jours','3 mois','1 an'):
+                    e=lire_etat(f'[2026-10-19 | {fen}] {carte}[F]')
+                    p=horizon_result(e,'persiste',k,[],{},1,'presence')['p'];d=horizon_result(e,'disparait',k,[],{},1,'presence')['p']
+                    self.assertAlmostEqual(p+d,1,places=12)                     # complémentarité
+                a=horizon_result(lire_etat(f'[2026-10-19 | 7 jours] {carte}[F]'),'persiste',k,[],{},1,'continue')['p']
+                b=horizon_result(lire_etat(f'[2026-10-19 | 1 jour] {carte}[F]'),'persiste',k,[],{},7,'continue')['p']
+                self.assertAlmostEqual(a,b,places=12)                           # découpage temporel
+            a=horizon_result(lire_etat('[2026-10-19 | 7 jours] RÉSEAU@5[F]'),'apparait','COM@5',[],{},1,'presence')['p']
+            b=horizon_result(lire_etat('[2026-10-19 | 1 jour] RÉSEAU@5[F]'),'apparait','COM@5',[],{},7,'au-moins-une-fois')['p']
+            self.assertAlmostEqual(a,b,places=12)                               # apparition sans multiplicateur
+        def test_journal_lie_au_calcul(self):
+            calc={'evenement':'SEU@7 apparait','p':.2,'rho':4,'p_sans_cartes':.1,'pas':1,'semantique':'presence',
+                  'echeance':'2026-04-01','etat':'[2026-01-01 | 3 mois] POLARITÉ@7[f]','intervalle':None}
+            ok=forecast(calcul=dict(calc),p_sans_cartes=.1);self.assertTrue(valider_journal([ok]))
+            for k,v in (('evenement','HIE@7 apparait'),('p_sans_cartes',.3),('etat','[2026-01-01 | 3 mois] HIÉRARCHIE@7[f]'),('semantique','au-moins-une-fois')):
+                with self.assertRaises(ValueError):valider_journal([forecast(calcul=dict(calc,**{k:v}),p_sans_cartes=.1)])
+        def test_temporalite(self):
+            e=lire_etat('[2026-09-26 | 7 jours] ÉMERGENCE@11[f]')
+            r=appliquer_temporalite(dict(horizon_result(e,'persiste','EME@11',[],{},1,'continue'),rho=4),'duree_de_vie')
+            self.assertIsNone(r['p']);self.assertIn('durée de vie',ligne_signalement(r))
+            r=appliquer_temporalite(dict(horizon_result(e,'persiste','EME@11',[],{},1,'continue'),rho=3),'programmee')
+            self.assertIsNotNone(r['p'])                                         # une référence de domaine suffit
+            with self.assertRaises(ValueError):valider_journal([forecast(temporalite='programmee')])   # ρ4
+            self.assertTrue(valider_journal([forecast(temporalite='programmee',rho='ρ3')]))
+            p=forecast();p.pop('temporalite')
+            with self.assertRaises(ValueError):valider_journal([p])              # exigée depuis 0.6.10
+        def test_journal_complet(self):
+            calc={'evenement':'SEU@7 apparait','p':.2,'rho':4,'comparateur':.3,'intervalle':None,
+                  'marqueur_local':{'marqueur':'rupture diplomatique'}}
+            ok=forecast(calcul=dict(calc),resolution=dict(forecast()['resolution'],marqueur='rupture diplomatique'))
+            self.assertTrue(valider_journal([ok]))
+            with self.assertRaises(ValueError):valider_journal([dict(ok,frequence_de_base=.4)])
+            with self.assertRaises(ValueError):valider_journal([dict(ok,intervalle=[.1,.3])])
+            with self.assertRaises(ValueError):valider_journal([dict(ok,resolution=dict(ok['resolution'],marqueur='autre chose'))])
+            self.assertTrue(valider_journal([dict(ok,resolution=dict(ok['resolution'],marqueur='autre chose',ecart_marqueur='source mesurant un marqueur voisin, motif'))]))
+        def test_cloture_vide(self):
+            rv=recherches_vide();self.assertEqual(rv[(carte_id('RÉSONANCE'),7)],2)
+            self.assertEqual(sum(1 for v in rv.values() if v>=P['vide_recherches_cloture']),0)
+            self.assertEqual(len(rv),sum(1 for v in statuts().values() if v=='Vide'))
+        def test_questions(self):
+            fm={'POL@7':'F','CTR@7':'f'}
+            self.assertEqual(controle_questions([{'question':'q','si_oui':'POLARITÉ@7','si_non':'HIÉRARCHIE@7'}],fm,True),[])
+            self.assertTrue(controle_questions([{'question':'q','si_oui':'POL@7','si_non':'POL@7'}],fm,True))
+            self.assertTrue(controle_questions([{'question':'q','si_oui':'SEU@7','si_non':'HIE@7'}],fm,True))
+            self.assertTrue(controle_questions(None,fm,True));self.assertEqual(controle_questions(None,fm,False),[])
         def test_audit(self):
             with contextlib.redirect_stdout(io.StringIO()):self.assertTrue(audit())
     suite=unittest.defaultTestLoader.loadTestsFromTestCase(Tests)

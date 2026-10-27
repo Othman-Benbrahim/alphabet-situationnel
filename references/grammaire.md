@@ -1,6 +1,6 @@
 # Alphabet situationnel — Grammaire (couche 2)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Notation, syntaxe formelle, critères des liaisons et liste de contrôle. Les règles sont G1–G6
 > (`protocole.md`) ; ce fichier les rend applicables.
@@ -170,7 +170,14 @@ Une phrase entre dans la base ou dans un calcul seulement si toutes les cases so
 - [ ] Date et fenêtre présentes ; fenêtre identique pour tous les états d'une séquence.
 - [ ] Chaque mot a un fait d'ancrage cité, avec sa source (A5, B1).
 - [ ] Chaque mot F a sa ligne A6 complète (toutes les voisines de `cartes.md`).
+- [ ] Chaque mot F a sa garantie (mécanisme, attendu, contredirait), et rien de ce qui la contredirait
+      ne figure dans les faits cités.
+- [ ] Chaque mot F nomme un acteur et l'option ouverte ou fermée (pertinence, O1).
 - [ ] Chaque mot a sa contre-observation classée (A7).
+- [ ] Premier état d'un cas réel : au moins une question qui départage deux cartes (`questions` :
+      `{question, si_oui, si_non}`, deux CARTE@strate différents, l'un au moins dans l'état). Une bonne
+      lecture rend évidente la question qui la mettrait en défaut ; une question dont la réponse est
+      déjà dans les faits cités ne départage rien.
 - [ ] Une carte apparaît au plus une fois par strate.
 - [ ] Un même fait n'ancre qu'un mot par strate (`strates.md` §4).
 - [ ] Chaque qualificatif a sa ligne Q ; au plus deux par mot.

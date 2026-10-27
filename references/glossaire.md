@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -43,10 +43,24 @@
 | Résolution externe | source, critère et seuil qui décideront de l'issue d'une prévision sans recoder | S1, V1 |
 | Rejeu | prévision calculée alors que l'issue était connue ; exclue de l'évaluation V4 | V1, `validation.md` §8 |
 | Résultat nul (∅) | aucune carte ancrée : pas de prévision | A8 |
-| Statut d'équivalent | Attesté, Documenté, Proposé, Vide | A3 |
+| Statut d'équivalent | Attesté, Documenté, Proposé, Vide, Hors domaine | A3 |
 | Statut de lecture | Descriptif, Spéculatif, Nul ; porte sur la lecture, pas sur les prévisions | `simulation.md` §2 |
 | Strate | l'un des 13 registres où se rangent les faits (niveaux d'organisation, domaines, longue durée) | `strates.md` |
 | Transition | paire d'états consécutifs d'un cas ; unité de comptage | `graphe.md` §3 |
+| Angle mort | ce qu'aucune carte ne peut exprimer dans une strate ; entrée réfutable, ou exclusion déclarée « délibéré » | `angles-morts.md` |
+| Bande de sensibilité | p le plus bas et le plus haut sur six variantes des hypothèses non calibrées ; « non identifié » si elle traverse `seuil_decision`, « bande large » au-delà de 30 points, « saturée » si une variante touche le plafond des cartes ; sensibilité paramétrique globale, pas structurelle | `graphe.md` §2.3 |
+| Barreau | degré causal d'une transition (Pearl) : A association, I intervention documentée, C contrefactuel documenté ; toutes les transitions sont A | `dynamiques.md`, S5 |
+| Recodage confirmé | relecture datée, par un codeur humain nommé, d'un codage proposé par un modèle ; exigée avant qu'un tel cas devienne actif | `base-de-cas.md` §2 |
+| Corroboration | déclaration, pour un mot F de cas réel actif, que son fait repose sur des sources indépendantes (au moins deux, nommées) ou sur une source unique ; sans effet sur le calcul | `base-de-cas.md` §2 |
+| Difficulté | 0,5 − \|f − 0,5\| par question, f étant la fréquence de référence : 0 pour une question jouée d'avance, 0,5 pour une question à 50 % | `validation.md` §1 |
+| Garantie | troisième terme d'un ancrage F de cas réel : mécanisme par lequel le fait relève de la carte, ce qu'elle rend attendu, ce qui la contredirait | A6 |
+| Jugement scellé | probabilité du codeur écrite et hachée (`sceller-jugement`) **avant** le moteur ; prouve l'intégrité, pas l'antériorité | `validation.md` §1 |
+| Nom local | phrase par laquelle une discipline nomme le phénomène dans son vocabulaire, sans le mot de la carte ; exigé pour Documenté | `equivalences.md` §2 |
+| Option | filtre de pertinence d'un ancrage F de cas réel : un acteur et l'option qu'il avait avant et n'a plus après, ou l'inverse | O1 |
+| Question qui départage | question posée au premier état d'un cas réel dont les deux réponses mènent à deux cartes différentes (abduction) | `grammaire.md` §7 |
+| Rabbit | construction ad hoc d'un codage (carte, strate, règle inventée en cours de route) ; dette ouverte jusqu'à sa résorption | `validation.md` §6 |
+| Temporalité | déclaration d'une prévision : générique, programmée (échéance fixée par un texte) ou durée de vie propre ; hors générique, le taux générique (ρ4) est refusé | `validation.md` §1 |
+| Vide clos | case Vide après trois recherches documentées sans équivalent : non concluant, comptée comme traitée | `equivalences.md` §3 |
 
 La force F/f, l’intensité F/M/f d’une arête de la matrice et une grandeur physique sont trois notions
 distinctes. Les deux premières ne fournissent pas une unité de mesure de la troisième.

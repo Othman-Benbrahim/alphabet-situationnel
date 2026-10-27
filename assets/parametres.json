@@ -1,5 +1,5 @@
 {
- "version": "0.5.1",
+ "version": "0.6.10",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -163,6 +163,10 @@
    "CRO": "M"
   }
  },
+ "barreau": {
+  "defaut": "A",
+  "exceptions": {}
+ },
  "autre_strate": {
   "SEU": {
    "SEU": "M"
@@ -183,5 +187,7 @@
  "n_min_frequence": 10,
  "c_min_rho1": 3,
  "alerte_R2": 0.3,
+ "seuil_decision": 0.5,
+ "vide_recherches_cloture": 3,
  "pas_max": 20
 }

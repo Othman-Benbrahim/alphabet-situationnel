@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.5.1
+> Version : 0.6.10
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -18,7 +18,7 @@ moteur ; null si indisponibles, auquel cas la prévision reste hors V4) :
   "type": "prevision",
   "id": "P-0042",
   "date": "2026-09-01",
-  "version_regles": "0.5.1",
+  "version_regles": "0.6.10",
   "question": "POL@7 persiste au 2026-12-01 ?",
   "evenement": "POL@7 persiste",
   "resolution": {
@@ -41,6 +41,7 @@ moteur ; null si indisponibles, auquel cas la prévision reste hors V4) :
   "partition": null,
   "frequence_de_base": 0.8372000588523011,
   "p_sans_cartes": 0.8372000588523011,
+  "temporalite": "generique",
   "rejeu": true,
   "fictif": true,
   "episode_id": "DEMO-A-B",
@@ -66,6 +67,22 @@ Ligne de score :
 cartes, que `calculer` imprime à côté de p : le **comparateur inertiel**. `scorer` en tire
 `apport_des_cartes` (Brier avec cartes moins Brier sans cartes) : un score flatteur dont l'apport est
 nul ne vient que du statu quo et ne valide pas la lecture (exemple 11).
+**Deux probabilités (0.6.0).** Avant de lancer le moteur, le codeur écrit sa propre probabilité et la
+scelle : `moteur.py sceller-jugement --question … --evenement … --p … --date …` rend
+`probabilite_jugement` et `jugement_scelle`, à recopier dans la ligne. Le champ est obligatoire à
+partir des prévisions 0.6 (null si aucun jugement n'a été scellé) ; un scellé qui ne correspond pas à
+la question, à l'événement, à la date ou à la probabilité est refusé. `scorer` rend alors
+`moteur_contre_jugement` : Brier du jugement, Brier du moteur, nombre d'**améliorations** et de
+**dégradations** question par question — une amélioration moyenne peut cacher des dégradations.
+`bande_sensibilite` (facultatif) recopie la bande de sensibilité de `calculer` (`graphe.md` §2.3).
+Le scellé local ne prouve pas la date : seul le dépôt externe le fait (§8).
+
+**Difficulté des questions (0.6.0 ; sens corrigé en 0.6.5).** `scorer` rend `difficulte` :
+0,5 − |f − 0,5| par question (0 pour une question jouée d'avance, 0,5 pour une question à 50 %), f étant la
+fréquence de base au même horizon (à défaut, `p_sans_cartes`), la part des questions à référence
+extrême (f < 0,1 ou > 0,9) et le Brier par tranche. Au-delà de 70 % de questions extrêmes, un bon
+score ne mesure pas la compétence : prédire « non » à 0,8 % est presque gratuit (exemples 11 et 12).
+
 **Questions hors alphabet** (`"origine": "jugement"`). L'alphabet décrit des structures, pas des issues
 nominatives : « qui sera élu ? », « le groupe aura-t-il quatorze membres ? » ne sont pas des événements
 de cartes. Une telle question se journalise avec une probabilité **humaine** : champs `question`,
@@ -77,7 +94,21 @@ score du moteur ni dans V4 : c'est la calibration du codeur, que le moteur ne me
 absence. `rejeu` et `fictif` sont obligatoires ; leur absence est une erreur. `calcul`, s'il est
 présent, est le JSON du moteur qui a produit la prévision : `probabilite` doit égaler `calcul.p` et
 `rho` doit égaler `calcul.rho` (contrôlé depuis 0.4.4), faute de quoi le chiffre scoré n'est plus
-celui qui a été calculé.
+celui qui a été calculé. Depuis 0.6.9, la question entière est recoupée : événement, état
+(`calcul.etat`), pas, sémantique, échéance, `p_sans_cartes` et intervalle. Un calcul étiqueté pour un
+autre événement, ou un comparateur sans cartes recopié faux, est refusé. Depuis 0.6.10 aussi :
+`frequence_de_base` doit égaler `calcul.comparateur` ; un intervalle journalisé alors que le calcul
+ne l'a pas estimé est refusé ; `resolution.marqueur` doit recopier le marqueur local du calcul
+(`calcul.marqueur_local`), sinon `resolution.ecart_marqueur` justifie l'écart (S1). La **pertinence**
+de la source de résolution reste un jugement humain ; sa **conservation** est garantie par
+l'empreinte de la prévision (`sceller`, §8).
+
+**Temporalité (0.6.10).** Chaque prévision déclare `temporalite` : `generique`, `programmee`
+(échéance fixée par un texte : scrutin, proclamation, échéance légale) ou `duree_de_vie` (phénomène à
+durée de vie propre, sans rapport avec la fenêtre de référence de 3 mois : cyclone, grève reconductible,
+session). Hors `generique`, une prévision ρ4, c'est-à-dire sur le seul taux générique, est refusée ;
+`calculer --temporalite …` répond alors « non estimée ». Le moteur ne sait pas reconnaître seul une
+échéance ou une durée de vie : la déclaration est humaine, son effet est contrôlé.
 `episode_id` regroupe les questions liées au même épisode, même si leurs cartes ou strates diffèrent.
 `semantique` décrit présence finale, occurrence au moins une fois ou persistance continue.
 `resolution_verifiee` signifie que le lien entre marqueur, objet et critère a été contrôlé, pas que
@@ -131,6 +162,7 @@ Les sources, définitions et valeurs non arrondies sont conservées au moment du
 | Base | Échantillon, dates, disponibilité, indépendance des épisodes ? | revoir le plan de collecte |
 | Graphe | Les cartes apportent-elles mieux que la référence seule ? | ablation et sensibilité, pas réglage sur le test |
 | Simulation | Horizon, composé, dépendance, masse élaguée ? | limiter ou reformuler le calcul |
+| Barreau | La sortie revendique-t-elle plus que le barreau des transitions utilisées (effet d'une action, « ce qui se serait passé ») ? | reformuler en association : « si le motif observé se répète, alors… » |
 
 Un événement à faible probabilité qui survient n'invalide pas à lui seul une estimation. Rechercher
 les erreurs répétées et les écarts de calibration ; surveiller la sur-prédiction de SEUIL. Une
@@ -165,6 +197,14 @@ calcul : une transition mal estimée n'est pas nécessairement une structure abs
 Trois observations indépendantes et vérifiées ouvrent A2 ; les entrées historiques non revérifiées
 sont des pistes, pas des validations. Ne jamais fabriquer de cas pour atteindre ce nombre.
 
+Le journal des lacunes enregistre le **manque** ; `assets/rabbits.jsonl` enregistre la **construction
+auxiliaire** qui l'a comblé (champs `cas`, `probleme`, `construction`, `type` : carte, strate,
+qualificatif, statut ou règle, `necessite` : fait daté qui la rendait nécessaire, `date`, `statut` :
+`ouvert` ou `resorbe`, et pour une entrée résorbée `resolution` : comment la construction est devenue
+une règle écrite, contrôlée et réemployée). Une entrée reste ouverte tant que la construction n'existe
+que dans le cas qui l'a fait naître : c'est une dette. C'est la seconde information qui permet
+d'étendre l'alphabet par méthode plutôt que par intuition ; `audit` contrôle la forme et le statut.
+
 ---
 
 ## 7. Indicateurs de santé de l'outil
@@ -177,7 +217,10 @@ sont des pistes, pas des validations. Ne jamais fabriquer de cas pour atteindre 
 | Niveaux ρ | provenance des chiffres, jamais performance acquise |
 | Épisodes comparables | éviter qu'un grand nombre de questions liées gonfle l'effectif |
 | Valeurs p proches de 0 ou 1 | surveiller les échecs confiants, ne pas déclarer le test inutile |
-| Part des ruptures SEUIL | comparer au taux réellement observé dans la population définie |
+| Part des ruptures SEUIL | comparer au taux réellement observé dans la population définie ; à lire **avec** l'apport des cartes : un gain accompagné d'une sur-prédiction de ruptures est suspect |
+| Questions à référence extrême | au-delà de 70 %, le gain n'est pas interprétable |
+| Dégradations du jugement par le moteur | une amélioration moyenne peut cacher des cas où le moteur éloigne de l'issue |
+| Bandes de sensibilité traversant le seuil | part des prévisions « non identifiées » : l'incertitude de modèle domine |
 
 ---
 

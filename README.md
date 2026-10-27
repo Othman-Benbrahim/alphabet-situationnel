@@ -2,14 +2,14 @@
 
 Auteur : Othman Ben Brahim · Licence : MIT (`LICENSE`)
 
-Version 0.7.0 (numéro de `assets/parametres.json`, vérifié par `audit` dans `SKILL.md`, le README, les
+Version 0.7.1 (numéro de `assets/parametres.json`, vérifié par `audit` dans `SKILL.md`, le README, les
 19 références, les 13 fichiers d'équivalents et le moteur ; le paquet livré se nomme
-`alphabet-situationnel-0.7.0.zip`). **Intégrité du paquet** : `SHA256SUMS` donne l'empreinte de chaque
+`alphabet-situationnel-0.7.1.zip`). **Intégrité du paquet** : `SHA256SUMS` donne l'empreinte de chaque
 fichier livré ; `sha256sum -c SHA256SUMS` ou `moteur.py audit` refusent un fichier modifié, ajouté ou
 retiré. `audit` valide aussi les JSONL livrés (bases, cas archivés, journal d'exemple). Un zip ne
 pouvant contenir sa propre empreinte, son SHA-256 est communiqué à la livraison ; sur GitHub, chaque
 version a son étiquette `vX.Y.Z` et sa release, avec `SHA256SUMS` en pièce jointe (`publier-github.ps1`).
-Les étiquettes ne sont pas signées : le niveau d'assurance est celui du compte GitHub de l'auteur. Historique : 0.4.0 a corrigé le calcul et
+Les étiquettes sont signées si une clé est configurée (`git config user.signingkey`, GPG ou SSH ; vérifier par `git tag -v vX.Y.Z`) ; sinon, le niveau d'assurance est celui du compte GitHub de l'auteur. Historique : 0.4.0 a corrigé le calcul et
 les contrats, 0.4.1 a rétabli les contrôles perdus (F, G6, renvois, homologie), 0.4.2 a rendu A6 et A7
 vérifiables, 0.4.3 recoupe A7 entre états et valide le schéma documenté, 0.4.4 durcit les entrées
 (aucune trace Python, erreurs JSON) et l'affichage, 0.4.5 aligne la sortie sur la constitution et
@@ -21,7 +21,7 @@ restreint SEUIL@13 et journalise à part les jugements nominatifs, 0.6.0 traduit
 en contrôles (barreau déclaré, garantie et option des ancrages F, jugement scellé avant le moteur,
 bande de sensibilité, questions qui départagent, angles morts ; `references/apports-theoriques.md`),
 0.6.1 inscrit la décision 1b (cartes à agents universelles) et propose 16 références pour la strate 7,
-0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée, 0.6.11 compte les abstentions, 0.6.12 pose la question de la temporalité avant tout calcul, 0.6.13 traite l'audit de la 0.6.12 (contrôles exécutés pour de vrai, Brier des partitions, temporalité tranchée), 0.6.14 l'audit Manus (provenance des prévisions et des codeurs, manifeste, intégration continue), 0.6.15 les corrections documentaires de l'audit Scira ; 0.7.0 ajoute les tests de preuve du process tracing et la décomposition de Murphy.
+0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée, 0.6.11 compte les abstentions, 0.6.12 pose la question de la temporalité avant tout calcul, 0.6.13 traite l'audit de la 0.6.12 (contrôles exécutés pour de vrai, Brier des partitions, temporalité tranchée), 0.6.14 l'audit Manus (provenance des prévisions et des codeurs, manifeste, intégration continue), 0.6.15 les corrections documentaires de l'audit Scira ; 0.7.0 ajoute les tests de preuve du process tracing et la décomposition de Murphy, 0.7.1 corrige la sortie sous Windows (cp1252) et ajoute Windows et macOS à la CI.
 Le modèle suit `SKILL.md`. Les anciens faits non revérifiés sont conservés comme archives exclues.
 
 ## Ce que fait l'outil
@@ -39,7 +39,7 @@ SKILL.md                    procédure et chargement par mode
 LICENSE                     licence MIT
 LICENCES-TIERS.md           notice MIT d'EnVrai?, dont sources-france.md reprend des contenus
 README.md                   ce guide
-CHANGELOG.md                historique et révisions 0.4.0–0.7.0
+CHANGELOG.md                historique et révisions 0.4.0–0.7.1
 references/                 19 références (dont feuille-de-route.md, sources-france.md, angles-morts.md et apports-theoriques.md) et 13 fichiers d'équivalents
 scripts/moteur.py           moteur, validateur, scoreur et autotests intégrés
 assets/parametres.json      source structurée exhaustive des paramètres

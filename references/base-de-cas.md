@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.0
+> Version : 0.7.1
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -172,7 +172,8 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 | `garantie` | requis pour F (cas réel) : `mecanisme`, `attendu`, `contredirait` (A6) ; forme type dans chaque fiche de `cartes.md` |
 | `option` | requis pour F (cas réel) : `acteur` (« le système » admis), `avant`, `apres` différents (pertinence, O1) |
 | `questions` | requis au premier état non nul d'un cas réel (cas fictif exempté) : liste non vide de `{question, si_oui, si_non}` ; `si_oui` et `si_non` sont deux CARTE@strate **différents**, l'un au moins présent dans l'état. Une question dont les deux réponses mènent à la même carte est décorative et refusée (abduction, `grammaire.md` §7) |
-| `corroboration` | requis pour F d'un cas réel **actif** (une proposition le reçoit à son activation) : `"independantes"` si le fait repose sur au moins deux sources indépendantes, nommées dans `source` et séparées par « ; » ; `"unique"` sinon, admis et signalé dans « À vérifier auprès de vous ». Aucun effet sur le calcul (qualité de l'information, 0.6.6) |
+| `corroboration` | requis pour F d'un cas réel **actif** (une proposition le reçoit à son activation) : `"independantes"` si le fait repose sur au moins deux sources indépendantes, nommées dans `source` et séparées par « ; » ; `"unique"` sinon, admis seulement pour une source primaire (texte officiel, donnée publiée) et signalé dans « À vérifier auprès de vous » ; un fait repris d'un seul relais secondaire s'ancre en f (0.7.1). Aucun effet sur le calcul (qualité de l'information, 0.6.6) |
+| `source_url`, `date_consultation` | facultatifs (0.7.1) : adresse http(s) de la source et date de consultation (AAAA-MM-JJ), contrôlées si présentes ; recommandés pour tout cas réel, ils permettent à un tiers de relire la source |
 | `test` | requis pour F de cas réel : `pistolet` ou `double` (fait suffisant) ; facultatif pour f (`paille`, `cerceau`, aussi admis) ; tests de process tracing, `protocole.md` A6 (0.7.0) |
 | `a6` | requis pour F : chaque voisine de `cartes.md`, verdict `→` ou `+`, justification non vide ; contrôle complet sur cas réel, cas fictif exempté |
 | `retraits` | exactement les mots disparus, chacun avec fait et source |

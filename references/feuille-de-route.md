@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.0
+> Version : 0.7.1
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -230,7 +230,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | Audit Manus traité (0.6.14) : prévisions moteur liées à leur calcul, codeurs {id, role}, manifeste, CI 3.8/3.12 |
 | 2026-10-27 | — | Audit Scira traité (0.6.15) : corrections documentaires ; deux anomalies écartées après vérification |
 | 2026-10-27 | — | 0.7.0 : tests de preuve (F exige un fait suffisant) et décomposition de Murphy ; fin de la série d'audits, début des tests à l'aveugle |
-| 2026-10-27 | 0 | À faire : installer la 0.7.0 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-27 | — | Audit hacker.ai traité (0.7.1) : sortie Windows, CI Windows et macOS, sources, `scorer --csv` |
+| 2026-10-27 | 0 | À faire : installer la 0.7.1 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 

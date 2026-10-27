@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.0 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.1 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -249,6 +249,20 @@ def controle_test(k, item, force, requis):
     if force == 'F' and t not in TESTS_SUFFISANTS:
         return [f'{k} : F exige un test suffisant (pistolet ou double) ; un {t} ({TESTS_PREUVE[t]}) ne confirme pas la carte → f']
     return []
+
+
+def controle_source(k, item):
+    """0.7.1 (audit hacker.ai) : traçabilité facultative d'un fait. `source_url` (http ou https, sans
+    espace) et `date_consultation` (AAAA-MM-JJ) ; contrôlés s'ils sont présents."""
+    err=[]
+    u=item.get('source_url')
+    if u is not None and not (isinstance(u,str) and re.fullmatch(r'https?://\S+',u)):
+        err.append(f'{k} : source_url = adresse http(s) sans espace')
+    d=item.get('date_consultation')
+    if d is not None:
+        try:date_iso(d)
+        except ValueError:err.append(f'{k} : date_consultation au format AAAA-MM-JJ')
+    return err
 
 
 def controle_corroboration(k, item):
@@ -757,7 +771,7 @@ def valider_base(base):
                 for field in ('fait','source','contre_observation','objet'):
                     texte_requis(item.get(field), f'{cid}.{k}.{field}')
                 pr=None if prev is None or k not in forces(prev) else (forces(prev)[k], origine_f.get(k))
-                errs=controle_a7(k,item,pr); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                errs=controle_a7(k,item,pr)+controle_source(k,item); exiger(not errs, f'{cid} : '+' ; '.join(errs))
                 if fm[k]=='F':
                     # A6 : F qualifie la lecture (fait précis, voisines tranchées), pas la bibliographie (A3).
                     texte_requis(item.get('a6'), f'{cid}.{k}.a6')
@@ -1486,8 +1500,20 @@ def score_result(data):
                        'p(1-p) décrit la confiance annoncée ; une valeur faible ne démontre pas que le test est inutile.']}
 
 
-def scorer(path):
+COLONNES_CSV=('ids','episode_id','origine','rho','strate','partition','hors_V4','brier','brier_base','brier_sans_cartes',
+              'brier_jugement','difficulte','reference_difficulte','incertitude_annoncee')
+
+
+def scorer(path, csv_=False):
     r=score_result(charger(path))
+    if csv_:
+        # 0.7.1 : une ligne par question résolue, pour suivre la calibration dans un tableur ; séparateur « ; »,
+        # décimale « . », abstentions et décomposition de Murphy dans le JSON.
+        import csv
+        out=io.StringIO();w=csv.writer(out,delimiter=';',lineterminator='\n');w.writerow(COLONNES_CSV)
+        for u in r['details']:
+            w.writerow(['+'.join(u['ids']) if k=='ids' else ('' if u.get(k) is None else u.get(k)) for k in COLONNES_CSV])
+        return out.getvalue().rstrip('\n')
     return json.dumps(r,ensure_ascii=False,indent=2,allow_nan=False)
 
 
@@ -1732,7 +1758,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.0','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.1','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
@@ -1951,6 +1977,7 @@ def main():
     sj.add_argument('--origine',choices=('moteur','jugement'),default='moteur')
     for name in ('valider','scorer','sceller'):
         s=subs.add_parser(name);s.add_argument('fichier')
+        if name=='scorer':s.add_argument('--csv',action='store_true')
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
     subs.add_parser('manifeste')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
@@ -1991,7 +2018,7 @@ def main():
         print(f'{NOMS[ab]} — équivalents locaux (statut, marqueur)')
         for r in rows:print(f"  {r['strate']:>2} · {r['statut'] or '—'} · {r['equivalent'] or '—'} — {r['marqueur'] or '—'}")
         return
-    if a.cmd=='scorer':print(scorer(a.fichier));return
+    if a.cmd=='scorer':print(scorer(a.fichier,a.csv));return
     if a.cmd=='sceller-jugement':
         proba(a.p,'--p');date_iso(a.date)
         # 0.6.13 : l'outil qui fabrique la preuve refuse en amont ce que le journal refuserait.
@@ -2366,11 +2393,21 @@ def autotest():
             self.assertEqual(pct(.220379),'22 %');self.assertEqual(pct(.00724),'0,7 %');self.assertEqual(pct(.9931),'99,3 %')
         def test_erreur_json(self):
             import subprocess
-            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@99 apparait','--json'],capture_output=True,text=True)
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@99 apparait','--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
             self.assertEqual(r.returncode,2);self.assertIn('erreur',json.loads(r.stdout))
             # 0.6.12 : sans --temporalite, la question est posée et le calcul refusé.
-            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09-26 | 7 jours] ÉMERGENCE@11[f]','--evenement','ÉMERGENCE@11 persiste','--json'],capture_output=True,text=True)
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09-26 | 7 jours] ÉMERGENCE@11[f]','--evenement','ÉMERGENCE@11 persiste','--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
             self.assertEqual(r.returncode,2);self.assertIn('durée de vie propre',json.loads(r.stdout)['erreur'])
+        def test_console_cp1252(self):
+            # 0.7.1 (audit hacker.ai) : sortie Windows en cp1252, redirigée. Erreur JSON et sortie humaine.
+            import subprocess
+            env=dict(os.environ,PYTHONIOENCODING='cp1252');env.pop('PYTHONUTF8',None)
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@99 apparait','--json'],
+                             capture_output=True,stdin=subprocess.DEVNULL,env=env)
+            self.assertEqual(r.returncode,2);self.assertEqual(json.loads(r.stdout.decode('ascii'))['code'],2)
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@7 apparait','--temporalite','generique'],
+                             capture_output=True,stdin=subprocess.DEVNULL,env=env)
+            self.assertEqual(r.returncode,0);self.assertIn('⚠ ρ4',r.stdout.decode('utf-8'))
         def test_sortie_doree(self):
             # Sortie humaine de l'exemple 1 : ouverture constitutionnelle, ligne S5, marquage « large ».
             e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
@@ -2584,6 +2621,16 @@ def autotest():
             with self.assertRaises(ValueError):valider_base([c])            # absent sur F réel
             self.assertEqual(valider_base([self._f_case(ok,test='double')])['actifs'],1)
             self.assertEqual(controle_test('POL@7',{'test':'cerceau'},'f',False),[])   # f : tout test
+        def test_source_url(self):
+            self.assertEqual(controle_source('POL@7',{'source_url':'https://ex.org/a','date_consultation':'2026-10-27'}),[])
+            self.assertTrue(controle_source('POL@7',{'source_url':'ex.org a'}))
+            self.assertTrue(controle_source('POL@7',{'date_consultation':'27/10/2026'}))
+        def test_scorer_csv(self):
+            import tempfile,csv
+            with tempfile.TemporaryDirectory() as d:
+                f=Path(d)/'j.jsonl';f.write_text('\n'.join(json.dumps(x) for x in [forecast(),score()]),encoding='utf-8')
+                lignes=list(csv.reader(io.StringIO(scorer(str(f),True)),delimiter=';'))
+            self.assertEqual(tuple(lignes[0]),COLONNES_CSV);self.assertEqual(len(lignes),2);self.assertEqual(lignes[1][0],'P-1')
         def test_murphy(self):
             # Identité exacte quand les p d'une même classe sont égaux : BS = REL − RES + UNC.
             pr=[(.2,0),(.2,0),(.2,1),(.8,1),(.8,1),(.8,0),(.8,1)]
@@ -2634,14 +2681,30 @@ def autotest():
     exiger(result.wasSuccessful(),'tests de régression échoués')
 
 
+def sorties_robustes():
+    """0.7.1 (audit hacker.ai) : sous Windows, une sortie redirigée ou une console MSYS est en cp1252 ; le
+    premier « ⚠ » ou « → » levait UnicodeEncodeError, et toute la sortie, erreurs comprises, échouait.
+    Sortie redirigée : UTF-8 (ce qu'attend le programme qui la lit). Console : encodage conservé, les
+    caractères absents remplacés par une séquence d'échappement plutôt qu'un plantage."""
+    for flux in (sys.stdout, sys.stderr):
+        enc=(getattr(flux,'encoding','') or '').lower().replace('-','')
+        if enc=='utf8' or not hasattr(flux,'reconfigure'):continue
+        try:
+            if flux.isatty():flux.reconfigure(errors='backslashreplace')
+            else:flux.reconfigure(encoding='utf-8',errors='backslashreplace')
+        except (ValueError,OSError,io.UnsupportedOperation):pass
+
+
 if __name__=='__main__':
+    sorties_robustes()
     try:
         main()
     except Exception as e:
         # Une entrée invalide ne doit jamais produire une trace Python. Avec --json, l'erreur est du JSON.
         msg=str(e) if isinstance(e,ValueError) else f'{type(e).__name__} : {e} (entrée inattendue)'
         if '--json' in sys.argv[1:]:
-            print(json.dumps({'erreur':msg,'code':2},ensure_ascii=False))
+            # JSON d'erreur en ASCII pur : lisible par tout programme, quel que soit l'encodage de la console.
+            print(json.dumps({'erreur':msg,'code':2},ensure_ascii=True))
         else:
             print('Erreur : '+msg,file=sys.stderr)
         sys.exit(2)

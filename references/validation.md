@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.6.12
+> Version : 0.6.13
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -115,8 +115,9 @@ son score sans rien prévoir. Scores et abstentions se lisent ensemble.
 **Temporalité (0.6.10).** Chaque prévision déclare `temporalite` : `generique`, `programmee`
 (échéance fixée par un texte : scrutin, proclamation, échéance légale) ou `duree_de_vie` (phénomène à
 durée de vie propre, sans rapport avec la fenêtre de référence de 3 mois : cyclone, grève reconductible,
-session). Hors `generique`, une prévision ρ4, c'est-à-dire sur le seul taux générique, est refusée ;
-`calculer --temporalite …` répond alors « non estimée » (à journaliser comme abstention).
+session). Hors `generique`, seule une référence externe permet de chiffrer (0.6.13) : la prévision
+joint son calcul, dont `reference_de_domaine` vaut true ; des cas homologues seuls ne suffisent pas.
+Sinon `calculer --temporalite …` répond « non estimée » (à journaliser comme abstention).
 `trajectoires` refuse l'option (0.6.11) : ses chemins reposent sur les taux génériques de toutes les
 cartes à la fois. Le moteur ne sait pas reconnaître seul une
 échéance ou une durée de vie : la déclaration est humaine, son effet est contrôlé. Depuis 0.6.12,
@@ -143,9 +144,12 @@ Doublons, scores orphelins, nombres invalides et score avant échéance sont ref
 
 ## 2. Score de Brier et fréquence de base
 
-Binaire : (p−o)² ; partition : somme sur les catégories, **une seule question**. Le score d'une
-partition n'a pas la même échelle maximale que celui d'une binaire : comparer au comparateur de
-même type et présenter séparément ces régimes si nécessaire.
+Binaire : (p−o)² ; partition : somme sur les catégories **divisée par 2**, **une seule question**
+(0.6.13). La somme brute va de 0 à 2, le Brier binaire de 0 à 1 : sans la division, une partition
+0,5/0,5 réalisée valait 0,50 contre 0,25 pour la binaire équivalente, et la moyenne d'un journal
+mixte était majorée (audit 0.6.12). Divisée par 2, une partition à deux issues a exactement le score
+de la binaire équivalente ; comparateur, sans-cartes et jugement suivent la même échelle. Les scores
+d'archives antérieurs à 0.6.13 (exemples 7 à 11) sont sur l'ancienne échelle.
 La fréquence de base provient du moteur, au **même horizon et pour le même événement**. Ne pas
 comparer un pari annuel à une référence trimestrielle ; null signifie comparaison non évaluable.
 Les questions d'un épisode sont moyennées, puis les épisodes reçoivent des poids égaux. Le gain est

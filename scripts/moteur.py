@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.6.12 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.6.13 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -460,6 +460,14 @@ def proba(x, champ='probabilité'):
     return float(x)
 
 
+def version_lue(s, champ='version_regles'):
+    """0.6.13 (audit 0.6.12, m1) : « 0.6 » ou « 0.6.12 », sinon refus. Une valeur illisible (« abc »)
+    rendait une liste vide, et les exigences versionnées étaient sautées sans message."""
+    m = re.fullmatch(r'(\d+)\.(\d+)(?:\.(\d+))?', s if isinstance(s, str) else '')
+    exiger(m is not None, f'{champ} illisible : {s!r} (forme 0.6 ou 0.6.12)')
+    return tuple(int(v) if v is not None else 0 for v in m.groups())
+
+
 def date_iso(s):
     exiger(isinstance(s, str) and re.fullmatch(r'\d{4}-\d{2}(?:-\d{2})?', s), f'date invalide : {s!r}')
     try:
@@ -652,7 +660,7 @@ def valider_base(base):
             continue # Conserved evidence, never an eligible training or validation observation.
         # Même version mineure : un correctif (0.4.x) ne force pas à recoder, puisque le validateur applique
         # de toute façon les règles courantes à chaque fiche ; un changement mineur (0.5) l'exige.
-        exiger(c['version_regles'].split('.')[:2] == P['version'].split('.')[:2], f'{cid} : recodage requis pour cette version')
+        exiger(version_lue(c['version_regles'],cid+'.version_regles')[:2]==version_lue(P['version'],'version')[:2], f'{cid} : recodage requis pour cette version')
         coding = c.get('codage')
         exiger(isinstance(coding,dict) and coding.get('mode') in ('manuel','declenche'), f'{cid} : mode de codage requis')
         coders = coding.get('codeurs')
@@ -851,10 +859,12 @@ def apriori(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_mat
     inert=P['inertie_contrainte_materielle'] if c=='CTR' and s in ctr_materielle else P['inertie'][c]
     inert=inert**(duree_jours(fen)/P['fenetre_reference_jours'])
     if cible in bouge and not sans_cartes: inert=inert**P['multiplicateur_bouge']
-    external=reference(refs,cible,typ)
+    external=reference(refs,cible,typ);rref=refs.get(cible+' '+typ)
     if external is None and typ in ('persiste','disparait'):
-        comp=reference(refs,cible,'disparait' if typ=='persiste' else 'persiste')
-        external=None if comp is None else 1-comp
+        cle_c=cible+' '+('disparait' if typ=='persiste' else 'persiste');comp=reference(refs,cible,cle_c.split(' ',1)[1])
+        external=None if comp is None else 1-comp;rref=refs.get(cle_c) if comp is not None else None
+    # 0.6.13 (audit 0.6.12, m2) : la ligne S5 nomme la source externe en clair (constitution.md §3).
+    source_ext=None if not rref else (str(rref.get('source','')).strip()+(f", {rref['periode']}" if rref.get('periode') else '')) or None
     default=a_l_echelle(P['f_defaut'],fen) if typ=='apparait' else (inert if typ=='persiste' else 1-inert)
     ref=default if external is None else external
     f,cnt,neff=frequence_de_base(base,typ,cible,fen,asof,ref)
@@ -869,7 +879,7 @@ def apriori(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_mat
     # 7 pas quotidiens plafonnés donnaient 0,95⁷ ≈ 70 % au lieu de la persistance sur 7 jours.
     if 0<p<1 and p>f: p=min(p,max(f,P['plafond_p0']))
     return {'p0':proba(p),'f_base':f if anchored else None,'reference_interne':f,'ancrage':anchored,
-            'reference_externe':external,'cas_reference':cnt,'effectif_reference':neff,'LR':lr,'LR_plafonne':capped,
+            'reference_externe':external,'source_externe':source_ext,'cas_reference':cnt,'effectif_reference':neff,'LR':lr,'LR_plafonne':capped,
             'sources':src,'ecartees':removed,'inertie':inert}
 
 
@@ -1126,6 +1136,7 @@ def valider_journal(data):
         if origine=='jugement':
             # Question nominative ou hors alphabet (« qui sera élu ? ») : probabilité humaine, journalisée
             # et scorée à part, jamais mêlée au score du moteur ni à V4.
+            version_lue(x.get('version_regles'),ident+'.version_regles')
             for field in ('version_regles','question','evenement','episode_id','refutation'):
                 texte_requis(x.get(field),f'{ident}.{field}')
             date_iso(x.get('echeance'));exiger(jour(x['date'])<jour(x['echeance']),f'{ident} : prévision datée à échéance ou après')
@@ -1197,10 +1208,11 @@ def valider_journal(data):
                 exiger(ok(ci) and ok(xi) and all(abs(u-v)<1e-12 for u,v in zip(ci,xi)),
                        f'{ident} : intervalle différent du calcul figé')
         exiger('frequence_de_base' in x,f'{ident} : fréquence de base requise (null si non évaluable)')
-        if [int(v) for v in re.findall(r'\d+',x['version_regles'])[:2]]>=[0,5]:
+        vr=version_lue(x['version_regles'],ident+'.version_regles')
+        if vr>=(0,5,0):
             exiger('p_sans_cartes' in x,f'{ident} : p_sans_cartes requis depuis 0.5 (null pour un composé) : comparateur inertiel')
         if x.get('p_sans_cartes') is not None:proba(x['p_sans_cartes'],ident+'.p_sans_cartes')
-        if [int(v) for v in re.findall(r'\d+',x['version_regles'])[:2]]>=[0,6]:
+        if vr>=(0,6,0):
             exiger('probabilite_jugement' in x,f'{ident} : probabilite_jugement requis depuis 0.6 (null si aucun jugement scellé)')
         if x.get('probabilite_jugement') is not None:
             proba(x['probabilite_jugement'],ident+'.probabilite_jugement')
@@ -1208,11 +1220,13 @@ def valider_journal(data):
                    f'{ident} : jugement_scelle absent ou différent (sceller-jugement avant le moteur)')
         # 0.6.10 : temporalité déclarée. Une échéance programmée ou une durée de vie propre ne se chiffre
         # pas sur le taux générique : ρ4 refusé. Exigée à partir de version_regles 0.6.10.
-        if tuple(int(v) for v in re.findall(r'\d+',x['version_regles'])[:3])>=(0,6,10):
+        if vr>=(0,6,10):
             exiger(x.get('temporalite') in ('generique','programmee','duree_de_vie'),
                    f'{ident} : temporalite requise depuis 0.6.10 (generique, programmee ou duree_de_vie)')
         if x.get('temporalite') not in (None,'generique') and x.get('probabilite') is not None:
-            exiger(str(x.get('rho'))!='ρ4',f'{ident} : temporalité {x["temporalite"]} : une prévision ρ4 (taux générique) est refusée ; fournir une référence de domaine')
+            # 0.6.13 : une référence de domaine, pas seulement « pas ρ4 » ; le calcul figé le prouve.
+            exiger(isinstance(calc,dict) and calc.get('reference_de_domaine') is True,
+                   f'{ident} : temporalité {x["temporalite"]} : une prévision chiffrée joint son calcul, fondé sur une référence de domaine (--fref ou --references) ; des cas seuls ne suffisent pas')
         if isinstance(calc,dict) and calc.get('temporalite') is not None:
             exiger(calc['temporalite']==x.get('temporalite','generique'),f'{ident} : temporalite différente du calcul figé')
         bs=x.get('bande_sensibilite')
@@ -1329,11 +1343,15 @@ def score_result(data):
     for items in groups:
         if any(x['id'] not in scores for x in items):missing+=1;continue
         if any(scores[x['id']]['issue'] is None for x in items):unresolved+=1;continue
-        b=sum((x['probabilite']-scores[x['id']]['issue'])**2 for x in items)
+        # 0.6.13 (audit 0.6.12, M3) : le Brier d'une partition (somme sur les issues, de 0 à 2) était
+        # moyenné avec des Brier binaires (de 0 à 1) : une partition 0,5/0,5 valait 0,50, la binaire
+        # équivalente 0,25. Divisé par 2, il revient sur l'échelle binaire (identique pour deux issues).
+        ech=.5 if len(items)>1 else 1.
+        b=ech*sum((x['probabilite']-scores[x['id']]['issue'])**2 for x in items)
         origine=items[0].get('origine','moteur')
-        bb=None if any(x.get('frequence_de_base') is None for x in items) else sum((x['frequence_de_base']-scores[x['id']]['issue'])**2 for x in items)
-        bsc=None if any(x.get('p_sans_cartes') is None for x in items) else sum((x['p_sans_cartes']-scores[x['id']]['issue'])**2 for x in items)
-        bj=None if any(x.get('probabilite_jugement') is None for x in items) else sum((x['probabilite_jugement']-scores[x['id']]['issue'])**2 for x in items)
+        bb=None if any(x.get('frequence_de_base') is None for x in items) else ech*sum((x['frequence_de_base']-scores[x['id']]['issue'])**2 for x in items)
+        bsc=None if any(x.get('p_sans_cartes') is None for x in items) else ech*sum((x['p_sans_cartes']-scores[x['id']]['issue'])**2 for x in items)
+        bj=None if any(x.get('probabilite_jugement') is None for x in items) else ech*sum((x['probabilite_jugement']-scores[x['id']]['issue'])**2 for x in items)
         ref=None if len(items)>1 else items[0].get('frequence_de_base') if items[0].get('frequence_de_base') is not None else items[0].get('p_sans_cartes')
         verified=all(x.get('preuve_prepublication') is not None and x.get('empreintes') is not None and x.get('resolution_verifiee') for x in items)
         excluded=origine=='jugement' or any(x['rejeu'] or x['fictif'] for x in items) or not verified
@@ -1408,7 +1426,7 @@ RENVOIS = {
     ('grammaire.md','4'):'liaisons', ('grammaire.md','5'):'Positions', ('grammaire.md','7'):'bonne formation',
     ('graphe.md','2'):'priori', ('graphe.md','2.1'):'Sources', ('graphe.md','2.2'):'Fréquence',
     ('graphe.md','2.3'):'Combinaison', ('graphe.md','3'):'homologues',
-    ('protocole.md','H'):'Paramètres', ('simulation.md','1'):'Modèle de sortie', ('simulation.md','4'):'Rédiger', ('simulation.md','2'):'remplissage',
+    ('protocole.md','H'):'Paramètres', ('simulation.md','1'):'Modèle de sortie', ('simulation.md','4'):'Rédiger', ('simulation.md','6'):'autres cas', ('simulation.md','2'):'remplissage',
     ('strates.md','2'):'Fiches', ('strates.md','3'):'taxonomie', ('strates.md','4'):'rattachement',
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
@@ -1440,7 +1458,7 @@ def erreurs_renvois(chemins):
     return err
 
 
-def erreurs_statuts():
+def erreurs_statuts(texte_skill=None):
     """M1 : la répartition des statuts publiée (Bilans, equivalences.md, protocole.md, SKILL.md) est
     recalculée à partir des 16 × NS cellules, jamais crue sur parole."""
     st=statuts();err=[];ordre=('Attesté','Documenté','Proposé','Vide','Hors domaine')
@@ -1466,8 +1484,14 @@ def erreurs_statuts():
     for f in ('references/equivalences.md','references/protocole.md'):
         for a,d,pr,v,hd in re.findall(r'(\d+) Attesté, (\d+) Documenté, (\d+) Proposé, (\d+) Vide, (\d+) Hors domaine',(RACINE/f).read_text(encoding='utf-8')):
             if [int(a),int(d),int(pr),int(v),int(hd)]!=[tot[x] for x in ordre]:err.append(f'{f} : bilan {a}/{d}/{pr}/{v}/{hd} ≠ {[tot[x] for x in ordre]}')
-    for pr,v in re.findall(r'(\d+) Proposé, (\d+) Vide',(RACINE/'SKILL.md').read_text(encoding='utf-8')):
-        if [int(pr),int(v)]!=[tot['Proposé'],tot['Vide']]:err.append(f'SKILL.md : {pr} Proposé / {v} Vide ≠ cellules')
+    # 0.6.13 (audit 0.6.12, M1) : le texte est coupé par un retour à la ligne, la regex ne trouvait rien
+    # et le contrôle ne s'exécutait jamais. Blancs normalisés, trois nombres comparés, absence = erreur.
+    sk=' '.join((texte_skill if texte_skill is not None else (RACINE/'SKILL.md').read_text(encoding='utf-8')).split())
+    trouves=re.findall(r'(\d+) Documenté, (\d+) Proposé, (\d+) Vide',sk)
+    if not trouves:err.append('SKILL.md : répartition « N Documenté, N Proposé, N Vide » introuvable')
+    for d,pr,v in trouves:
+        if [int(d),int(pr),int(v)]!=[tot['Documenté'],tot['Proposé'],tot['Vide']]:
+            err.append(f'SKILL.md : {d} Documenté / {pr} Proposé / {v} Vide ≠ cellules ({tot["Documenté"]}/{tot["Proposé"]}/{tot["Vide"]})')
     return err
 
 
@@ -1563,8 +1587,25 @@ def schema_documente():
     return json.loads(m.group(1))
 
 
+# Paramètres déclarés mais lus par aucun calcul, à dessein (protocole.md A4 pour kappa_min).
+PARAMETRES_RESERVES = {'kappa_min'}
+
+
+def erreurs_parametres(params=None):
+    """0.6.13 (audit 0.6.12, m7) : « paramètres exhaustifs » ne disait pas « chaque paramètre est lu ».
+    Un paramètre publié dans §H mais jamais appliqué (largeur_max_affichage jusqu'en 0.4.5) passait.
+    Tout paramètre est lu littéralement par le moteur (P['clé']), ou déclaré réservé."""
+    src=Path(__file__).read_text(encoding='utf-8');err=[]
+    for k in (params if params is not None else P):
+        lu=re.search(r"P\[['\"]"+re.escape(k)+r"['\"]\]",src) is not None
+        if not lu and k not in PARAMETRES_RESERVES:err.append(f'parametres.json : « {k} » n’est lu par aucun calcul ; l’appliquer ou le déclarer réservé')
+        if lu and k in PARAMETRES_RESERVES:err.append(f'parametres.json : « {k} » déclaré réservé mais lu par le moteur')
+    return err
+
+
 def audit():
-    exiger(P['version']=='0.6.12','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.6.13','version du moteur et des paramètres différente')
+    errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
@@ -1646,7 +1687,7 @@ def audit():
     exiger(not errs,'renvois : '+' ; '.join(errs))
     exiger(voisines() and all(voisines().get(ab) for ab in NOMS),'cartes.md : listes de voisines illisibles (A6)')
     incompatibles()
-    print(f'audit : conforme — fichiers, versions, {16*NS} statuts, paramètres exhaustifs, matrice et inerties, '
+    print(f'audit : conforme — fichiers, versions, {16*NS} statuts, paramètres exhaustifs et lus, matrice et inerties, '
           f'{sum(len(RENVOI_RE.findall(p.read_text(encoding="utf-8"))) for p in [RACINE/"SKILL.md",RACINE/"README.md"]+paths)} renvois §, '
           'voisines A6, incompatibilités G6, schéma de fiche validé, répartition des statuts, index des cartes, répétitions ; '
           'contrôle de forme et de recoupement interne, pas de la justesse du contenu ni certification empirique')
@@ -1691,13 +1732,20 @@ def appliquer_temporalite(result, temporalite):
     """0.6.10. Le moteur ne sait pas reconnaître qu'une question porte sur une échéance programmée
     (scrutin, proclamation : test brésilien) ou sur un phénomène à durée de vie propre (cyclone : test
     Polo, ÉMERGENCE@11 persistant à 96,75 % sur 7 jours par l'inertie trimestrielle générique). Déclarée
-    par le codeur, cette temporalité interdit de chiffrer avec le seul taux générique : sans cas ni
-    référence externe (ρ4), la probabilité devient « non estimée ». La déclaration reste humaine."""
+    par le codeur, cette temporalité interdit de chiffrer avec le seul taux générique. 0.6.13 (audit
+    0.6.12, M2) : la règle ne mordait que sur une base vide (ρ4) ; avec des cas homologues, une
+    proclamation ou un cyclone recevaient un chiffre, alors que ces cas, appariés par cartes et non par
+    calendrier, partagent le même angle mort. Désormais, hors « generique », **seule une référence externe**
+    (`--fref`, `--references`, ou la référence conditionnelle d'un composé) permet de chiffrer ; des cas
+    seuls ne suffisent pas. La déclaration reste humaine."""
     result['temporalite']=temporalite
-    if temporalite!='generique' and result.get('rho')==4 and result.get('p') is not None:
+    ap=result.get('a_priori') or {}
+    externe=ap.get('reference_externe') is not None or 'conditionnelle' in (result.get('composantes') or {})
+    result['reference_de_domaine']=externe
+    if temporalite!='generique' and not externe and result.get('p') is not None:
         motif={'programmee':'échéance programmée','duree_de_vie':'durée de vie propre au phénomène'}[temporalite]
         result.update(p=None,intervalle=None,p_sans_cartes=None,apport_cartes=None,sensibilite=None,
-                      non_estime_motif=f'{motif} : taux générique refusé, référence de domaine requise (--fref ou --references)')
+                      non_estime_motif=f'{motif} : référence de domaine requise (--fref ou --references) ; ni le taux générique ni des cas appariés par cartes ne représentent ce calendrier')
         result.setdefault('drapeaux',[]).append(f'Non estimé : {motif} ; l’inertie et la fréquence par défaut ne représentent pas ce calendrier ou cette durée de vie (simulation.md §4).')
     return result
 
@@ -1706,12 +1754,14 @@ def ligne_signalement(result):
     """Ligne S5 (protocole.md, constitution.md §3) :
     ⚠ ρ[n] · [barreau] · [source en clair] · p₀ [x] % · p [y] % [intervalle] · échéance [date] · journal [id]"""
     h=result.get('homologie');c=result.get('c_A') or 0;ap=result.get('a_priori')
-    if c and h=='H3':src=f'{c} cas empruntés (H3)'
+    if result.get('non_estime_motif'):src=result['non_estime_motif']
+    elif c and h=='H3':src=f'{c} cas empruntés (H3)'
     elif c:src=f'{c} cas distincts ({h})'
     elif 'conditionnelle' in result.get('composantes',{}):src='composé : persistance × référence conditionnelle'
     elif result.get('non_estime_motif'):src=result['non_estime_motif']
     elif result.get('p') is None:src='référence conditionnelle manquante'
     else:src='a priori '+('ancré' if ap and ap.get('ancrage') else 'non ancré')+', aucun cas'
+    if ap and ap.get('source_externe') and not result.get('non_estime_motif'):src+=f" · réf. {ap['source_externe']}"
     p0=f" · p₀ {pct(ap['p0'])}" if ap and not result.get('non_estime_motif') else ''
     sb=result.get('sensibilite')
     if sb and sb['traverse_seuil'] and result.get('p') is not None:
@@ -1728,7 +1778,11 @@ def afficher(result,as_json=False):
         print(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False));return
     print(OUVERTURE)
     print(ligne_signalement(result))
-    print(f"Événement : {result['evenement']} · ρ = provenance du chiffre, pas sa fiabilité")
+    # 0.6.13 (audit 0.6.12, m4) : en sortie, le nom canonique (grammaire.md) ; l'abréviation reste dans le JSON.
+    ev=result['evenement'];k_,t_=ev.split(' ',1) if ' ' in ev else (ev,'')
+    try:c_,s_=k_.split('@');ev=f"{NOMS[c_]}@{s_} {t_}".strip()
+    except (ValueError,KeyError):pass
+    print(f"Événement : {ev} · ρ = provenance du chiffre, pas sa fiabilité")
     if (result.get('barreau') or P['barreau']['defaut'])=='A':
         print("Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ;"
               " aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »")
@@ -1758,10 +1812,11 @@ def main():
     for name in ('audit','autotest','parametres'):subs.add_parser(name)
     sj=subs.add_parser('sceller-jugement');sj.add_argument('--question',required=True);sj.add_argument('--evenement',required=True)
     sj.add_argument('--p',type=float,required=True);sj.add_argument('--date',required=True)
+    sj.add_argument('--origine',choices=('moteur','jugement'),default='moteur')
     for name in ('valider','scorer','sceller'):
         s=subs.add_parser(name);s.add_argument('fichier')
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
-    q=subs.add_parser('equivalences');q.add_argument('--carte',required=True)
+    q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
     for name in ('calculer','trajectoires'):
         c=subs.add_parser(name);c.add_argument('--base');c.add_argument('--etat',required=True)
@@ -1782,15 +1837,27 @@ def main():
     if a.cmd=='valider':valider(a.fichier);return
     if a.cmd=='bilan':print(bilan(a.base,a.references,a.journal));return
     if a.cmd=='partager':
-        for ident in a.ids:print(ident+' → '+usage_attendu(ident))
+        # 0.6.13 : même format que valider_base, refusé en amont.
+        for ident in a.ids:
+            exiger(re.fullmatch(r'C-\d{4}-S(?:0[1-9]|[1-9]\d)',ident) is not None,f'partager : identifiant C-NNNN-SNN attendu, reçu « {ident} »')
+            print(ident+' → '+usage_attendu(ident))
         return
     if a.cmd=='equivalences':
-        ab=carte_id(a.carte)
-        for s in range(1,NS+1):print(s,marqueur_local(ab,s))
+        # 0.6.13 : table lisible, ou JSON (--json), au lieu de tuples Python.
+        ab=carte_id(a.carte);rows=[]
+        for s in range(1,NS+1):
+            m=marqueur_local(ab,s);rows.append({'strate':s,'equivalent':m[0] if m else None,'marqueur':m[1] if m else None,'statut':m[2] if m else None})
+        if a.json:print(json.dumps({'carte':NOMS[ab],'equivalents':rows},ensure_ascii=False,indent=2));return
+        print(f'{NOMS[ab]} — équivalents locaux (statut, marqueur)')
+        for r in rows:print(f"  {r['strate']:>2} · {r['statut'] or '—'} · {r['equivalent'] or '—'} — {r['marqueur'] or '—'}")
         return
     if a.cmd=='scorer':print(scorer(a.fichier));return
     if a.cmd=='sceller-jugement':
         proba(a.p,'--p');date_iso(a.date)
+        # 0.6.13 : l'outil qui fabrique la preuve refuse en amont ce que le journal refuserait.
+        if a.origine=='moteur':evenement_lire(a.evenement)
+        else:texte_requis(a.evenement,'--evenement')
+        exiger(jour(a.date)<=datetime.date.today().toordinal(),f'--date {a.date} postérieure à aujourd’hui : on scelle un jugement déjà formé')
         print(json.dumps({'probabilite_jugement':a.p,'jugement_scelle':empreinte_jugement(a.question,a.evenement,a.p,a.date),
                           'instruction':'Recopier ces deux champs dans la ligne de prévision, puis seulement lancer le moteur.'},ensure_ascii=False));return
     if a.cmd=='sceller':
@@ -2000,7 +2067,7 @@ def autotest():
             with self.assertRaises(ValueError):valider_journal([p,q,score(issue=1),score('P-2',1)])
         def test_partition_brier(self):
             p=forecast(partition='A',probabilite=.5,frequence_de_base=.5);q=forecast('P-2',partition='A',probabilite=.5,frequence_de_base=.5,evenement='SEU@7 absent')
-            r=score_result([p,q,score(issue=1),score('P-2',0)]);self.assertEqual(r['questions_resolues'],1);self.assertAlmostEqual(r['details'][0]['brier'],.5)
+            r=score_result([p,q,score(issue=1),score('P-2',0)]);self.assertEqual(r['questions_resolues'],1);self.assertAlmostEqual(r['details'][0]['brier'],.25)   # échelle binaire (0.6.13)
         def test_missing_score_counted(self):self.assertEqual(score_result([forecast()])['sans_score'],1)
         def test_fiction_never_validated(self):self.assertEqual(score_result([forecast(),score()])['questions_eligibles'],0)
         def test_unverified_never_validated(self):self.assertEqual(score_result([forecast(fictif=False),score()])['questions_eligibles'],0)
@@ -2283,10 +2350,13 @@ def autotest():
             e=lire_etat('[2026-09-26 | 7 jours] ÉMERGENCE@11[f]')
             r=appliquer_temporalite(dict(horizon_result(e,'persiste','EME@11',[],{},1,'continue'),rho=4),'duree_de_vie')
             self.assertIsNone(r['p']);self.assertIn('durée de vie',ligne_signalement(r))
-            r=appliquer_temporalite(dict(horizon_result(e,'persiste','EME@11',[],{},1,'continue'),rho=3),'programmee')
+            refs={'EME@11 persiste':{'frequence':.3,'source':'durée de vie des cyclones du bassin','definition':'x','periode':'2000-2025','fenetre':'7 jours','disponible_le':'2026-01-01'}}
+            r=appliquer_temporalite(horizon_result(e,'persiste','EME@11',[],{'refs':refs},1,'continue'),'duree_de_vie')
             self.assertIsNotNone(r['p'])                                         # une référence de domaine suffit
             with self.assertRaises(ValueError):valider_journal([forecast(temporalite='programmee')])   # ρ4
-            self.assertTrue(valider_journal([forecast(temporalite='programmee',rho='ρ3')]))
+            with self.assertRaises(ValueError):valider_journal([forecast(temporalite='programmee',rho='ρ1')])   # cas seuls
+            ok=forecast(temporalite='programmee',rho='ρ3',calcul={'p':.2,'rho':3,'temporalite':'programmee','reference_de_domaine':True})
+            self.assertTrue(valider_journal([ok]))
             p=forecast();p.pop('temporalite')
             with self.assertRaises(ValueError):valider_journal([p])              # exigée depuis 0.6.10
         def test_journal_complet(self):
@@ -2298,6 +2368,30 @@ def autotest():
             with self.assertRaises(ValueError):valider_journal([dict(ok,intervalle=[.1,.3])])
             with self.assertRaises(ValueError):valider_journal([dict(ok,resolution=dict(ok['resolution'],marqueur='autre chose'))])
             self.assertTrue(valider_journal([dict(ok,resolution=dict(ok['resolution'],marqueur='autre chose',ecart_marqueur='source mesurant un marqueur voisin, motif'))]))
+        def test_temporalite_avec_base(self):
+            # 0.6.13 (audit 0.6.12, M2) : des cas homologues ne remplacent pas une référence de domaine.
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            base=base_active(charger(RACINE/'assets/base-de-cas.exemple.jsonl'),'2026-09-01',True)
+            r=horizon_result(e,'apparait','SEU@7',base,{'asof':'2026-09-01'},1,'presence');self.assertEqual(r['rho'],1)
+            self.assertIsNone(appliquer_temporalite(dict(r),'programmee')['p'])
+            self.assertIsNotNone(appliquer_temporalite(dict(r),'generique')['p'])
+            refs={'SEU@7 apparait':{'frequence':.3,'source':'série de domaine','definition':'x','periode':'2000-2025','fenetre':'3 mois','disponible_le':'2026-01-01'}}
+            r2=horizon_result(e,'apparait','SEU@7',base,{'asof':'2026-09-01','refs':refs},1,'presence')
+            self.assertIsNotNone(appliquer_temporalite(dict(r2),'programmee')['p'])
+        def test_brier_partition_echelle(self):
+            # 0.6.13 : une partition 0,5/0,5 réalisée et une binaire à 0,5 ont le même Brier (0,25).
+            a=forecast('P-A',partition='Z',probabilite=.5,frequence_de_base=.5,episode_id='E1',evenement='SEU@7 apparait')
+            b=forecast('P-B',partition='Z',probabilite=.5,frequence_de_base=.5,episode_id='E1',evenement='HIE@7 apparait')
+            c=forecast('P-C',probabilite=.5,episode_id='E2')
+            r=score_result([a,b,c,score('P-A',1),score('P-B',0),score('P-C',1)])
+            self.assertEqual(sorted(round(u['brier'],12) for u in r['details']),[.25,.25])
+        def test_version_illisible(self):
+            for v in ('abc','0.6.x','6',''):
+                with self.assertRaises(ValueError):valider_journal([forecast(version_regles=v)])
+            self.assertEqual(version_lue('0.6'),(0,6,0));self.assertEqual(version_lue('0.6.12'),(0,6,12))
+        def test_parametre_fantome(self):
+            self.assertEqual(erreurs_parametres(),[])
+            self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
         def test_abstention(self):
             # 0.6.11 (audit V22) : un calcul non estimé ne devient pas une prévision chiffrée.
             calc={'evenement':'SEU@7 apparait','p':None,'rho':4,'intervalle':None,'p_sans_cartes':None,
@@ -2311,6 +2405,14 @@ def autotest():
             self.assertEqual((r['abstentions']['questions'],r['abstentions']['resolues']),(1,1))
             self.assertAlmostEqual(r['abstentions']['part_des_questions'],.5)
             with self.assertRaises(ValueError):valider_journal([forecast(probabilite=None)])   # null sans calcul
+        def test_mutation_statuts_skill(self):
+            # 0.6.13 : un contrôle par regex sur texte libre a son test de mutation.
+            sk=(RACINE/'SKILL.md').read_text(encoding='utf-8');self.assertEqual(erreurs_statuts(sk),[])
+            m=re.search(r'(\d+) Documenté,\s+(\d+) Proposé,\s+(\d+) Vide',sk);self.assertIsNotNone(m)
+            for g in (1,2,3):
+                mut=sk[:m.start(g)]+str(int(m.group(g))+1)+sk[m.end(g):]
+                self.assertTrue(erreurs_statuts(mut),f'mutation du nombre {g} non détectée')
+            self.assertTrue(erreurs_statuts(sk.replace(m.group(0),'(répartition supprimée)')))
         def test_cloture_vide(self):
             rv=recherches_vide();self.assertEqual(rv[(carte_id('RÉSONANCE'),7)],2)
             self.assertEqual(sum(1 for v in rv.values() if v>=P['vide_recherches_cloture']),0)

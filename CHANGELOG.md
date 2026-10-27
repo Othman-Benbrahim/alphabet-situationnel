@@ -1,6 +1,40 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.6.12
+> Version : 0.6.13
+
+## 0.6.13 — 2026-10-27 · après l'audit de la 0.6.12
+
+Audit du dépôt (commit a9398b1), par mutations et journaux reconstruits. Tous les constats reproduits,
+tous traités. 92 autotests (87 + 5). Aucun chiffre des exemples ne change.
+
+**Majeurs**
+- **M1 · contrôle des statuts publiés dans `SKILL.md`, jamais exécuté** : la regex exigeait les deux
+  nombres sur une ligne, le texte est coupé. Blancs normalisés, trois nombres comparés (Documenté
+  compris), absence de la phrase = erreur ; autotest de mutation sur chacun des trois nombres.
+- **M2 · temporalité tranchée** : hors `generique`, **seule une référence externe** permet de chiffrer ;
+  des cas homologues ne suffisent plus (appariés par cartes, pas par calendrier, ils partagent l'angle
+  mort). Moteur (`reference_de_domaine`), journal, `simulation.md`, `validation.md` et `SKILL.md`
+  disent la même chose ; autotest `programmee + base` (ρ1 → non estimé ; avec référence → chiffré).
+  La ligne S5 nomme le motif au lieu du nombre de cas.
+- **M3 · Brier des partitions sur l'échelle binaire** : somme ÷ 2 (0 à 1), comparateurs compris ;
+  une partition 0,5/0,5 vaut désormais 0,25, comme la binaire équivalente. Les scores d'archives
+  (exemples 7 à 11) restent sur l'ancienne échelle, signalé dans `validation.md` §2.
+
+**Modérés**
+- m1 · `version_regles` validé (forme 0.6 ou 0.6.12) ; « abc » est refusé au lieu de sauter les
+  exigences versionnées. m2 · la ligne S5 nomme la source externe et sa période (« réf. … »).
+  m3 · étape 6 : le marqueur se lit avant calcul avec `equivalences --carte`. m4 · en sortie, noms
+  canoniques (« SEUIL@7 », « TRACE·MÉMOIRE@7 ») ; abréviations dans le JSON seulement.
+  m5 · `equivalences.md` dans la table de chargement. m6 · prérequis d'exécution dans `SKILL.md`.
+  m7 · tout paramètre est lu par le moteur ou déclaré réservé (`kappa_min`) ; un paramètre fantôme
+  fait échouer `audit`, qui annonce désormais « paramètres exhaustifs et lus ».
+- Structure : procédures numérotées pour LIRE, CODER et SCORER (seule PRÉVOIR en avait).
+
+**Mineurs** : `equivalences --carte` en table lisible ou `--json` ; `partager` refuse un identifiant hors
+format ; `sceller-jugement` valide l'événement (texte libre avec `--origine jugement`) et refuse une
+date future ; README : journal d'exemple qualifié d'archive (0.4.0) ; `.gitignore` livré sans BOM et
+`publier-github.ps1` corrigé (l'ancien, écrit par `Set-Content -Encoding UTF8`, rendait la première
+règle inerte) ; « en 0.4.0, les 117 anciens Documentés… ».
 
 ## 0.6.12 — 2026-10-27 · la temporalité devient une question obligatoire
 

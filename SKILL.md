@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.6.12'
+  version: '0.6.13'
   author: Othman Ben Brahim
 ---
 
@@ -18,8 +18,12 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.6.12. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.6.13. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
+Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
+du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
+ou échoue, travailler « sans shell » (`simulation.md` §6) : lecture et commandes à exécuter, aucun
+chiffre présenté comme sortie du moteur.
 Exécuter `python3 scripts/moteur.py audit` ; après modification, `python3 scripts/moteur.py autotest`.
 Le premier vérifie les fichiers, versions, paramètres exhaustifs, statuts, matrice et inerties ; le
 second teste les régressions. Aucun ne certifie les faits ou l'utilité scientifique de l'alphabet.
@@ -50,6 +54,7 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | « Où en est le skill ? », « que reste-t-il à faire ? » | `feuille-de-route.md` et `moteur.py bilan` |
 | Situation française : chercher un fait, une source de résolution, une série chiffrée | `sources-france.md` |
 | Sortie LIRE : « ce que l'alphabet ne voit pas ici » | `angles-morts.md` |
+| Statut d'un équivalent (Documenté, Proposé, Vide), tableau par strate, cases Vides et leur clôture | `equivalences.md` |
 | Pourquoi une règle 0.6.x existe (garantie, option, barreau, jugement scellé, sensibilité, corroboration) | `apports-theoriques.md` |
 | Politique intérieure (gouvernement, Parlement, partis, élections, mobilisations) | strate 13 : `strates.md` §2 et §4, `equivalences/strate-13.md` |
 
@@ -68,15 +73,15 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… calculer --base B --etat "…" --evenement "…" --date-information AAAA-MM-JJ --references R.json` | base validée, références propres à chaque événement |
 | `… calculer … --pas 4 --semantique presence` | présence à l'horizon ; alternatives : au-moins-une-fois, continue selon l'événement |
 | `… calculer … --sans-cartes` | ablation : référence sans multiplicateurs ni sélection d'homologues |
-| `… calculer … --temporalite generique\|programmee\|duree_de_vie` | **obligatoire** (0.6.12) : échéance programmée ou durée de vie propre → « non estimée » sans référence de domaine ni cas |
+| `… calculer … --temporalite generique\|programmee\|duree_de_vie` | **obligatoire** : échéance programmée ou durée de vie propre → « non estimée » sans référence externe, même avec des cas |
 | `… trajectoires --etat "…" --pas 2 [--strates 11,8] --json` | exploration à un changement par pas |
 | `… valider B.jsonl` | validation commune aux fiches et au calcul |
 | `… partager C-0042-S07` | partage par empreinte, fixé avant codage |
 | `… bilan [--references R.json] [--journal J.jsonl]` | position mesurée sur la feuille de route |
-| `… equivalences --carte SEUIL` | les 13 équivalents d'une carte (marqueur local, statut) : utile à l'étape 2 |
+| `… equivalences --carte SEUIL [--json]` | les 13 équivalents d'une carte (statut, marqueur local) : le marqueur à recopier dans la résolution, **avant** tout calcul (étape 6) |
 | `… scorer J.jsonl` | validation du journal, score des questions et épisodes |
 | `… sceller J.jsonl` | empreinte à publier avant échéance ; ne prouve pas seul la prépublication |
-| `… sceller-jugement --question Q --evenement E --p 0.3 --date AAAA-MM-JJ` | empreinte de votre propre probabilité, à calculer **avant** le moteur ; à recopier dans `jugement_scelle` |
+| `… sceller-jugement --question Q --evenement E --p 0.3 --date AAAA-MM-JJ [--origine jugement]` | empreinte de votre propre probabilité, à calculer **avant** le moteur ; à recopier dans `jugement_scelle` ; l'événement est validé (texte libre seulement avec `--origine jugement`), la date ne peut pas être future |
 | `… audit` / `… autotest` / `… parametres` | intégrité / tests / table documentaire générée ; l'audit vérifie la forme et les recoupements internes, pas la justesse du contenu |
 
 `--fref` n'est admis que pour un événement simple, avec `--source-ref`, `--periode-ref`,
@@ -136,12 +141,14 @@ réponse** (s'il est absent, prendre la réponse la plus prudente et la déclare
 1. « Cet événement est-il fixé par un calendrier (scrutin, proclamation, échéance), ou le phénomène
    a-t-il une durée de vie propre (ouragan, grève, session), ou ni l'un ni l'autre ? » → `--temporalite`,
    obligatoire dans `calculer`.
-2. « La source de résolution mesure-t-elle bien [marqueur local affiché par le moteur], ou un
-   phénomène voisin ? » → si voisin, reformuler la question ou justifier `ecart_marqueur`.
+2. « La source de résolution mesure-t-elle bien [marqueur local], ou un phénomène voisin ? » → si
+   voisin, reformuler la question ou justifier `ecart_marqueur`. Le marqueur local se lit **avant** tout
+   calcul avec `moteur.py equivalences --carte NOM` ; le `marqueur_local` du calcul sert ensuite à
+   vérifier qu'il a été recopié.
 Figer objet, source, critère, seuil et sémantique temporelle. Une intensification porte sur une
 mesure réelle, jamais sur f → F. Un événement fixé par un calendrier (scrutin, proclamation, échéance)
-ou un phénomène à durée de vie propre (cyclone, grève) exige une référence externe ou reste non
-chiffré : `calculer --temporalite programmee|duree_de_vie` (`simulation.md` §4). Déclarer binaire ou partition ; tester l'exclusivité et l'exhaustivité.
+ou un phénomène à durée de vie propre (cyclone, grève) exige une référence externe, même si la base a
+des cas, ou reste non chiffré : `calculer --temporalite programmee|duree_de_vie` (`simulation.md` §4). Déclarer binaire ou partition ; tester l'exclusivité et l'exhaustivité.
 
 **7. Calcul.** **D'abord** écrire sa propre probabilité, en chiffre (un « probable » se fait préciser,
 jamais convertir), et la sceller (`sceller-jugement`), **puis**
@@ -167,6 +174,24 @@ successifs : du plus ancien au plus récent ; une issue déjà vue rend la quest
 **10. Sortie.** Suivre `simulation.md` : analytique, symbolique sans chiffre, lignes de journal,
 points à vérifier. Expliquer ce que les données permettent et ce qui reste non estimé.
 
+## Procédures — LIRE, CODER, SCORER
+
+**LIRE** (aucun calcul) : 1. recevabilité (étape 0) ; 2. strates et candidates (1–2) ; 3. ancrage et
+anti-résonance (3–4) ; 4. état (5) ; 5. sortie : état daté, preuves, alternatives, 1 à 3 questions qui
+départagent deux cartes, « ce que l'alphabet ne voit pas ici » (`angles-morts.md`), coût du codage,
+signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une carte.
+
+**CODER** (une fiche) : 1. parcours LIRE (1–4) pour chaque état daté, avec `disponible_le` ;
+2. fiche au schéma de `base-de-cas.md` §2 : garantie, option et, pour un cas actif, `corroboration`
+sur chaque F ; questions au premier état ; si Claude propose le codage, `codage.recodage`, et
+l'utilisateur confirme (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
+`assets/rabbits.jsonl` ; 4. `moteur.py valider` ; une fiche refusée se corrige ou s'archive avec motif.
+
+**SCORER** : 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
+3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement ;
+exclusions (rejeux, fictifs, sans preuve) nommées ; 4. `bilan --journal J.jsonl` pour la position sur le
+jalon V4. Aucun score ne se commente comme validation de l'alphabet tant que V4 n'est pas atteint.
+
 ## Limites
 
 - Le moteur est **associationnel** (barreau A de Pearl) : il extrapole des motifs observés et ne
@@ -175,8 +200,8 @@ points à vérifier. Expliquer ce que les données permettent et ce qui reste no
 - L'alphabet décrit des structures, pas des issues nominatives : qui gagne, quel nom, quel effectif
   exact relèvent du jugement, journalisé à part (`origine: jugement`).
 - Treize équivalents ont une référence lue, tous en strate 7 : 13 Documenté, 182 Proposé,
-  13 Vide. Les 117 anciens
-  Documentés sont rétrogradés. Aucun cas réel actif : les quatre premiers, codés avant les règles
+  13 Vide. En 0.4.0, les 117 anciens
+  Documentés avaient été rétrogradés. Aucun cas réel actif : les quatre premiers, codés avant les règles
   courantes, sont archivés (décision d'auteur, 0.6.8) ; le premier cas actif sera codé sous la version
   courante, de préférence avant son issue (`feuille-de-route.md`, étape 2).
 - Multiplicateurs et inerties non calibrés ; aucune performance prospective démontrée.

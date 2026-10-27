@@ -2,8 +2,8 @@
 
 Auteur : Othman Ben Brahim · Licence : MIT (`LICENSE`)
 
-Version 0.6.12 (numéro de `assets/parametres.json`, vérifié par `audit` dans tous les fichiers, README
-compris ; le paquet livré se nomme `alphabet-situationnel-0.6.12.zip` — un zip renommé à la réception se
+Version 0.6.13 (numéro de `assets/parametres.json`, vérifié par `audit` dans tous les fichiers, README
+compris ; le paquet livré se nomme `alphabet-situationnel-0.6.13.zip` — un zip renommé à la réception se
 rattache à sa version par ce numéro ; un zip ne pouvant contenir sa propre empreinte, son SHA-256 est
 communiqué à la livraison, et `audit` vérifie ensuite le contenu décompressé). Historique : 0.4.0 a corrigé le calcul et
 les contrats, 0.4.1 a rétabli les contrôles perdus (F, G6, renvois, homologie), 0.4.2 a rendu A6 et A7
@@ -17,7 +17,7 @@ restreint SEUIL@13 et journalise à part les jugements nominatifs, 0.6.0 traduit
 en contrôles (barreau déclaré, garantie et option des ancrages F, jugement scellé avant le moteur,
 bande de sensibilité, questions qui départagent, angles morts ; `references/apports-theoriques.md`),
 0.6.1 inscrit la décision 1b (cartes à agents universelles) et propose 16 références pour la strate 7,
-0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée, 0.6.11 compte les abstentions, 0.6.12 pose la question de la temporalité avant tout calcul.
+0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée, 0.6.11 compte les abstentions, 0.6.12 pose la question de la temporalité avant tout calcul, 0.6.13 traite l'audit de la 0.6.12 (contrôles exécutés pour de vrai, Brier des partitions, temporalité tranchée).
 Le modèle suit `SKILL.md`. Les anciens faits non revérifiés sont conservés comme archives exclues.
 
 ## Ce que fait l'outil
@@ -35,16 +35,17 @@ SKILL.md                    procédure et chargement par mode
 LICENSE                     licence MIT
 LICENCES-TIERS.md           notice MIT d'EnVrai?, dont sources-france.md reprend des contenus
 README.md                   ce guide
-CHANGELOG.md                historique et révisions 0.4.0–0.6.12
+CHANGELOG.md                historique et révisions 0.4.0–0.6.13
 references/                 19 références (dont feuille-de-route.md, sources-france.md, angles-morts.md et apports-theoriques.md) et 13 fichiers d'équivalents
 scripts/moteur.py           moteur, validateur, scoreur et autotests intégrés
 assets/parametres.json      source structurée exhaustive des paramètres
 assets/base-de-cas.exemple.jsonl  40 cas fictifs, --demo obligatoire
-assets/journal.exemple.jsonl      journal fictif courant, exclu de V4
+assets/journal.exemple.jsonl      journal fictif d'archive (règles 0.4.0, calculs non reproductibles sous la version courante), exclu de V4
 assets/cas-reels.jsonl            4 premiers cas réels, archivés en 0.6.8 (rejeux d'avant les règles courantes), exclus des calculs
 assets/cas-reels-originaux.jsonl  témoignage original de ces 4 cas, archive non réécrite
 assets/journal-lacunes.md         pistes historiques à revérifier, ancrages à revoir
 assets/rabbits.jsonl              constructions ad hoc d'un codage, avec statut ouvert ou résorbé
+.gitignore                        __pycache__/ et *.pyc (sans BOM)
 ```
 
 ## Démarrer

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.6.12
+> Version : 0.6.13
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -120,8 +120,9 @@ proclamation, échéance budgétaire ou légale) n'est pas une transition aléat
 connaît pas le calendrier, le calcule sur un taux générique (test brésilien : « un vainqueur est
 proclamé dans la semaine du second tour », 6,8 %, alors que la proclamation était programmée). Pour un
 tel événement, fournir une référence externe (`--fref` avec sa source, ou `--references`), ou ne pas
-le chiffrer. Déclarer `--temporalite programmee` : sans référence ni cas, le moteur répond « non
-estimée ». **Durée de vie propre (0.6.10)** : même règle pour un phénomène dont la durée de vie n'a
+le chiffrer. Déclarer `--temporalite programmee` : sans référence externe, le moteur répond « non
+estimée », **même avec des cas homologues** (0.6.13) : ces cas sont appariés par cartes, pas par
+calendrier, et partagent le même angle mort. **Durée de vie propre (0.6.10)** : même règle pour un phénomène dont la durée de vie n'a
 rien à voir avec la fenêtre de référence de 3 mois (test Polo : un cyclone, ÉMERGENCE@11, « persiste »
 à 96,75 % sur 7 jours par l'inertie trimestrielle générique, et se dissipe le quatrième jour) :
 `--temporalite duree_de_vie`, puis une référence de domaine (durée de vie des cyclones du bassin) ou

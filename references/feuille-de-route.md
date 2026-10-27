@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.6.12
+> Version : 0.6.13
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -224,7 +224,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | Audit V21 et test Polo traités (0.6.10) : journal entièrement lié au calcul, temporalité déclarée |
 | 2026-10-27 | — | Audit V22 traité (0.6.11) : abstentions journalisées et comptées, `trajectoires` refuse la temporalité |
 | 2026-10-27 | — | Temporalité obligatoire (0.6.12) : le moteur pose la question, Claude la pose à l'utilisateur avec celle du critère |
-| 2026-10-27 | 0 | À faire : installer la 0.6.12 |
+| 2026-10-27 | — | Audit de la 0.6.12 traité (0.6.13) : M1 à M3, m1 à m7, mineurs |
+| 2026-10-27 | 0 | À faire : installer la 0.6.13 |
 
 ---
 

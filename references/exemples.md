@@ -1,6 +1,6 @@
 # Alphabet situationnel — Exemples
 
-> Version : 0.6.12
+> Version : 0.6.13
 
 > Exemples 1–6 : démonstrations entièrement fictives du contrat courant. Exemples 7–10 : archives
 > critiques de versions antérieures, non revérifiées et exclues des calculs actuels. Ne jamais
@@ -36,7 +36,7 @@ Sortie humaine complète pour SEUIL@7 (sans `--json`) :
 ```
 ⚠ Prévision · cet outil prend un risque déclaré.
 ⚠ ρ1 · association · 10 cas distincts (H1) · p₀ 23 % · p ~22 % (large : 5–43) · échéance 2026-12-01 · journal [à attribuer]
-Événement : SEU@7 apparait · ρ = provenance du chiffre, pas sa fiabilité
+Événement : SEUIL@7 apparait · ρ = provenance du chiffre, pas sa fiabilité
 Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ; aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »
 Comparateur au même horizon : 12 %
 Sans cartes (inertie et fréquences seules) : 12 % — les cartes déplacent la probabilité de +10,0 points
@@ -125,7 +125,7 @@ python3 scripts/moteur.py calculer --etat "[2026-09 | 3 mois] POLARITÉ@7[F]" \
 ```
 ⚠ Prévision · cet outil prend un risque déclaré.
 ⚠ ρ3 · association · composé : persistance × référence conditionnelle · p 17 % [intervalle non estimé] · échéance 2026-12-01 · journal [à attribuer]
-Événement : POL@7 intensifie · ρ = provenance du chiffre, pas sa fiabilité
+Événement : POLARITÉ@7 intensifie · ρ = provenance du chiffre, pas sa fiabilité
 Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ; aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »
 Comparateur au même horizon : 17 %
 Résolution (S1) : la source doit mesurer le marqueur local « deux blocs, alignements exclusifs » (Système bipolaire, Documenté) ; sinon reformuler l'événement

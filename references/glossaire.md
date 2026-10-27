@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.1
+> Version : 0.7.2
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -60,7 +60,14 @@
 | Nom local | phrase par laquelle une discipline nomme le phénomène dans son vocabulaire, sans le mot de la carte ; exigé pour Documenté | `equivalences.md` §2 |
 | Manifeste | `SHA256SUMS` : empreinte de chaque fichier livré, vérifiée par `audit` et `sha256sum -c` ; régénérée en dernier avant livraison | `README.md` |
 | Option | filtre de pertinence d'un ancrage F de cas réel : un acteur et l'option qu'il avait avant et n'a plus après, ou l'inverse | O1 |
-| Question qui départage | question posée au premier état d'un cas réel dont les deux réponses mènent à deux cartes différentes (abduction) | `grammaire.md` §7 |
+| Question qui départage | question posée au premier état d'un cas réel dont les deux réponses mènent à deux cartes différentes, ou à une carte et à l'indétermination (abduction) ; pour un cas réel, avec sa résolution et une justification par branche | `grammaire.md` §7 |
+| Indéterminé (`indetermine`) | branche d'une question dont la réponse ne permet pas de conclure : « non A » ne vaut pas « B » ; état de l'information, pas issue du monde, jamais probabilisé | `grammaire.md` §7 |
+| Question de documentation | question qui cherche la preuve manquante d'un ancrage (`carte`, `manque`) ; ne départage pas deux cartes et ne remplace pas une question qui départage | `base-de-cas.md` §2 |
+| Résolution d'une question | observation et source qui répondraient à une question de lecture ; distincte de la résolution externe d'une prévision (S1) | `base-de-cas.md` §2 |
+| Statut d'une question | ouverte, partielle, résolue (avec la réponse) ou présupposé invalidé, chacun avec la preuve qui l'a fait changer | `base-de-cas.md` §2 |
+| Passage | localisation, dans la source, du fait d'ancrage et relation à ce fait (soutient, partiel, contredit, insuffisant) ; F exige un passage qui soutient le fait tel qu'il est écrit | A6 |
+| État de travail | résumé révisable d'un dossier long, séparé des pièces et des prévisions scellées, au contenu minimal fixé ; un index, jamais une preuve | `simulation.md` §7 |
+| Banc d'essai | épreuves de stabilité et de réexamen, avec corrigé indépendant et comparaison qui isole l'apport, par lesquelles une modification du skill doit passer avant de devenir une règle | `validation.md` §9 |
 | Rabbit | construction ad hoc d'un codage (carte, strate, règle inventée en cours de route) ; dette ouverte jusqu'à sa résorption | `validation.md` §6 |
 | Temporalité | déclaration d'une prévision : générique, programmée (échéance fixée par un texte) ou durée de vie propre ; hors générique, le taux générique (ρ4) est refusé | `validation.md` §1 |
 | Vide clos | case Vide après trois recherches documentées sans équivalent : non concluant, comptée comme traitée | `equivalences.md` §3 |

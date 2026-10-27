@@ -1,9 +1,46 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.1
+> Version : 0.7.2
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.2 — 2026-10-27 · cinq apports : éprouver les étapes de la lecture
+
+Aucun calcul ne change. 103 autotests (101 + 2). Schéma des fiches étendu pour les cas réels ; aucun cas
+réel actif n'existe, aucun recodage n'est donc demandé (même version mineure). Tri complet :
+`apports-theoriques.md` §10.
+
+- **Questions résolubles** (sémantique inquisitive, Ciardelli, Groenendijk et Roelofsen 2019). Le
+  contrôle vérifiait deux cartes différentes, pas que la réponse les établisse. Pour un cas réel,
+  chaque question porte `resolution` (observation et source qui y répondraient) et, par branche menant
+  à une carte, `justification`. « Non A » ne vaut pas « B » : une branche peut mener à `indetermine`
+  (état de l'information, jamais probabilisé). Facultatif : `type: "documentation"` (`carte`, `manque`),
+  `statut` (ouverte, partielle, resolue avec `reponse`, presuppose_invalide), chacun avec sa `preuve`.
+  L'exemple du schéma, cité par l'analyse (« pas de troisième groupe → POLARITÉ »), commettait l'erreur :
+  remplacé.
+- **Passage** (contrôle affirmation–passage : OpenScholar, spécifications). Un mot F de cas réel actif
+  cite `passage` {localisation, relation} : F exige `soutient` ; `partiel` donne f ; `contredit` renvoie
+  à A7 ; `insuffisant` n'ancre rien ; « independantes » exige deux passages qui soutiennent. A5 : une
+  annonce, une possibilité, une décision non entrée en vigueur ne sont pas une réalisation.
+- **Recherche et arrêt** (`protocole.md` A7) : requêtes sur le phénomène, pas sur le nom de la carte ;
+  une famille de requêtes cherche la contradiction ; la recherche s'arrête sur contrôles faits, pas sur
+  sentiment de certitude, et un budget épuisé donne un dossier incomplet.
+- **Séries** (`sources-france.md` §5) : objet compté, unité, période, périmètre, manquants, agrégation,
+  révisions, avant d'ancrer un marqueur ou de fixer une résolution.
+- **État de travail** (`simulation.md` §7) : contenu minimal d'un résumé de dossier long ; pièces, état
+  révisable et prévisions scellées séparés.
+- **Banc d'essai** (`validation.md` §9) : toute modification du skill passe par des épreuves de
+  stabilité et de réexamen, avec corrigé indépendant, une variante à la fois, sorties anonymisées, lots
+  séparés par épisode ; trois résultats (conformité, lecture, prévision) jamais fondus ; une règle
+  constitutive ne se retire pas faute d'échec. La règle d'importation est complétée : un contrôle entre
+  avec son épreuve.
+- **Déjà trié** : `apports-intuition-machine.md`, reversé le même jour, est la synthèse QPT traitée en
+  0.6.7 (§8) ; aucun apport nouveau.
+- **Différé** : registre de dépendances, dossier externe et sous-tâches récursives, trajectoires datées
+  (0.9, à leurs conditions). **Refusé** : distances vectorielles ou indices de confiance internes comme
+  probabilités ou comme F/f, consensus de modèles comme corroboration, cartes ordonnées en étapes,
+  nouvelles cartes décrivant l'outil.
 
 ## 0.7.1 — 2026-10-27 · après l'audit hacker.ai (exécuté sous Windows)
 

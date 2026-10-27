@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.1
+> Version : 0.7.2
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -52,6 +52,10 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
           "fait": "Fait fictif n° 1 remplissant un marqueur local de POLARITÉ (strate 7)",
           "source": "Source fictive n° 1 ; source fictive n° 1 bis, indépendante de la première (exemple construit)",
           "corroboration": "independantes",
+          "passage": [
+            {"localisation": "source fictive n° 1, § 3", "relation": "soutient"},
+            {"localisation": "source fictive n° 1 bis, p. 2", "extrait": "extrait court, fictif", "relation": "soutient"}
+          ],
           "contre_observation": "Contre-observation fictive (marginale)",
           "portee": "marginale",
           "a6": "POLARITÉ@7 : CONTRAINTE → (deux camps nommés, pas une règle qui retire des options) ; SEUIL → (aucun passage irréversible daté)",
@@ -73,7 +77,12 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
         }
       ],
       "questions": [
-        {"question": "Les États tiers forment-ils un troisième groupe stable, hors des deux blocs ?", "si_oui": "RES@7", "si_non": "POL@7"}
+        {"question": "Les votes des États tiers s'alignent-ils de façon exclusive sur l'un des deux blocs ?", "si_oui": "POL@7", "si_non": "indetermine",
+         "resolution": "votes nominatifs publiés au registre fictif sur la fenêtre",
+         "justification": {"oui": "des alignements exclusifs datés sont l'attendu de la garantie de POLARITÉ"},
+         "statut": "ouverte"},
+        {"question": "Quel texte fixe le plafond, et à quelle date entre-t-il en vigueur ?", "type": "documentation", "carte": "CTR@6",
+         "manque": "la date d'entrée en vigueur : l'annonce du plafond ne suffit pas", "resolution": "journal officiel fictif"}
       ],
       "liaisons": [],
       "positions": null,
@@ -171,7 +180,8 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 | `force_initiale` | `"F"` seulement avec une portée substantielle ; sur un mot qui persiste, admis seulement s'il était F, ou déjà rétrogradé depuis F, à l'état précédent |
 | `garantie` | requis pour F (cas réel) : `mecanisme`, `attendu`, `contredirait` (A6) ; forme type dans chaque fiche de `cartes.md` |
 | `option` | requis pour F (cas réel) : `acteur` (« le système » admis), `avant`, `apres` différents (pertinence, O1) |
-| `questions` | requis au premier état non nul d'un cas réel (cas fictif exempté) : liste non vide de `{question, si_oui, si_non}` ; `si_oui` et `si_non` sont deux CARTE@strate **différents**, l'un au moins présent dans l'état. Une question dont les deux réponses mènent à la même carte est décorative et refusée (abduction, `grammaire.md` §7) |
+| `questions` | requis au premier état non nul d'un cas réel (cas fictif exempté) : liste non vide, dont au moins une question de **discrimination** `{question, si_oui, si_non}` ; `si_oui` et `si_non` sont deux CARTE@strate **différents**, ou une carte et `"indetermine"` (« non A » ne vaut pas « B » : la réponse laisse le codage ouvert), l'une au moins présente dans l'état. Une question dont les deux réponses mènent à la même carte, ou toutes deux à l'indétermination, est décorative et refusée (abduction, `grammaire.md` §7). **Cas réel (0.7.2)** : chaque question porte `resolution` (l'observation et la source qui y répondraient) ; une question de discrimination porte `justification` `{oui, non}`, une phrase par branche menant à une carte (pourquoi cette réponse l'établit), les deux différentes. Facultatif : `type: "documentation"` avec `carte` (dans l'état) et `manque` (la preuve qui fait défaut à l'ancrage), qui documente sans départager ; `statut` = `ouverte`, `partielle`, `resolue` (avec `reponse` oui/non) ou `presuppose_invalide`, chacun sauf `ouverte` avec sa `preuve` |
+| `passage` | requis pour F d'un cas réel **actif** (0.7.2) ; contrôlé s'il est fourni ailleurs : objet ou liste `{localisation, relation, extrait?}`. `localisation` dit où le fait se lit (page, section, paragraphe, horodatage) ; `relation` = `soutient`, `partiel`, `contredit` ou `insuffisant` ; `extrait` facultatif, 300 caractères au plus. F exige un passage qui **soutient** le fait tel qu'il est écrit (« peut être activé » ne soutient pas « a été activé ») ; un soutien partiel donne f ; une pièce qui contredit va en contre-observation (A7), une pièce qui ne permet pas de conclure n'ancre rien ; `corroboration: "independantes"` exige deux passages qui soutiennent. Aucun effet sur le calcul (contrôle affirmation–passage, `protocole.md` A6) |
 | `corroboration` | requis pour F d'un cas réel **actif** (une proposition le reçoit à son activation) : `"independantes"` si le fait repose sur au moins deux sources indépendantes, nommées dans `source` et séparées par « ; » ; `"unique"` sinon, admis seulement pour une source primaire (texte officiel, donnée publiée) et signalé dans « À vérifier auprès de vous » ; un fait repris d'un seul relais secondaire s'ancre en f (0.7.1). Aucun effet sur le calcul (qualité de l'information, 0.6.6) |
 | `source_url`, `date_consultation` | facultatifs (0.7.1) : adresse http(s) de la source et date de consultation (AAAA-MM-JJ), contrôlées si présentes ; recommandés pour tout cas réel, ils permettent à un tiers de relire la source |
 | `test` | requis pour F de cas réel : `pistolet` ou `double` (fait suffisant) ; facultatif pour f (`paille`, `cerceau`, aussi admis) ; tests de process tracing, `protocole.md` A6 (0.7.0) |

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.1
+> Version : 0.7.2
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -105,7 +105,10 @@ Une carte dont l’accord est insuffisant revient en Proposé ; rechercher les d
 **A5 · Ce qui compte comme fait.** Un fait est un acte, un document, un événement daté, une mesure ou
 un comportement décrit avec précision — ce qu'un tiers présent aurait pu constater — ou une donnée
 issue d'un flux identifié (source, date, identifiant). Un discours compte comme fait **sur le
-discours** (qui a dit quoi), pas comme preuve de ce qu'il affirme.
+discours** (qui a dit quoi), pas comme preuve de ce qu'il affirme. De même, une **annonce**, une
+**possibilité** ou une **condition** (« pourra être activé si… ») n'est pas une **réalisation** (« a été
+activé ») ; une décision adoptée n'est pas en vigueur. Le fait s'écrit au statut que la source lui
+donne, et le passage cité doit le soutenir tel qu'il est écrit (A6, `passage`).
 
 - Un ressenti, individuel ou collectif, n'est jamais un ancrage.
 - Une déclaration d'ignorance n'ancre pas INCERTITUDE ; il faut une conduite organisée par
@@ -168,6 +171,26 @@ voisine, est ce qui rend un fait suffisant. Côté A7, une contre-observation de
 cerceau échoué : la carte est éliminée. Le moteur vérifie la cohérence de la déclaration, pas sa
 justesse.
 
+**Passage (0.7.2).** Le test dit ce qu'un fait prouverait ; il ne dit pas que la source le dit. Une
+référence réelle, pertinente et bien datée peut ne pas soutenir le fait tel qu'il est écrit : un
+passage qui décrit une possibilité ne prouve pas une réalisation, un résultat local ne vaut pas pour
+toute l'organisation, une propriété d'un acteur ne passe pas à un autre (contrôle affirmation–passage,
+OpenScholar ; `apports-theoriques.md` §10). Un mot F de cas réel actif porte donc `passage` : où le
+fait se lit (`localisation`) et ce que ce passage fait au fait (`relation`) :
+
+| `relation` | Sens | Effet |
+|---|---|---|
+| `soutient` | le passage établit le fait écrit, pour cet objet, cet acteur et cette date | admis pour F |
+| `partiel` | il en établit une partie (l'annonce, pas l'entrée en vigueur ; une partie de l'objet) | f au plus |
+| `contredit` | il établit le contraire | contre-observation (A7), pas ancrage |
+| `insuffisant` | il ne permet pas de conclure | n'ancre rien : corriger le fait, chercher une autre pièce ou ne pas ancrer |
+
+Une corroboration « independantes » exige deux passages qui soutiennent, un par source. **Si aucun
+passage ne soutient l'affirmation, on corrige l'affirmation ; on ne lui cherche pas une apparence de
+justification.** Un passage qui soutient n'établit pas que le fait est vrai (la source peut se tromper,
+reprendre une autre source) : la corroboration, A6 et A7 restent requises. Le moteur vérifie la
+cohérence de la déclaration, pas la lecture.
+
 **A7 · Anti-résonance.** Pour chaque carte ancrée, chercher activement la contre-observation la plus
 forte **dans la situation** (un contre-exemple pris ailleurs ne compte pas), puis classer sa portée :
 
@@ -180,6 +203,18 @@ forte **dans la situation** (un contre-exemple pris ailleurs ne compte pas), pui
 
 Le rejet est un résultat attendu. Une lecture où toutes les contre-observations sont marginales le
 justifie pour chacune.
+
+**Chercher (0.7.2).** La contre-observation se cherche par une requête formée sur le phénomène
+observable, l'objet et la période, jamais sur le nom de la carte (« cycle », « réseau » rapportent des
+métaphores) ni sur une prémisse (« pourquoi le système a-t-il rompu ? » suppose la rupture). Trois
+familles de requêtes : **observation** (les faits, séries, décisions), **discrimination** (ce qui
+départagerait deux candidates), **contradiction** (exceptions, corrections, interruptions). Un
+document pertinent qui contredit la lecture reste au dossier : ce n'est pas un document hors sujet.
+Plusieurs relais d'une même origine ne sont pas des confirmations indépendantes (`corroboration`).
+**Arrêt.** La recherche s'arrête quand les contrôles requis sont faits (A6, A7, passage, questions) et
+qu'aucune vérification accessible ne changerait la conclusion ; pas quand la lecture « paraît sûre »,
+ni parce que des réponses répétées concordent. Un budget épuisé avant un contrôle décisif donne un
+dossier incomplet (Spéculatif, « À vérifier »), jamais une conclusion renforcée.
 
 Dans une fiche, la portée s'écrit dans le champ `portee` (`marginale`, `substantielle`, `dominante`,
 `aucune`) et la force notée est la force **après** A7. Une portée substantielle exige la force f et
@@ -476,7 +511,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.1"` |
+| `version` | `"0.7.2"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

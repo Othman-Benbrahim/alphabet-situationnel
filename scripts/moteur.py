@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.1 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.2 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -180,27 +180,88 @@ def controle_a6(k, ligne):
 PORTEES = ('marginale', 'substantielle', 'dominante', 'aucune')
 
 
-def controle_questions(qs, fm, requis):
+INDETERMINE = 'indetermine'
+STATUTS_QUESTION = ('ouverte', 'partielle', 'resolue', 'presuppose_invalide')
+
+
+def controle_questions(qs, fm, requis, reel=False):
     """0.6.0. Abduction : une lecture produit les questions que la situation rend posables, chacune
     départageant deux cartes. Forme : [{question, si_oui, si_non}], si_oui ≠ si_non (CARTE@strate),
     l'une au moins présente dans l'état. Une question dont les deux réponses mènent à la même carte est
-    décorative et refusée. Exigée pour le premier état non nul d'un cas réel."""
+    décorative et refusée. Exigée pour le premier état non nul d'un cas réel.
+
+    0.7.2 (sémantique inquisitive : Ciardelli, Groenendijk et Roelofsen 2019, ch. 2 et 5). Une question
+    se définit par ses **conditions de résolution** : ce qui y répondrait, et ce que chaque réponse
+    établit. « Non A » ne vaut pas « B » : une branche peut mener à `"indetermine"` (le codage reste
+    ouvert ; c'est un état de l'information, pas une issue du monde). Pour un cas réel, chaque question
+    de discrimination porte `resolution` (l'observation et la source qui répondraient) et
+    `justification` {oui, non} (pourquoi cette réponse établit cette carte). Une question de
+    `type: "documentation"` cherche la preuve qui manque à un ancrage (`carte`, `manque`) : utile, elle
+    ne remplace pas la question qui départage. `statut` (ouverte, partielle, resolue,
+    presuppose_invalide) trace ce qui a été levé, par quelle `preuve`. Le moteur vérifie la forme et
+    la cohérence des déclarations, pas la justesse d'une justification."""
     if qs is None:
         return ['questions requises au premier état d’un cas réel : au moins une question qui départage deux cartes'] if requis else []
     if not isinstance(qs, list) or (requis and not qs):
         return ['questions = liste non vide de {question, si_oui, si_non}']
-    err = []
+    err = []; discrimination = 0
     for q in qs:
         if not isinstance(q, dict) or not isinstance(q.get('question'), str) or not q['question'].strip():
             err.append('question sans texte'); continue
-        try:
-            a, b = cle_valide(str(q.get('si_oui', ''))), cle_valide(str(q.get('si_non', '')))
-        except (ValueError, IndexError):
-            err.append(f'« {q["question"][:40]}… » : si_oui et si_non doivent être des CARTE@strate'); continue
+        t = q['question'][:40]
+        typ = q.get('type', 'discrimination')
+        if typ not in ('discrimination', 'documentation'):
+            err.append(f'« {t}… » : type = discrimination ou documentation'); continue
+        if reel and not (isinstance(q.get('resolution'), str) and q['resolution'].strip()):
+            err.append(f'« {t}… » : resolution requise pour un cas réel (quelle observation, dans quelle source, répondrait)')
+        st = q.get('statut')
+        if st is not None:
+            if st not in STATUTS_QUESTION:
+                err.append(f'« {t}… » : statut = {", ".join(STATUTS_QUESTION)}')
+            elif st != 'ouverte' and not (isinstance(q.get('preuve'), str) and q['preuve'].strip()):
+                err.append(f'« {t}… » : statut {st} sans preuve (ce qui a levé ou invalidé la question)')
+            elif st == 'resolue' and typ == 'discrimination' and q.get('reponse') not in ('oui', 'non'):
+                err.append(f'« {t}… » : question résolue sans reponse (oui ou non)')
+        if typ == 'documentation':
+            try:
+                k = cle_valide(str(q.get('carte', '')))
+            except (ValueError, IndexError):
+                err.append(f'« {t}… » : une question de documentation nomme la carte (CARTE@strate) dont elle documente l’ancrage'); continue
+            if k not in fm:
+                err.append(f'« {t}… » : {k} n’est pas dans l’état')
+            if not (isinstance(q.get('manque'), str) and q['manque'].strip()):
+                err.append(f'« {t}… » : manque requis (la preuve qui fait défaut à l’ancrage)')
+            continue
+        discrimination += 1
+        branches = {}
+        for b in ('si_oui', 'si_non'):
+            v = str(q.get(b, ''))
+            if v == INDETERMINE:
+                branches[b] = None; continue
+            try:
+                branches[b] = cle_valide(v)
+            except (ValueError, IndexError):
+                branches[b] = False
+        if False in branches.values():
+            err.append(f'« {t}… » : si_oui et si_non doivent être des CARTE@strate (ou « {INDETERMINE} »)'); continue
+        a, b = branches['si_oui'], branches['si_non']
+        if a is None and b is None:
+            err.append(f'« {t}… » : les deux réponses laissent le codage indéterminé, la question ne départage rien'); continue
         if a == b:
-            err.append(f'« {q["question"][:40]}… » : les deux réponses mènent à {a}, question décorative')
-        elif a not in fm and b not in fm:
-            err.append(f'« {q["question"][:40]}… » : aucune des deux cartes n’est dans l’état')
+            err.append(f'« {t}… » : les deux réponses mènent à {a}, question décorative'); continue
+        if a not in fm and b not in fm:
+            err.append(f'« {t}… » : aucune des deux cartes n’est dans l’état'); continue
+        if reel:
+            j = q.get('justification')
+            if not isinstance(j, dict):
+                err.append(f'« {t}… » : justification {{oui, non}} requise pour un cas réel (pourquoi cette réponse établit cette carte)'); continue
+            for rep, cible in (('oui', a), ('non', b)):
+                if cible is not None and not (isinstance(j.get(rep), str) and j[rep].strip()):
+                    err.append(f'« {t}… » : justification.{rep} requise (pourquoi « {rep} » établit {cible} ; « non A » ne vaut pas « B »)')
+            if all(isinstance(j.get(r), str) for r in ('oui', 'non')) and ' '.join(j['oui'].lower().split()) == ' '.join(j['non'].lower().split()):
+                err.append(f'« {t}… » : justifications identiques pour oui et non')
+    if requis and qs and not discrimination and not err:
+        err.append('au moins une question de discrimination (si_oui, si_non) au premier état : une question de documentation ne départage pas deux cartes')
     return err
 
 
@@ -279,6 +340,48 @@ def controle_corroboration(k, item):
     if v == 'independantes' and len([x for x in str(item.get('source', '')).split(';') if x.strip()]) < 2:
         return [f'{k} : corroboration "independantes" mais une seule source nommée (séparer les sources par « ; »)']
     return []
+
+
+RELATIONS_PASSAGE = ('soutient', 'partiel', 'contredit', 'insuffisant')
+
+
+def controle_passage(k, item, force, requis):
+    """0.7.2 (OpenScholar : Asai et al. 2024, contrôle affirmation–passage ; Shao). Une source réelle et
+    pertinente ne prouve pas pour autant le fait tel qu'il est écrit : « peut être activé » ne soutient
+    pas « a été activé ». `passage` (objet ou liste) relie le fait au passage lu : `localisation`
+    (page, section, paragraphe, horodatage), `extrait` facultatif (court), `relation` : soutient,
+    partiel, contredit ou insuffisant. Une pièce qui contredit va en contre-observation (A7) ; une pièce
+    qui ne permet pas de conclure n'ancre rien. **F exige au moins un passage qui soutient** ; une
+    corroboration « independantes » en exige deux. Requis pour F de cas réel actif ; contrôlé s'il est
+    fourni ailleurs. Le moteur vérifie la cohérence de la déclaration, pas la lecture."""
+    v = item.get('passage')
+    if v is None:
+        return [f'{k} : champ passage requis pour F de cas actif ({{localisation, relation}} : le passage lu qui soutient le fait)'] if requis else []
+    ps = v if isinstance(v, list) else [v]
+    if not ps:
+        return [f'{k} : passage = objet ou liste non vide']
+    err = []
+    for x in ps:
+        if not isinstance(x, dict) or not (isinstance(x.get('localisation'), str) and x['localisation'].strip()):
+            err.append(f'{k} : passage = {{localisation, relation}} (où, dans la source, le fait se lit)'); continue
+        r = x.get('relation')
+        if r not in RELATIONS_PASSAGE:
+            err.append(f'{k} : passage.relation = {", ".join(RELATIONS_PASSAGE)}'); continue
+        e = x.get('extrait')
+        if e is not None and not (isinstance(e, str) and e.strip() and len(e) <= 300):
+            err.append(f'{k} : passage.extrait = court extrait (300 caractères au plus) ; sinon la seule localisation')
+        if r == 'contredit':
+            err.append(f'{k} : un passage qui contredit le fait est une contre-observation (A7), pas un ancrage')
+        elif r == 'insuffisant':
+            err.append(f'{k} : un passage qui ne permet pas de conclure n’ancre rien : corriger le fait, chercher une autre pièce, ou ne pas ancrer')
+    if err:
+        return err
+    soutiens = sum(1 for x in ps if x['relation'] == 'soutient')
+    if force == 'F' and not soutiens:
+        err.append(f'{k} : F exige un passage qui soutient le fait tel qu’il est écrit ; un soutien partiel donne f')
+    if force == 'F' and item.get('corroboration') == 'independantes' and soutiens < 2:
+        err.append(f'{k} : corroboration « independantes » : deux passages qui soutiennent, un par source')
+    return err
 
 
 def controle_a7(k, item, precedent=None):
@@ -782,12 +885,13 @@ def valider_base(base):
                     if not c['fictif']:
                         errs=controle_a6(k,item['a6'])+controle_garantie(k,item,True)+controle_test(k,item,'F',True)
                         if c.get('statut_donnees')=='actif':errs+=controle_corroboration(k,item)
+                        errs+=controle_passage(k,item,'F',c.get('statut_donnees')=='actif')
                         exiger(not errs, f'{cid} : '+' ; '.join(errs))
                     else:
-                        errs=(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'F',False)
+                        errs=(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'F',False)+controle_passage(k,item,'F',False)
                         exiger(not errs, f'{cid} : '+' ; '.join(errs))
-                elif 'garantie' in item or 'option' in item or 'corroboration' in item or 'test' in item:
-                    errs=controle_garantie(k,item,False)+(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'f',False)
+                elif 'garantie' in item or 'option' in item or 'corroboration' in item or 'test' in item or 'passage' in item:
+                    errs=controle_garantie(k,item,False)+(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'f',False)+controle_passage(k,item,'f',False)
                     exiger(not errs, f'{cid} : '+' ; '.join(errs))
             exiger(expected <= documented, f'{cid} : mots nouveaux ou modifiés non documentés {sorted(expected-documented)}')
             removed=set(forces(prev))-set(fm) if prev else set()
@@ -826,9 +930,9 @@ def valider_base(base):
                     if label=='tient': exiger(fm[kk]=='F', f'{cid} : tient exige F')
                 texte_requis(x.get('preuve_positions'), f'{cid} : preuve des positions')
             if ix==0 and not c['fictif'] and e['mots']:
-                errs=controle_questions(x.get('questions'),fm,True); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                errs=controle_questions(x.get('questions'),fm,True,True); exiger(not errs, f'{cid} : '+' ; '.join(errs))
             elif x.get('questions') is not None:
-                errs=controle_questions(x['questions'],fm,False); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                errs=controle_questions(x['questions'],fm,False,not c['fictif']); exiger(not errs, f'{cid} : '+' ; '.join(errs))
             prev=e
         exiger(observed<=set(strata), f'{cid} : strate d’état absente de la fiche')
         if c['sans_evenement']:
@@ -1544,6 +1648,8 @@ RENVOIS = {
     ('strates.md','2'):'Fiches', ('strates.md','3'):'taxonomie', ('strates.md','4'):'rattachement',
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
+    ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
+    ('apports-theoriques.md','10'):'Cinq apports', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -1758,7 +1864,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.1','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.2','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
@@ -2124,7 +2230,9 @@ def autotest():
                            'mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'deux camps observés',
                                     'source':'source de test fictive','contre_observation':'médiation observée, marginale','portee':'marginale','objet':'conflit-test'}] if not j else None,
                            'retraits':[],'liaisons':[],'positions':None})
-        states[0]['questions']=[{'question':'Une médiation impose-t-elle une règle commune ?','si_oui':'CTR@7','si_non':'POL@7'}]
+        states[0]['questions']=[{'question':'Une médiation impose-t-elle une règle commune ?','si_oui':'CTR@7','si_non':'POL@7',
+                                 'resolution':'texte de la médiation publié au registre (fictif)',
+                                 'justification':{'oui':'une règle commune retire des options aux deux camps','non':'sans règle, les deux camps restent seuls à se définir l’un par l’autre'}}]
         return {'id':cid,'version_regles':P['version'],'titre':'Cas technique fictif','strates':[7],'fenetre':'3 mois',
                 'sequence':states[:-1],'issue':states[-1],'sans_evenement':True,'fictif':True,'statut_donnees':'actif',
                 'codage':{'mode':'manuel','codeurs':[{'id':'codeur-1','role':'humain'}]},'usage':'apprentissage'}
@@ -2278,7 +2386,12 @@ def autotest():
             with self.assertRaises(ValueError):valider_base([c])            # corroboration manquante (0.6.6)
             m['corroboration']='independantes'
             with self.assertRaises(ValueError):valider_base([c])            # une seule source nommée
-            m['source']='source A ; source B';self.assertEqual(valider_base([c])['actifs'],1)
+            m['source']='source A ; source B'
+            with self.assertRaises(ValueError):valider_base([c])            # passage manquant (0.7.2)
+            m['passage']={'localisation':'source A, p. 3','relation':'soutient'}
+            with self.assertRaises(ValueError):valider_base([c])            # « independantes » : un seul passage qui soutient
+            m['passage']=[{'localisation':'source A, p. 3','relation':'soutient'},{'localisation':'source B, § 4','relation':'soutient'}]
+            self.assertEqual(valider_base([c])['actifs'],1)
             m['corroboration']='unique';self.assertEqual(valider_base([c])['actifs'],1)
             c2=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)')
             st=statuts();cle_=_STATUTS_CACHE['cle'];st[('POL',7)]='Vide';_STATUTS_CACHE.update(st=st)
@@ -2327,7 +2440,7 @@ def autotest():
             self.assertEqual(r['homologie'],'H1')
         def _f_case(self,a6,**mot):
             c=fake_case();m=c['sequence'][0]['mots'][0];c['fictif']=False;c['sources_verifiees']=True
-            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique',test='pistolet');m.update(mot)
+            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique',test='pistolet',passage={'localisation':'p. 3, § 2','relation':'soutient'});m.update(mot)
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
             return c
         def test_a6_verdicts(self):
@@ -2621,6 +2734,49 @@ def autotest():
             with self.assertRaises(ValueError):valider_base([c])            # absent sur F réel
             self.assertEqual(valider_base([self._f_case(ok,test='double')])['actifs'],1)
             self.assertEqual(controle_test('POL@7',{'test':'cerceau'},'f',False),[])   # f : tout test
+        def test_passage(self):
+            # 0.7.2 : contrôle affirmation–passage (OpenScholar). Une source réelle ne soutient pas forcément le fait écrit.
+            ok='POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)'
+            self.assertEqual(valider_base([self._f_case(ok)])['actifs'],1)
+            for bad in ({'localisation':'p. 3','relation':'partiel'},            # soutien partiel : f, pas F
+                        {'localisation':'p. 3','relation':'contredit'},          # va en contre-observation (A7)
+                        {'localisation':'p. 3','relation':'insuffisant'},        # n'ancre rien
+                        {'localisation':'','relation':'soutient'},               # où se lit le fait ?
+                        {'localisation':'p. 3','relation':'soutient','extrait':'x'*301},
+                        []):
+                with self.assertRaises(ValueError):valider_base([self._f_case(ok,passage=bad)])
+            c=self._f_case(ok);c['sequence'][0]['mots'][0].pop('passage')
+            with self.assertRaises(ValueError):valider_base([c])            # requis pour F de cas actif
+            c['statut_donnees']='proposition';c['sources_verifiees']=False;c['motif_proposition']='à relire'
+            self.assertEqual(valider_base([c])['propositions'],1)           # une proposition le reçoit à son activation
+            self.assertEqual(controle_passage('POL@7',{'passage':{'localisation':'p. 3','relation':'partiel'}},'f',False),[])
+            self.assertTrue(controle_passage('POL@7',{'passage':{'localisation':'p. 3','relation':'contredit'}},'f',False))
+            self.assertEqual(controle_passage('POL@7',{},'f',False),[])
+        def test_questions_inquisitives(self):
+            # 0.7.2 : « non A » ne vaut pas « B » ; conditions de résolution ; questions de documentation ; statut.
+            fm={'POL@7':'F','HIE@7':'f'}
+            j={'oui':'un troisième groupe stable contredit deux blocs exclusifs','non':'alignements exclusifs datés'}
+            base_q=dict(question='q',si_oui='RES@7',si_non='POL@7',resolution='votes publiés',justification=j)
+            self.assertEqual(controle_questions([base_q],fm,True,True),[])
+            self.assertEqual(controle_questions([dict(base_q,si_oui='POL@7',si_non='indetermine',justification={'oui':'alignements exclusifs datés'})],fm,True,True),[])
+            self.assertTrue(controle_questions([dict(base_q,si_non='indetermine',justification={'oui':j['oui']})],fm,True,True))   # ne touche pas l'état
+            self.assertTrue(controle_questions([dict(base_q,si_oui='indetermine',si_non='indetermine')],fm,True,True))
+            self.assertTrue(controle_questions([dict(base_q,si_oui='indetermine',si_non='RES@7',justification=j)],fm,True,True))  # aucune carte dans l'état
+            self.assertTrue(controle_questions([{k:v for k,v in base_q.items() if k!='justification'}],fm,True,True))
+            self.assertTrue(controle_questions([dict(base_q,justification={'oui':j['oui']})],fm,True,True))   # branche « non » sans justification
+            self.assertTrue(controle_questions([dict(base_q,justification={'oui':'même','non':'Même'})],fm,True,True))
+            self.assertTrue(controle_questions([{k:v for k,v in base_q.items() if k!='resolution'}],fm,True,True))
+            self.assertEqual(controle_questions([{k:v for k,v in base_q.items() if k not in ('resolution','justification')}],fm,True,False),[])  # fictif
+            doc=dict(question='Quelle règle publiée interdit cette option ?',type='documentation',carte='HIE@7',manque='texte de la règle',resolution='journal officiel')
+            self.assertTrue(controle_questions([doc],fm,True,True))                  # documentation seule : ne départage rien
+            self.assertEqual(controle_questions([base_q,doc],fm,True,True),[])
+            self.assertTrue(controle_questions([base_q,dict(doc,carte='SEU@7')],fm,True,True))
+            self.assertTrue(controle_questions([base_q,dict(doc,manque='')],fm,True,True))
+            self.assertTrue(controle_questions([dict(base_q,statut='resolue',preuve='vote du 3 mars')],fm,True,True))   # réponse manquante
+            self.assertEqual(controle_questions([dict(base_q,statut='resolue',reponse='non',preuve='vote du 3 mars')],fm,True,True),[])
+            self.assertTrue(controle_questions([dict(base_q,statut='partielle')],fm,True,True))                        # preuve manquante
+            self.assertTrue(controle_questions([dict(base_q,statut='close')],fm,True,True))
+            self.assertEqual(controle_questions([dict(base_q,statut='presuppose_invalide',preuve='aucun État tiers ne vote')],fm,True,True),[])
         def test_source_url(self):
             self.assertEqual(controle_source('POL@7',{'source_url':'https://ex.org/a','date_consultation':'2026-10-27'}),[])
             self.assertTrue(controle_source('POL@7',{'source_url':'ex.org a'}))

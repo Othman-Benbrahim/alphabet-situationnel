@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.1'
+  version: '0.7.2'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.1. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.7.2. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -55,7 +55,8 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | Situation française : chercher un fait, une source de résolution, une série chiffrée | `sources-france.md` |
 | Sortie LIRE : « ce que l'alphabet ne voit pas ici » | `angles-morts.md` |
 | Statut d'un équivalent (Documenté, Proposé, Vide), tableau par strate, cases Vides et leur clôture | `equivalences.md` |
-| Pourquoi une règle 0.6.x existe (garantie, option, barreau, jugement scellé, sensibilité, corroboration) | `apports-theoriques.md` |
+| Pourquoi une règle 0.6.x ou 0.7.x existe (garantie, option, barreau, jugement scellé, sensibilité, corroboration, passage, résolution des questions) | `apports-theoriques.md` |
+| Modifier le skill, comparer deux versions, évaluer une règle nouvelle | `validation.md` §9 (banc d'essai) |
 | Politique intérieure (gouvernement, Parlement, partis, élections, mobilisations) | strate 13 : `strates.md` §2 et §4, `equivalences/strate-13.md` |
 
 Lire par rubrique (`rg -n '^##|^\*\*[OAGBTSV][0-9]' references/protocole.md`, ou `grep -nE` avec le même
@@ -100,6 +101,8 @@ référence absente, annoncer « non estimé », demander cette donnée ou propo
 ## Fichiers de l'utilisateur
 
 Le skill ne garantit aucune mémoire entre sessions. Identifier les fichiers réellement fournis.
+Un dossier long ou repris d'une session à l'autre passe par un état de travail dont le contenu
+minimal est fixé (`simulation.md` §7) : un résumé est un index, jamais une preuve.
 
 | Fichier | Contenu | Format |
 |---|---|---|
@@ -129,17 +132,23 @@ est un cerceau et donne f), la **corroboration** déclarée pour une lecture ré
 (deux sources indépendantes nommées ; une source unique est admise si elle est primaire, texte officiel
 ou donnée publiée, et signalée « source unique » dans « À vérifier » ; un fait repris d'un seul relais
 secondaire donne f : un fait forgé bien formé ne doit pas suffire à porter F), une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?`, une
-**garantie** (mécanisme, attendu, contredirait : forme type dans la fiche) et une **option** (acteur,
-option avant, option après : un fait qui ne change l'espace d'action de personne ne s'ancre pas) ;
+**garantie** (mécanisme, attendu, contredirait : forme type dans la fiche), une **option** (acteur,
+option avant, option après : un fait qui ne change l'espace d'action de personne ne s'ancre pas) et
+le **passage** lu qui soutient le fait tel qu'il est écrit (localisation ; « peut être activé » ne
+soutient pas « a été activé » ; un soutien partiel donne f, une pièce qui contredit va en A7) ;
 équivalent Vide : au plus f. Lister les équivalents Proposés dans « À vérifier auprès de vous ». Ne
 jamais rétablir « Documenté » à partir d'un souvenir bibliographique.
 
-**4. Anti-résonance (A7).** Chercher la contre-observation dans la situation, classer sa portée et
-appliquer sa conséquence ; une contre-observation substantielle n'est pas compatible avec F maintenu.
+**4. Anti-résonance (A7).** Chercher la contre-observation dans la situation (requêtes sur le
+phénomène et l'objet, pas sur le nom de la carte ; une famille de requêtes cherche la contradiction),
+classer sa portée et appliquer sa conséquence. S'arrêter quand les contrôles sont faits, pas quand la
+lecture « paraît sûre » ; budget épuisé = dossier incomplet ; une contre-observation substantielle n'est pas compatible avec F maintenu.
 Dans une fiche : champ `portee`, force notée après A7, `force_initiale: "F"` si elle a baissé.
 
 **5. État (G1–G6).** Date, fenêtre, mots, objets, liaisons, lignes A6 et Q ; positions avec ≥3 mots.
-Sortie LIRE, en plus : 1 à 3 questions qui départagent deux cartes (abduction), « ce que l'alphabet
+Sortie LIRE, en plus : 1 à 3 questions qui départagent deux cartes, ou une carte et
+l'indétermination (abduction), chacune avec ce qui y répondrait (observation, source) et, par branche,
+pourquoi la réponse établit la carte : « non A » ne vaut pas « B » (`grammaire.md` §7) ; « ce que l'alphabet
 ne voit pas ici » (`angles-morts.md`), coût du codage (faits écartés, candidates non retenues, rejets A7).
 État nul : pas de prévision par défaut. → LIRE s'arrête ici. → CODER suit `base-de-cas.md` et `valider`.
 
@@ -186,12 +195,12 @@ points à vérifier. Expliquer ce que les données permettent et ce qui reste no
 
 **LIRE** (aucun calcul) : 1. recevabilité (étape 0) ; 2. strates et candidates (1–2) ; 3. ancrage et
 anti-résonance (3–4) ; 4. état (5) ; 5. sortie : état daté, preuves, alternatives, 1 à 3 questions qui
-départagent deux cartes, « ce que l'alphabet ne voit pas ici » (`angles-morts.md`), coût du codage,
+départagent (résolution et justification par branche), « ce que l'alphabet ne voit pas ici » (`angles-morts.md`), coût du codage,
 signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une carte.
 
 **CODER** (une fiche) : 1. parcours LIRE (1–4) pour chaque état daté, avec `disponible_le` ;
 2. fiche au schéma de `base-de-cas.md` §2 : test de preuve, garantie, option et, pour un cas actif,
-`corroboration` sur chaque F ; questions au premier état ; codeurs `{id, role: humain|modele}` (Claude est un codeur
+`corroboration` et `passage` sur chaque F ; questions au premier état ; codeurs `{id, role: humain|modele}` (Claude est un codeur
 `modele`) ; si Claude propose le codage, `codage.recodage`, et l'utilisateur confirme sous son propre
 `id` (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
 `assets/rabbits.jsonl` ; 4. `moteur.py valider` ; une fiche refusée se corrige ou s'archive avec motif.

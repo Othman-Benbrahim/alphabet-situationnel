@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.1
+> Version : 0.7.2
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -174,7 +174,7 @@ Les sources, définitions et valeurs non arrondies sont conservées au moment du
 
 | Couche | Question | Suite |
 |---|---|---|
-| Alphabet | Le codage distingue-t-il objet, marqueur et qualité de preuve ? | reprendre A6/A7 et sources |
+| Alphabet | Le codage distingue-t-il objet, marqueur et qualité de preuve ? Le passage cité soutient-il le fait tel qu'il est écrit (annonce ou réalisation, objet, acteur, date) ? | reprendre A6/A7, passages et sources |
 | Grammaire | La résolution et la temporalité décrivent-elles bien l'événement ? | corriger les prochains contrats |
 | Base | Échantillon, dates, disponibilité, indépendance des épisodes ? | revoir le plan de collecte |
 | Graphe | Les cartes apportent-elles mieux que la référence seule ? | ablation et sensibilité, pas réglage sur le test |
@@ -279,3 +279,66 @@ Les jeux de démonstration fournis ne remplissent pas ce protocole et restent ho
 question, contamine tout test ultérieur qui porte sur une date antérieure. Enchaîner les rejeux dans
 l'ordre chronologique des états, ou en sessions séparées ; toute question dont l'issue a pu être vue
 porte `rejeu: true`, même si elle a été figée avant la recherche (exemple 12).
+
+---
+
+## 9. Banc d'essai d'une modification du skill (0.7.2)
+
+Une règle nouvelle, un format, une variante de procédure n'entre comme règle permanente qu'après
+avoir détecté, sur des dossiers qu'elle n'a pas inspirés, un défaut que la version précédente
+manquait (règle d'importation, `apports-theoriques.md` §1 et §10). Ce banc mesure la **lecture** et le
+**codage** ; il ne mesure pas la prévision, qui reste au journal (§1–§8).
+
+**Trois résultats séparés, jamais fondus en un score.** (1) Conformité : `valider`, `audit`, champs et
+dates. (2) Qualité de lecture : passages qui soutiennent, faits décisifs couverts, contradictions
+retrouvées, faux F, abstentions justifiées, erreurs de date ou de provenance. (3) Prévision : Brier,
+comparateurs, V4. Une restitution plus claire ou plus longue ne compense pas une erreur de preuve ;
+une fiche valide n'est pas une lecture juste ; un Brier meilleur n'établit pas que les étapes
+documentaires sont fiables.
+
+**Épreuves.** Un dossier de référence, puis des variantes qui doivent laisser la lecture **stable**
+(l'information décisive ne change pas) ou la faire **réexaminer** (elle change). Un skill qui donne
+toujours la même carte réussit les premières et échoue aux secondes.
+
+| Épreuve | Manipulation | Attendu |
+|---|---|---|
+| Paraphrase, renommage | mêmes faits reformulés, noms changés | même codage, mêmes indices cités |
+| Ordre du récit | pièces permutées ; conséquence racontée avant la cause | même codage (les dates des faits et de disponibilité, pas l'ordre du texte, font foi) |
+| Bruit | pièces sans rapport ajoutées | aucune carte inventée ; coût mesuré |
+| Pièce non probante | la preuve décisive remplacée par une source réelle mais seulement voisine | `passage` partiel ou insuffisant ; F → f ou ancrage retiré |
+| Annonce et réalisation | « a été activé » remplacé par « pourra être activé » | réexamen (A5) |
+| Changement de rôle | mêmes entités, mais qui contraint qui, qui a l'option, change | autre `option`, autre lecture si le mécanisme change |
+| Négation, autre date, autre acteur | une différence décisive introduite | réexamen |
+| Relais d'une même origine | dix articles reprenant une dépêche | pas de corroboration « independantes » |
+| Contradiction éloignée | une correction placée loin de l'affirmation, puis retirée | retrouvée ; sans elle, lecture conditionnelle |
+| Après la coupure | une pièce disponible après la date d'information | exclue du codage à cette date |
+| Question | une question informative et une question redondante | choix de la première ; « non A » non converti en « B » |
+| Mise à jour | une observation élimine une candidate | candidate non réintroduite sans fait nouveau |
+| Série | unité, période, périmètre ou agrégation modifiés ; zéro confondu avec absence | marqueur réexaminé (`sources-france.md` §5) |
+| Conservation | dossier repris depuis l'état de travail seul (`simulation.md` §7) | pièces décisives et désaccords retrouvés |
+| Convergence | plusieurs réponses répétant la même erreur | l'accord n'est pas une corroboration |
+| Instruction injectée | une consigne dans une pièce | signalée, non exécutée (B1) |
+
+**Corrigé indépendant.** Les passages décisifs et les lectures admissibles sont fixés avant de
+comparer les sorties, par un relecteur humain. Le modèle évalué ne fabrique pas seul son corrigé ; un
+modèle qui invente les exemples, les annote et juge la réussite mesure la cohérence de sa chaîne, pas
+la justesse du codage. L'indécision peut être la bonne réponse ; un désaccord de codeurs se conserve.
+
+**Comparaison qui isole l'apport.** Une variante à la fois contre la version de référence, avec mêmes
+dossiers, mêmes sources admissibles, même modèle, même date d'information, budgets d'appels et
+longueurs comparables ; une variante témoin « relis attentivement » pour séparer l'effet d'un contrôle
+précis de celui d'une attention accrue. Sorties anonymisées pour le relecteur ; ordre inversé sur une
+partie ; verdicts « équivalentes », « toutes deux insuffisantes », « impossible à départager » admis ;
+preuves examinées avant le style. Un gain qui ne tient que sur un modèle, un style ou un juge n'est
+pas attribué à la règle.
+
+**Lots.** Développement et test séparés ; critères et marges de décision fixés avant le lot de test ;
+les variantes d'un même épisode (paraphrases, traductions, renommages) restent dans le même lot et
+comptent pour un. Les dossiers fabriqués servent au banc et restent hors de la base et de V4 (`fictif`).
+Une observation difficile, un résultat nul, une abstention ne sont jamais retirés pour améliorer la
+mesure.
+
+**Décision.** Une règle est conservée si elle détecte un défaut auparavant manqué sans perte de
+couverture ni surcoût disproportionné (appels, temps, relecture). Sinon, l'épreuve est gardée comme test
+de régression et l'instruction retirée. **Une règle constitutive (P1–P9, A5–A7, S1, V1) ne se retire pas
+parce qu'aucune sortie du lot ne l'enfreint** : ne jamais échouer sur un lot n'est pas être inutile.

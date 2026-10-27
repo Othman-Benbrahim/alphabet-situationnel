@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.1
+> Version : 0.7.2
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -231,3 +231,84 @@ Brier par épisode) ; boîte morphologique (l'alphabet lui-même, cartes × stra
 T/O/P : vocabulaire sans contrôle. QCA et ensembles flous pour F/f : la force est une qualité de preuve,
 pas un degré d'appartenance. La note contenait des correspondances inexactes (numéros et noms de strates,
 règles) et une référence introuvable (« EL-DRUIN », arXiv 2604.10087), non citée ici.
+
+---
+
+## 10. Cinq apports reçus le 27 octobre 2026 (0.7.2)
+
+Cinq analyses versées par l'auteur, toutes rédigées sur la 0.7.1 (commit `0d92b34`) : *Inquisitive
+Semantics* (Ciardelli, Groenendijk et Roelofsen, Oxford UP, 2019, ch. 2, 5 et 9) ; VECTOR (Nour et al.,
+arXiv 2509.14455) ; les travaux de Rulin Shao (OpenScholar, ReasonIR, Context Language Models,
+DR Tulu, *Spurious Rewards*) ; ceux de Hao Zhang (spécifications, LLM-as-a-judge, ReFoRCE, Certaindex,
+GameArena, LongPack) ; ceux d'Alex L. Zhang (*Recursive Language Models*, généralisation
+compositionnelle, *Language-Guided World Models*, KernelBench). Même règle d'importation (§1). Les
+cinq décrivent correctement le skill ; elles convergent sur un point : **le skill déclare beaucoup et
+éprouve peu ses propres étapes** (source → fait → marqueur → carte → question), et l'évaluation risque
+de mesurer la forme ou le style plutôt que la lecture.
+
+Un sixième fichier versé le même jour, `apports-intuition-machine.md`, est la synthèse QPT déjà triée
+au §8 (0.6.7), mêmes pistes P1–P12 et mêmes inexactitudes (36 cartes, modes SIMULER et VALIDER) :
+aucun apport nouveau.
+
+### 10.1 Ce qui entre
+
+| Piste | Source | Contrôle ajouté | Où |
+|---|---|---|---|
+| Conditions de résolution d'une question ; « non A » ne vaut pas « B » | *Inquisitive Semantics*, ch. 2, §2.3–2.5 | pour un cas réel, chaque question porte `resolution` ; une question de discrimination porte `justification` {oui, non}, une par branche menant à une carte ; une branche peut mener à `indetermine` (les deux, refusé). L'exemple du schéma (« pas de troisième groupe → POLARITÉ ») commettait l'erreur : corrigé | `grammaire.md` §7, `base-de-cas.md` §2, `controle_questions` |
+| Toutes les questions utiles ne départagent pas | *Inquisitive Semantics*, ch. 5, §5.4 et ch. 9, §9.2 | `type: "documentation"` (`carte`, `manque`) ; ne remplace pas la question qui départage, exigée au premier état | idem |
+| Questions qui restent ouvertes, levées ou invalidées | *Inquisitive Semantics* ; GameArena (Hao Zhang) | `statut` (ouverte, partielle, resolue avec `reponse`, presuppose_invalide), chacun avec sa `preuve` | idem |
+| Contrôle affirmation–passage | OpenScholar (Shao) ; spécifications (Hao Zhang) | `passage` {localisation, relation} requis pour F de cas actif ; F exige `soutient`, `partiel` donne f, `contredit` renvoie à A7, `insuffisant` n'ancre rien ; « independantes » exige deux passages | `protocole.md` A6, `controle_passage` |
+| Annonce ≠ réalisation | VECTOR ; OpenScholar | A5 : une possibilité, une condition, une décision non entrée en vigueur ne sont pas une réalisation | `protocole.md` A5 |
+| Requêtes qui ne présupposent pas la lecture ; contradictions conservées | ReasonIR (Shao) | trois familles de requêtes (observation, discrimination, contradiction), jamais sur le nom de la carte | `protocole.md` A7, `sources-france.md` §1 |
+| Arrêt sur contrôles faits, pas sur sentiment de certitude | Certaindex, DeepConf (Hao Zhang) | budget épuisé = dossier incomplet ; la convergence de réponses n'est pas une corroboration | `protocole.md` A7 |
+| Sens d'une série avant usage | ReFoRCE, Arctic-Text2SQL (Hao Zhang) | liste : objet compté, unité, période, périmètre, manquants, agrégation, révisions | `sources-france.md` §5 |
+| Conservation de l'information après résumé | Context Language Models (Shao) ; RLM (Alex Zhang) | contenu minimal de l'état de travail ; pièces, état révisable et prévisions scellées séparés | `simulation.md` §7 |
+| Évaluer la représentation, pas seulement le résultat ; juge biaisé ; gain mal attribué | VECTOR ; LLM-as-a-judge, Chatbot Arena (Hao Zhang) ; *Spurious Rewards*, DR Tulu (Shao) ; généralisation compositionnelle, KernelBench (Alex Zhang) | banc d'essai : trois résultats séparés, épreuves de stabilité et de réexamen, corrigé indépendant, une variante à la fois, sorties anonymisées, lots séparés par épisode ; une règle constitutive ne se retire pas faute d'échec | `validation.md` §9 |
+
+**Règle d'importation, complétée.** Depuis 0.7.2, un contrôle nouveau entre avec son épreuve : le
+défaut qu'il doit détecter, construit au banc (`validation.md` §9). Les contrôles ci-dessus ont leurs
+autotests (forme) ; leur utilité (lecture) reste à mesurer au banc sur des dossiers qu'ils n'ont pas
+inspirés.
+
+### 10.2 Ce que le skill fait déjà
+
+| Piste | Déjà couvert par |
+|---|---|
+| Hypothèses concurrentes, critères de résolution externes, refus de chiffrer sans données | A7, S1, « non estimé » |
+| Incertitude de l'analyste distincte de celle des acteurs | carte INCERTITUDE (`cartes.md`) |
+| Trois chronologies (ordre du récit, date des faits, date de disponibilité) | `date`, `disponible_le`, date d'information (B1) ; l'ordre du récit n'entre dans aucun calcul |
+| Plusieurs appels au même modèle ne sont pas plusieurs sources | `corroboration`, codeurs `{id, role}`, `recodage_confirme` |
+| Comparer à une référence sans le mécanisme proposé | `--sans-cartes`, `p_sans_cartes`, `moteur_contre_jugement` |
+| Chargement sélectif du contexte | table « Ce qu'il faut charger » de `SKILL.md` |
+| Critères figés avant l'issue | scellés, résolution figée, journal non réécrit |
+| Rattachement d'un attribut au bon acteur (*Language-Guided World Models*) | `option` (acteur nommé) et `objet` ; renforcé par `passage` |
+
+### 10.3 Ce qui attend
+
+| Piste | Condition | Version |
+|---|---|---|
+| Registre de dépendances : une source corrigée signale les mots, états et prévisions qui en dépendent (Alex Zhang) | un premier cas réel où une source est corrigée ; sans lui, le registre serait une documentation de plus | Éprouver |
+| Dossier externe et sous-tâches bornées (*Recursive Language Models*) | dossiers réels assez longs pour que le banc montre une perte de pièces ; comparer d'abord un simple index à la décomposition, coût compris | Éprouver |
+| Comparaison de trajectoires datées, contre l'état courant seul (VECTOR) | avec H1.6, 30 cas actifs dans une strate | Éprouver |
+| Aide apprise proposant des marqueurs ou des cas voisins (VECTOR, ReasonIR) | corpus annoté, séparé par épisode et par date ; la proposition reste vérifiée par le codeur | après 1.0 |
+| Corpus documentaire figé et son manifeste (MassiveDS, DataComp-LM) | premières comparaisons de recherche au banc | Éprouver |
+
+### 10.4 Ce qui est refusé
+
+- **Distances vectorielles converties en probabilités**, déplacement dans un espace de textes lu comme
+  TRANSFORMATION, sortie de classifieur sommée à 100 % entre cartes : ces grandeurs ne mesurent pas
+  l'objet du moteur, et plusieurs cartes coexistent.
+- **Cartes ordonnées en étapes** : les cartes ne forment pas une succession unique.
+- **Indices de confiance internes** (tokens, stabilité de réponse) comme force F/f ou comme
+  probabilité : une erreur peut être stable.
+- **Consensus de modèles ou de générations** comme corroboration ; **architecture multi-agent** ou
+  récursion par principe : à comparer d'abord à une procédure simple, mêmes sources et budget.
+- **Retirer une règle parce qu'aucune sortie ne l'enfreint** (rubriques sans variance de DR Tulu) :
+  valable pour un signal d'entraînement, pas pour une règle constitutive.
+- **Écarter les observations difficiles** (filtrage de données d'Arctic) : un résultat nul ou une
+  abstention sont des observations.
+- **« Indéterminé » comme troisième issue probabilisée** : c'est un état de l'information.
+- **Nouvelles cartes « contexte », « recherche », « récompense »** : elles décrivent l'outil, pas une
+  structure observée. Aucun de ces travaux ne justifie les 16 cartes, les 13 strates, la matrice ou
+  les multiplicateurs.
+- **Usage individuel ou clinique** des trajectoires de pensée (VECTOR) : hors périmètre (`constitution.md` §6).

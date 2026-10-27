@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.6.15
+> Version : 0.7.0
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -147,6 +147,26 @@ lacunes pour correction ; abaisser à f ne règle pas une contradiction de défi
 `?` laisse la question ouverte, `←` attribue son fait à la voisine. Contrôle par `moteur.py valider`
 (cas réels) : voisines toutes nommées, verdicts, justifications non vides. Le moteur vérifie la forme ;
 la pertinence d'une justification reste un jugement de codeur, mesuré par l'accord A4.
+
+**Test de preuve (0.7.0).** F et f disaient la qualité d'un ancrage sans dire ce qu'un fait prouve.
+Les tests de process tracing (Van Evera 1997 ; Collier 2011, *PS* 44(4), p. 825-827) le disent : un fait
+est classé selon qu'il est **nécessaire** et/ou **suffisant** pour l'hypothèse « la carte est active
+dans la strate ». Le champ `test` le déclare :
+
+| `test` | Nom (Collier) | Nécessaire | Suffisant | Ce qu'il fait | Force |
+|---|---|---|---|---|---|
+| `paille` | straw-in-the-wind | non | non | rend la carte pertinente, ne la confirme pas | f |
+| `cerceau` | hoop | oui | non | son absence élimine la carte, sa présence ne la confirme pas | f |
+| `pistolet` | smoking gun | non | oui | confirme la carte ; on ne l'observerait presque pas si elle était fausse | F |
+| `double` | doubly decisive | oui | oui | confirme la carte et élimine les voisines | F |
+
+**F exige un test suffisant** (`pistolet` ou `double`), contrôlé par `valider` pour tout mot F de cas
+réel. Remplir le marqueur est un cerceau : nécessaire, jamais suffisant ; un fait qui ne fait que le
+remplir donne f. La garantie se lit dans ces termes : `attendu` est un cerceau (s'il manque, la carte
+tombe), `contredirait` nomme ce qui ferait échouer ce cerceau ; la ligne A6, qui écarte chaque
+voisine, est ce qui rend un fait suffisant. Côté A7, une contre-observation de portée dominante est un
+cerceau échoué : la carte est éliminée. Le moteur vérifie la cohérence de la déclaration, pas sa
+justesse.
 
 **A7 · Anti-résonance.** Pour chaque carte ancrée, chercher activement la contre-observation la plus
 forte **dans la situation** (un contre-exemple pris ailleurs ne compte pas), puis classer sa portée :
@@ -453,7 +473,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.6.15"` |
+| `version` | `"0.7.0"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

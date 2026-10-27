@@ -1,9 +1,28 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.0 — 2026-10-27 · tests de preuve et décomposition du Brier
+
+Version mineure : le schéma des fiches change (champ `test`). Fiches d'exemple revalidées en 0.7.0.
+Dernière version avant les tests à l’aveugle. 98 autotests (96 + 2). Aucun chiffre des exemples ne change.
+
+- **Tests de preuve du process tracing** (Van Evera 1997 ; Collier 2011, *PS* 44(4), p. 825-827, lu).
+  Chaque fait d'ancrage peut déclarer son `test` : paille (ni nécessaire ni suffisant), cerceau
+  (nécessaire), pistolet (suffisant), double (les deux). **F exige un test suffisant** (pistolet ou
+  double), contrôlé par `valider` pour tout F de cas réel : un fait qui remplit seulement le marqueur est
+  un cerceau et donne f. Le choix F/f passe d'un jugement de confiance à un critère de preuve. Garantie,
+  ligne A6 et portée dominante (A7) relues dans ces termes (`protocole.md` A6). Schéma, grammaire,
+  modèle de sortie, procédures et glossaire mis à jour.
+- **Décomposition de Murphy** (1973) dans `scorer` : fiabilité, résolution, incertitude, variance
+  intra-classe, sur les binaires éligibles et sur toutes les binaires du moteur ; `bilan --journal`
+  l'affiche. Identité vérifiée par autotest. Sur le journal d'exemple : résolution et incertitude
+  nulles, le Brier n'y mesure que la calibration.
+- **Feuille de route** : 0.8 Structurer (avec un comparateur de marché de prévision, étape 4),
+  0.9 Éprouver, 1.0 Grammaire. Tri de la note bibliographique : `apports-theoriques.md` §9.
 
 ## 0.6.15 — 2026-10-27 · après l'audit Scira (commit audité : e107a61)
 

@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.6.15'
+  version: '0.7.0'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.6.15. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.7.0. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -121,7 +121,8 @@ exploration des suites, sans faire passer celle-ci pour une prescription.
 **2. Candidates.** Tester 2 à 4 candidates par strate, dont une contre-candidate ; ouvrir leurs fiches.
 
 **3. Ancrage (A1, A5, A6).** Citer fait, objet, source, date ; attribuer F/f selon la preuve. F exige un
-fait précis, une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?`, une
+fait précis et **suffisant** (`test` : pistolet ou double ; un fait qui remplit seulement le marqueur
+est un cerceau et donne f), une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?`, une
 **garantie** (mécanisme, attendu, contredirait : forme type dans la fiche) et une **option** (acteur,
 option avant, option après : un fait qui ne change l'espace d'action de personne ne s'ancre pas) ;
 équivalent Vide : au plus f. Lister les équivalents Proposés dans « À vérifier auprès de vous ». Ne
@@ -183,8 +184,8 @@ départagent deux cartes, « ce que l'alphabet ne voit pas ici » (`angles-morts
 signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une carte.
 
 **CODER** (une fiche) : 1. parcours LIRE (1–4) pour chaque état daté, avec `disponible_le` ;
-2. fiche au schéma de `base-de-cas.md` §2 : garantie, option et, pour un cas actif, `corroboration`
-sur chaque F ; questions au premier état ; codeurs `{id, role: humain|modele}` (Claude est un codeur
+2. fiche au schéma de `base-de-cas.md` §2 : test de preuve, garantie, option et, pour un cas actif,
+`corroboration` sur chaque F ; questions au premier état ; codeurs `{id, role: humain|modele}` (Claude est un codeur
 `modele`) ; si Claude propose le codage, `codage.recodage`, et l'utilisateur confirme sous son propre
 `id` (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
 `assets/rabbits.jsonl` ; 4. `moteur.py valider` ; une fiche refusée se corrige ou s'archive avec motif.

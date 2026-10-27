@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -18,7 +18,7 @@ moteur ; null si indisponibles, auquel cas la prévision reste hors V4) :
   "type": "prevision",
   "id": "P-0042",
   "date": "2026-09-01",
-  "version_regles": "0.6.10",
+  "version_regles": "0.7.0",
   "question": "POL@7 persiste au 2026-12-01 ?",
   "evenement": "POL@7 persiste",
   "resolution": {
@@ -195,7 +195,15 @@ faiblesse du moteur ne justifie pas nécessairement l'ajout d'une nouvelle carte
 | Comparaison | épisodes comparables, Brier par épisode, base au même horizon, gain |
 | Groupes | résultats éligibles par niveau ρ et strate ; détails exportables par carte cible |
 | Calibration | probabilités moyennes et fréquences par tranche, binaires éligibles seulement |
+| Décomposition (0.7.0) | `decomposition_murphy` : Brier = fiabilité − résolution + incertitude (Murphy 1973), sur les binaires éligibles et, à titre descriptif, sur toutes les binaires résolues du moteur |
 | Limites | dépendance entre épisodes, sélection, couverture des domaines, incertitude du gain |
+
+**Lire la décomposition.** La **fiabilité** mesure l'écart entre p annoncé et fréquence observée
+(0 = calibré) ; la **résolution**, la capacité à séparer les questions qui se réalisent des autres
+(plus haute = meilleure) ; l'**incertitude**, ō(1 − ō), ne dépend que des questions posées. Un bon
+Brier obtenu sur des questions jouées d'avance se trahit par une incertitude basse et une résolution
+nulle ; c'est le complément de la difficulté (§1). Le regroupement par déciles laisse une variance
+intra-classe, rendue à part. Sous 50 questions, la décomposition est indicative.
 
 Le moteur n'estime pas encore un intervalle de confiance du gain. Ajouter un rééchantillonnage
 **par épisode** dans une étude indépendante, sans mélanger apprentissage et test.

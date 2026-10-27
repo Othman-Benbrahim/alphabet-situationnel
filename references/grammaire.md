@@ -1,6 +1,6 @@
 # Alphabet situationnel — Grammaire (couche 2)
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Notation, syntaxe formelle, critères des liaisons et liste de contrôle. Les règles sont G1–G6
 > (`protocole.md`) ; ce fichier les rend applicables.
@@ -170,6 +170,8 @@ Une phrase entre dans la base ou dans un calcul seulement si toutes les cases so
 - [ ] Date et fenêtre présentes ; fenêtre identique pour tous les états d'une séquence.
 - [ ] Chaque mot a un fait d'ancrage cité, avec sa source (A5, B1).
 - [ ] Chaque mot F a sa ligne A6 complète (toutes les voisines de `cartes.md`).
+- [ ] Chaque mot F repose sur un fait suffisant (`test` : pistolet ou double) ; un fait qui remplit
+      seulement le marqueur est un cerceau, il donne f.
 - [ ] Chaque mot F a sa garantie (mécanisme, attendu, contredirait), et rien de ce qui la contredirait
       ne figure dans les faits cités.
 - [ ] Chaque mot F nomme un acteur et l'option ouverte ou fermée (pertinence, O1).

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -22,7 +22,7 @@ Calcul : moteur.py v[version] · date d'information [date]
 Question : [objet, événement, horizon exact, fenêtre, nombre de pas, sémantique]
 Strates examinées : [faits et sources]
 
-| Carte@strate | Équivalent et statut | Fait, objet, source et date | Confiance F/f | Contre-observation | Final |
+| Carte@strate | Équivalent et statut | Fait, objet, source et date | Test (paille, cerceau, pistolet, double) | Confiance F/f | Contre-observation | Final |
 A6 · [voisines et raisons]
 Garantie · [pour chaque F : mécanisme · attendu · ce qui contredirait]
 Option · [pour chaque F : acteur · option avant → option après]

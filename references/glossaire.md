@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -46,6 +46,7 @@
 | Statut d'équivalent | Attesté, Documenté, Proposé, Vide, Hors domaine | A3 |
 | Statut de lecture | Descriptif, Spéculatif, Nul ; porte sur la lecture, pas sur les prévisions | `simulation.md` §2 |
 | Strate | l'un des 13 registres où se rangent les faits (niveaux d'organisation, domaines, longue durée) | `strates.md` |
+| Test de preuve | classement d'un fait d'ancrage selon qu'il est nécessaire et/ou suffisant (paille, cerceau, pistolet, double ; Collier 2011) ; F exige pistolet ou double | A6 |
 | Transition | paire d'états consécutifs d'un cas ; unité de comptage | `graphe.md` §3 |
 | Abstention | prévision journalisée dont le calcul figé est « non estimé » (`probabilite` null) ; sans Brier, comptée à part par `scorer` | `validation.md` §1 |
 | Angle mort | ce qu'aucune carte ne peut exprimer dans une strate ; entrée réfutable, ou exclusion déclarée « délibéré » | `angles-morts.md` |

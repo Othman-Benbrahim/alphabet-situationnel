@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.6.15 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.0 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -227,6 +227,28 @@ def controle_garantie(k, item, requis):
         if ' '.join(o['avant'].lower().split()) == ' '.join(o['apres'].lower().split()):
             err.append(f'{k} : option identique avant et après → le fait ne change l\u2019espace d\u2019action de personne (pertinence, O1)')
     return err
+
+
+TESTS_PREUVE = {'paille': 'straw-in-the-wind', 'cerceau': 'hoop', 'pistolet': 'smoking gun', 'double': 'doubly decisive'}
+TESTS_SUFFISANTS = ('pistolet', 'double')
+
+
+def controle_test(k, item, force, requis):
+    """0.7.0. Tests de process tracing (Van Evera 1997 ; Collier 2011, PS 44(4), p. 825-827). Hypothèse
+    testée : « la carte est active dans la strate ». Le fait d'ancrage déclare son test :
+    paille (ni nécessaire ni suffisant), cerceau (nécessaire : son absence élimine la carte, sa présence
+    ne la confirme pas — remplir le marqueur en est un), pistolet (suffisant : on ne l'observerait
+    presque pas si la carte était fausse), double (nécessaire et suffisant). **F exige un test
+    suffisant** : un fait qui remplit seulement le marqueur est un cerceau passé, il donne f. Le moteur
+    vérifie la cohérence de la déclaration, pas sa justesse."""
+    t = item.get('test')
+    if t is None:
+        return [f'{k} : champ test requis pour F de cas réel (pistolet ou double : un fait suffisant)'] if requis else []
+    if not isinstance(t, str) or t not in TESTS_PREUVE:
+        return [f'{k} : test = paille, cerceau, pistolet ou double']
+    if force == 'F' and t not in TESTS_SUFFISANTS:
+        return [f'{k} : F exige un test suffisant (pistolet ou double) ; un {t} ({TESTS_PREUVE[t]}) ne confirme pas la carte → f']
+    return []
 
 
 def controle_corroboration(k, item):
@@ -744,13 +766,14 @@ def valider_base(base):
                     ab,s=k.split('@')
                     exiger(stat.get((ab,int(s)))!='Vide', f'{cid} : F impossible sur un équivalent Vide {k} (A3)')
                     if not c['fictif']:
-                        errs=controle_a6(k,item['a6'])+controle_garantie(k,item,True)
+                        errs=controle_a6(k,item['a6'])+controle_garantie(k,item,True)+controle_test(k,item,'F',True)
                         if c.get('statut_donnees')=='actif':errs+=controle_corroboration(k,item)
                         exiger(not errs, f'{cid} : '+' ; '.join(errs))
-                    elif 'corroboration' in item:
-                        errs=controle_corroboration(k,item); exiger(not errs, f'{cid} : '+' ; '.join(errs))
-                elif 'garantie' in item or 'option' in item or 'corroboration' in item:
-                    errs=controle_garantie(k,item,False)+(controle_corroboration(k,item) if 'corroboration' in item else [])
+                    else:
+                        errs=(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'F',False)
+                        exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                elif 'garantie' in item or 'option' in item or 'corroboration' in item or 'test' in item:
+                    errs=controle_garantie(k,item,False)+(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'f',False)
                     exiger(not errs, f'{cid} : '+' ; '.join(errs))
             exiger(expected <= documented, f'{cid} : mots nouveaux ou modifiés non documentés {sorted(expected-documented)}')
             removed=set(forces(prev))-set(fm) if prev else set()
@@ -1367,6 +1390,24 @@ def difficulte(units):
             'lecture':'gain non interprétable : plus de 70 % de questions à référence extrême' if len(ext)/len(v)>.7 else 'composition interprétable'}
 
 
+def murphy(paires):
+    """0.7.0. Décomposition du score de Brier (Murphy 1973, *J. Appl. Meteor.* 12, 595-600) sur des
+    prévisions binaires : BS = fiabilité − résolution + incertitude (+ variance intra-classe, due au
+    regroupement en déciles). La **fiabilité** mesure l'écart entre p annoncé et fréquence observée
+    (calibration ; 0 = parfait) ; la **résolution**, la capacité à séparer les issues de la moyenne
+    (plus haut = mieux) ; l'**incertitude**, ō(1 − ō), ne dépend que des questions posées. Un bon Brier
+    obtenu par des questions faciles se voit dans une incertitude basse et une résolution nulle."""
+    if not paires:return None
+    n=len(paires);ob=sum(o for _,o in paires)/n;classes=defaultdict(list)
+    for p,o in paires:classes[min(9,int(p*10))].append((p,o))
+    rel=sum(len(v)*(sum(p for p,_ in v)/len(v)-sum(o for _,o in v)/len(v))**2 for v in classes.values())/n
+    res=sum(len(v)*(sum(o for _,o in v)/len(v)-ob)**2 for v in classes.values())/n
+    unc=ob*(1-ob);bs=sum((p-o)**2 for p,o in paires)/n
+    return {'questions':n,'brier':bs,'fiabilite':rel,'resolution':res,'incertitude':unc,'variance_intra_classe':bs-(rel-res+unc),
+            'lecture':('indicatif : moins de 50 questions, chaque classe compte trop peu de cas' if n<50 else
+                       'fiabilité 0 = calibré ; résolution haute = discrimine ; incertitude = difficulté de l’ensemble posé')}
+
+
 def score_result(data):
     prev,scores,partitions=valider_journal(data);units=[];used=set();unresolved=0;missing=0
     # 0.6.11 : abstentions (calcul « non estimé ») comptées à part. Elles n'ont pas de Brier et ne valent
@@ -1422,6 +1463,11 @@ def score_result(data):
     for i in ok_ids:
         x=prev[i];bins[min(9,int(x['probabilite']*10))].append((x['probabilite'],scores[i]['issue']))
     calibration={f'{k*10}–{k*10+10}':{'n':len(v),'p_moyenne':sum(x[0] for x in v)/len(v),'frequence':sum(x[1] for x in v)/len(v)} for k,v in sorted(bins.items())}
+    # 0.7.0 : décomposition de Murphy, sur les binaires éligibles (V4) et, à titre descriptif, sur toutes
+    # les binaires résolues du moteur (rejeux et fictifs compris, jamais une preuve).
+    tous={i for u in units if not u['partition'] and u['origine']=='moteur' for i in u['ids']}
+    decomposition={'eligibles':murphy([(prev[i]['probabilite'],scores[i]['issue']) for i in sorted(ok_ids)]),
+                   'toutes_moteur':murphy([(prev[i]['probabilite'],scores[i]['issue']) for i in sorted(tous)])}
     abstentions={'questions':len(abst),'resolues':len(ab_res),'issues_realisees':sum(scores[x['id']]['issue'] for x in ab_res),
                  'part_des_questions':len(abst)/(len(abst)+len(prev)) if abst or prev else None,
                  'motifs':sorted({x['calcul'].get('non_estime_motif') or 'référence manquante' for x in abst}),
@@ -1433,7 +1479,8 @@ def score_result(data):
             'moteur_contre_jugement':moteur_contre_jugement([x for x in units if x['origine']=='moteur']),
             'difficulte':difficulte(units),'questions_hors_V4':len(units)-len(eligible),
             'sans_score':missing,'non_resolues':unresolved,'episodes_comparables':len(episodes),'brier_par_episode':b,
-            'brier_base_par_episode':bb,'gain':gain,'statut':status,'par_groupe':by,'calibration':calibration,'details':units,
+            'brier_base_par_episode':bb,'gain':gain,'statut':status,'par_groupe':by,'calibration':calibration,
+            'decomposition_murphy':decomposition,'details':units,
             'limites':['Prépublication déclarée : authenticité à vérifier humainement.',
                        '50 épisodes et 10 % de gain constituent un jalon interne, pas une preuve statistique.',
                        'p(1-p) décrit la confiance annoncée ; une valeur faible ne démontre pas que le test est inutile.']}
@@ -1470,7 +1517,7 @@ RENVOIS = {
     ('protocole.md','H'):'Paramètres', ('simulation.md','1'):'Modèle de sortie', ('simulation.md','4'):'Rédiger', ('simulation.md','6'):'autres cas', ('simulation.md','2'):'remplissage',
     ('strates.md','2'):'Fiches', ('strates.md','3'):'taxonomie', ('strates.md','4'):'rattachement',
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
-    ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
+    ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -1614,6 +1661,8 @@ def bilan(base_chemin=None, refs_chemin=None, journal_chemin=None):
         mj=r['moteur_contre_jugement'];df=r['difficulte']
         if mj:out.append(f"Mesure · moteur contre jugement scellé : {mj['questions']} questions · {mj['ameliorations']} améliorations · {mj['degradations']} dégradations · {mj['lecture']}")
         if df:out.append(f"Mesure · questions à référence extrême : {df['part_extremes']:.0%} · {df['lecture']}")
+        dm=(r.get('decomposition_murphy') or {}).get('eligibles')
+        if dm:out.append(f"Mesure · Murphy (éligibles) : fiabilité {dm['fiabilite']:.3f} · résolution {dm['resolution']:.3f} · incertitude {dm['incertitude']:.3f} · {dm['lecture']}")
         ab=r.get('abstentions')
         if ab:out.append(f"Mesure · abstentions (non estimé) : {ab['questions']} · {ab['part_des_questions']:.0%} des questions · {ab['resolues']} résolues, {ab['issues_realisees']} réalisées")
     else:
@@ -1683,7 +1732,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.6.15','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.0','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
@@ -2198,7 +2247,7 @@ def autotest():
             m['intensite']='F';m['a6']='POLARITÉ@7 : CONTRAINTE → (deux camps, pas une règle) ; SEUIL → (aucun passage irréversible)'
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
             with self.assertRaises(ValueError):valider_base([c])            # garantie et option manquantes (0.6.0)
-            m.update(garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'})
+            m.update(garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},test='pistolet')
             with self.assertRaises(ValueError):valider_base([c])            # corroboration manquante (0.6.6)
             m['corroboration']='independantes'
             with self.assertRaises(ValueError):valider_base([c])            # une seule source nommée
@@ -2232,7 +2281,7 @@ def autotest():
         def test_renvoi_detection(self):
             import tempfile
             with tempfile.TemporaryDirectory() as d:
-                f=Path(d)/'x.md';f.write_text('voir `strates.md` §9 et `validation.md` §5',encoding='utf-8')
+                f=Path(d)/'x.md';f.write_text('voir `strates.md` §9 et `validation.md` §3',encoding='utf-8')
                 self.assertEqual(len(erreurs_renvois([f])),2)
                 f.write_text('voir `validation.md` §6',encoding='utf-8');self.assertEqual(erreurs_renvois([f]),[])
         def test_homology_strictest(self):
@@ -2251,7 +2300,7 @@ def autotest():
             self.assertEqual(r['homologie'],'H1')
         def _f_case(self,a6,**mot):
             c=fake_case();m=c['sequence'][0]['mots'][0];c['fictif']=False;c['sources_verifiees']=True
-            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique');m.update(mot)
+            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique',test='pistolet');m.update(mot)
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
             return c
         def test_a6_verdicts(self):
@@ -2525,6 +2574,25 @@ def autotest():
             for k in ('SEU@7','POL apparait','SEU@99 apparait','SEU@7 explose'):
                 with self.assertRaises(ValueError) as cm:refs_valider({k:dict(r)},'3 mois','2026-01-01')
                 self.assertIn(k.split(' ')[0],str(cm.exception))
+        def test_tests_preuve(self):
+            # 0.7.0 : F exige un fait suffisant (Collier 2011) ; un cerceau passé ne confirme pas la carte.
+            ok='POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)'
+            self.assertEqual(valider_base([self._f_case(ok)])['actifs'],1)
+            for t in ('cerceau','paille','inconnu'):
+                with self.assertRaises(ValueError):valider_base([self._f_case(ok,test=t)])
+            c=self._f_case(ok);c['sequence'][0]['mots'][0].pop('test')
+            with self.assertRaises(ValueError):valider_base([c])            # absent sur F réel
+            self.assertEqual(valider_base([self._f_case(ok,test='double')])['actifs'],1)
+            self.assertEqual(controle_test('POL@7',{'test':'cerceau'},'f',False),[])   # f : tout test
+        def test_murphy(self):
+            # Identité exacte quand les p d'une même classe sont égaux : BS = REL − RES + UNC.
+            pr=[(.2,0),(.2,0),(.2,1),(.8,1),(.8,1),(.8,0),(.8,1)]
+            d=murphy(pr);self.assertAlmostEqual(d['brier'],d['fiabilite']-d['resolution']+d['incertitude'],places=12)
+            self.assertAlmostEqual(d['variance_intra_classe'],0,places=12)
+            parfait=murphy([(0.,0),(1.,1)]);self.assertAlmostEqual(parfait['brier'],0);self.assertAlmostEqual(parfait['fiabilite'],0)
+            climat=murphy([(.5,0),(.5,1)]);self.assertAlmostEqual(climat['resolution'],0)   # p constant : aucune résolution
+            self.assertIsNone(murphy([]))
+            r=score_result([forecast(),score()]);self.assertEqual(r['decomposition_murphy']['toutes_moteur']['questions'],1)
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))

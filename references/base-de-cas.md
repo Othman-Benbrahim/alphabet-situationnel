@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -33,7 +33,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 ```json
 {
   "id": "C-0041-S07",
-  "version_regles": "0.6.0",
+  "version_regles": "0.7.0",
   "titre": "Cas fictif 1",
   "strates": [
     6,
@@ -55,6 +55,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
           "contre_observation": "Contre-observation fictive (marginale)",
           "portee": "marginale",
           "a6": "POLARITÉ@7 : CONTRAINTE → (deux camps nommés, pas une règle qui retire des options) ; SEUIL → (aucun passage irréversible daté)",
+          "test": "pistolet",
           "garantie": {"mecanisme": "les deux blocs se définissent l'un par l'autre et organisent les votes", "attendu": "alignements exclusifs : rejoindre un bloc écarte de l'autre", "contredirait": "une troisième position stable ou des alignements croisés durables"},
           "option": {"acteur": "les États tiers", "avant": "rester non alignés", "apres": "choisir un bloc pour obtenir un soutien"},
           "objet": "objet simulé C-0001-GEO strate 7"
@@ -172,6 +173,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 | `option` | requis pour F (cas réel) : `acteur` (« le système » admis), `avant`, `apres` différents (pertinence, O1) |
 | `questions` | requis au premier état non nul d'un cas réel (cas fictif exempté) : liste non vide de `{question, si_oui, si_non}` ; `si_oui` et `si_non` sont deux CARTE@strate **différents**, l'un au moins présent dans l'état. Une question dont les deux réponses mènent à la même carte est décorative et refusée (abduction, `grammaire.md` §7) |
 | `corroboration` | requis pour F d'un cas réel **actif** (une proposition le reçoit à son activation) : `"independantes"` si le fait repose sur au moins deux sources indépendantes, nommées dans `source` et séparées par « ; » ; `"unique"` sinon, admis et signalé dans « À vérifier auprès de vous ». Aucun effet sur le calcul (qualité de l'information, 0.6.6) |
+| `test` | requis pour F de cas réel : `pistolet` ou `double` (fait suffisant) ; facultatif pour f (`paille`, `cerceau`, aussi admis) ; tests de process tracing, `protocole.md` A6 (0.7.0) |
 | `a6` | requis pour F : chaque voisine de `cartes.md`, verdict `→` ou `+`, justification non vide ; contrôle complet sur cas réel, cas fictif exempté |
 | `retraits` | exactement les mots disparus, chacun avec fait et source |
 | `liaisons`, `preuves_liaisons` | mots existants, types compatibles avec les strates, une preuve par liaison |

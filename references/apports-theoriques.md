@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -205,3 +205,29 @@ nomme un acteur et un changement observable.
 - **Protocole d'interopérabilité « Common Ground »** (P12) : comme l'API REST au §7.4, prématuré avant 1.0.
 - **Opérateur formel `qml_q` comme modèle du moteur** (P1) : « modèle aspiratif » selon le document
   lui-même ; un opérateur sans équivalent dans le calcul n'ajoute pas de contrôle.
+
+---
+
+## 9. Pistes bibliographiques (0.7.0)
+
+Note versée par l'auteur le 27 octobre 2026 : une quarantaine de références (Heuer, Tetlock, Pearl,
+Murphy, process tracing, QCA, scénarios, impacts croisés, sensemaking, marchés de prévision). Triée par
+la règle d'importation (§1).
+
+**Entré.** Les tests de process tracing (Van Evera 1997 ; Collier 2011, *PS* 44(4), 823-830, lu) donnent
+au choix F/f un critère de preuve : F exige un fait suffisant (`test` : pistolet ou double), un fait qui
+remplit seulement le marqueur est un cerceau et donne f (`protocole.md` A6). La décomposition de Murphy
+(1973) sépare, dans le Brier, la fiabilité, la résolution et l'incertitude (`validation.md` §5).
+
+**Retenu pour plus tard.** Un marché de prévision (Metaculus, Polymarket) comme comparateur externe au
+même horizon, plus exigeant que l'inertie, si sa probabilité peut être figée à la date de la prévision
+(0.8, étape 4). Les *Cross-Impact Balances* (Weimer-Jehle 2006) pour le mode « scénarios » (0.9).
+L'agrégation de codeurs par calibration passée (Cooke 1991), au second codeur (étape 5).
+
+**Déjà présent.** ACH (A7, questions qui départagent) ; barreau de Pearl ; Tetlock (scellé, comparateur,
+Brier par épisode) ; boîte morphologique (l'alphabet lui-même, cartes × strates, paires incompatibles).
+
+**Non retenu.** Sensemaking, apprentissage en double boucle, niveaux logiques, autopoïèse, perspectives
+T/O/P : vocabulaire sans contrôle. QCA et ensembles flous pour F/f : la force est une qualité de preuve,
+pas un degré d'appartenance. La note contenait des correspondances inexactes (numéros et noms de strates,
+règles) et une référence introuvable (« EL-DRUIN », arXiv 2604.10087), non citée ici.

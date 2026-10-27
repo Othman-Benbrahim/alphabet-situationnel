@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.6.15
+> Version : 0.7.0
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -28,8 +28,9 @@
 | Version | Thème | Contenu | Condition |
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
-| 0.7 | Structurer | objets-frontière sourcés (strate 7 en cours, §5) ; cases Vides à combler (décision 1b = universelles) ; échelle de dureté (portes par niveau ρ, date de révision des sources) | étapes 2 et 3 |
-| 0.8 | Éprouver | séquence H1.6 (motifs ordonnés) ; banque de cas adverses ; mode « scénarios » à la manière d'ACH (`apports-theoriques.md` §7) | 30 cas actifs dans une strate |
+| 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.8 | Structurer | objets-frontière sourcés (strate 7 en cours, §5) ; cases Vides à combler (décision 1b = universelles) ; échelle de dureté (portes par niveau ρ, date de révision des sources) ; comparateur de marché de prévision (étape 4) | étapes 2 et 3 |
+| 0.9 | Éprouver | séquence H1.6 (motifs ordonnés) ; banque de cas adverses ; mode « scénarios » à la manière d'ACH (`apports-theoriques.md` §7) | 30 cas actifs dans une strate |
 | 1.0 | Grammaire | cartes comme règles de transformation, écrites par un rédacteur indépendant de la matrice puis comparées à elle ; liaisons comme opérateurs ; dérivation de l'alphabet en note séparée | rédacteur indépendant |
 
 Le test à l'aveugle peut commencer dès la fin de l'étape 2. Avant les étapes 3 et 4, il mesure la
@@ -228,7 +229,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | Audit de la 0.6.12 traité (0.6.13) : M1 à M3, m1 à m7, mineurs |
 | 2026-10-27 | — | Audit Manus traité (0.6.14) : prévisions moteur liées à leur calcul, codeurs {id, role}, manifeste, CI 3.8/3.12 |
 | 2026-10-27 | — | Audit Scira traité (0.6.15) : corrections documentaires ; deux anomalies écartées après vérification |
-| 2026-10-27 | 0 | À faire : installer la 0.6.15 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-27 | — | 0.7.0 : tests de preuve (F exige un fait suffisant) et décomposition de Murphy ; fin de la série d'audits, début des tests à l'aveugle |
+| 2026-10-27 | 0 | À faire : installer la 0.7.0 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 

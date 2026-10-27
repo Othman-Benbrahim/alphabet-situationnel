@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.6.13
+> Version : 0.6.14
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -140,7 +140,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
   "codage": {
     "mode": "manuel",
     "codeurs": [
-      "codeur-1"
+      {"id": "codeur-1", "role": "humain"}
     ],
     "regle_declenchement": null,
     "accord": "exemple construit",
@@ -178,7 +178,9 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 | `preuves_qualificatifs` | dictionnaire CARTE@strate → ligne Q pour chaque mot qualifié |
 | `positions`, `preuve_positions` | null ou tient/bouge/manque avec ≥3 mots, contraintes de présence et preuve |
 | `sans_evenement` | `true` seulement si aucun mot n'apparaît, ne disparaît ni ne change de force sur toute la séquence (B4) |
-| `codage` | `recodage` : qui a proposé le codage quand ce n'est pas le codeur (un modèle, par exemple) ; s'il est renseigné, un cas **actif** exige `recodage_confirme` `{par, date}` : un codeur humain nommé, pas le modèle, a relu ce qui a été proposé (0.6.7). Puis : mode, codeurs distincts ; `independants` et `au_moins_un_humain` booléens s'ils sont présents ; si deux codeurs : indépendance et au moins un humain explicitement attestés |
+| `codage` | `recodage` : qui a proposé le codage quand ce n'est pas le codeur (un modèle, par exemple) ; s'il est renseigné, un cas **actif** exige `recodage_confirme` `{par, date}` : un codeur humain nommé, pas le modèle, a relu ce qui a été proposé (0.6.7). **Codeurs** (0.6.14) : chacun `{id, role}`, `role` = `humain` ou `modele` ; un cas réel actif en
+compte au moins un humain, et `recodage_confirme.par` est l'`id` d'un codeur humain de la fiche, pas un
+nom libre. Les fiches fictives et les archives gardent la forme courte (chaîne). Puis : mode, codeurs distincts ; `independants` et `au_moins_un_humain` booléens s'ils sont présents ; si deux codeurs : indépendance et au moins un humain explicitement attestés |
 | `fictif` | booléen ; tout cas fictif est exclu hors --demo et de V4 |
 | `sources_verifiees` | true pour un cas réel actif ; ne pas déclarer sans avoir consulté les sources |
 | `statut_donnees` | actif, proposition (exige `motif_proposition` et `sources_verifiees: false`) ou archive_a_revoir (exige `motif_archive`) ; seuls les cas actifs entrent dans les calculs |

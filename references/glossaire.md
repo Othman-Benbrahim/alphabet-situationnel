@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.6.13
+> Version : 0.6.14
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -57,6 +57,7 @@
 | Garantie | troisième terme d'un ancrage F de cas réel : mécanisme par lequel le fait relève de la carte, ce qu'elle rend attendu, ce qui la contredirait | A6 |
 | Jugement scellé | probabilité du codeur écrite et hachée (`sceller-jugement`) **avant** le moteur ; prouve l'intégrité, pas l'antériorité | `validation.md` §1 |
 | Nom local | phrase par laquelle une discipline nomme le phénomène dans son vocabulaire, sans le mot de la carte ; exigé pour Documenté | `equivalences.md` §2 |
+| Manifeste | `SHA256SUMS` : empreinte de chaque fichier livré, vérifiée par `audit` et `sha256sum -c` ; régénérée en dernier avant livraison | `README.md` |
 | Option | filtre de pertinence d'un ancrage F de cas réel : un acteur et l'option qu'il avait avant et n'a plus après, ou l'inverse | O1 |
 | Question qui départage | question posée au premier état d'un cas réel dont les deux réponses mènent à deux cartes différentes (abduction) | `grammaire.md` §7 |
 | Rabbit | construction ad hoc d'un codage (carte, strate, règle inventée en cours de route) ; dette ouverte jusqu'à sa résorption | `validation.md` §6 |

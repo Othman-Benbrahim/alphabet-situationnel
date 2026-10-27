@@ -1,6 +1,47 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.6.13
+> Version : 0.6.14
+
+## 0.6.14 — 2026-10-27 · après l'audit Manus (dépôt GitHub, commit c9a8086)
+
+Audit de l'intégrité de la preuve plutôt que du calcul. Les quatre constats « haute » reproduits et
+corrigés. 96 autotests (92 + 4), qui passent aussi sous Python 3.8.
+
+**Haute**
+- **Une prévision « moteur » sans calcul comptait pour V4.** Reproduit : sans `calcul`, avec trois
+  empreintes `000…` et une prépublication auto-référente, la ligne était éligible. Désormais : une
+  prévision réelle d'origine moteur joint son calcul figé (JSON complet, contexte compris), sinon elle
+  est refusée (un chiffre humain relève d'origine « jugement ») ; ses empreintes doivent égaler celles
+  du calcul et, pour la version courante, celles des fichiers moteur et paramètres ; l'éligibilité V4
+  exige une prépublication publique (`https://`). Les partitions « moteur » réelles suivent la même
+  règle (une partition en texte libre relève du jugement).
+- **Relecture humaine contournable par des libellés.** Reproduit (codeur « GPT-4o » seul ; confirmation
+  par « Gemini »). Les codeurs d'un cas réel actif sont `{id, role: humain|modele}`, au moins un humain,
+  et `recodage_confirme.par` est l'`id` d'un codeur humain de la fiche. La liste noire « claude » est
+  supprimée. Fiches fictives et archives gardent la forme courte.
+- **`audit` promettait plus qu'il ne contrôlait.** Il valide désormais les JSONL livrés (base d'exemple,
+  cas archivés, témoignages originaux, journal) ; le README décrit son périmètre exact.
+- **Chaîne de livraison.** `SHA256SUMS` (`moteur.py manifeste`) donne l'empreinte de chaque fichier ;
+  `audit` et `sha256sum -c` refusent un fichier modifié, ajouté ou retiré (autotest de mutation).
+  `publier-github.ps1` crée aussi la release, notes tirées du CHANGELOG, `SHA256SUMS` joint.
+  `.gitattributes` empêche toute conversion de fin de ligne. Étiquettes non signées : limite écrite.
+
+**Moyenne**
+- Intégration continue (`.github/workflows/ci.yml`) : manifeste, audit, autotests, bases et journal,
+  sous Python 3.8 et 3.12. Compatibilité 3.8 vérifiée ici (`vermin`, et exécution complète sous 3.8.20).
+- Message d'audit : « paramètres exhaustifs (chacun référencé par le code) », sans prétendre à un
+  effet fonctionnel prouvé.
+- Provenance d'EnVrai? structurée dans `LICENCES-TIERS.md` ; dépôt et commit amont non relevés à la
+  reprise, signalés comme manque à combler par l'auteur. Sources structurées des cas : à l'activation du
+  premier cas réel (les quatre actuels sont archivés).
+- `.gitignore` : secrets usuels (`.env`, `*.pem`, `*.key`, `id_rsa*`).
+
+**Faible** : une clé de référence mal formée nomme la clé et le format attendu (autotest, quatre cas).
+
+**Non retenu** : `CONTRIBUTING`, `SECURITY`, `GOVERNANCE`, `CODEOWNERS`, `DATA-GOVERNANCE` et scanner de
+secrets en CI. Projet à un auteur, sans contributeur ni donnée personnelle versionnée : ces fichiers
+décriraient une organisation qui n'existe pas. À reprendre à l'arrivée d'un second codeur (étape 5),
+qui est aussi le moment où la gouvernance des données devient réelle.
 
 ## 0.6.13 — 2026-10-27 · après l'audit de la 0.6.12
 

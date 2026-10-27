@@ -1,6 +1,6 @@
 # Alphabet situationnel — Les 13 strates (couche 0)
 
-> Version : 0.6.13
+> Version : 0.6.14
 
 > Source de vérité de la **liste des strates** et de leur contenu. Les règles de rattachement sont
 > O1–O3 (`protocole.md`).

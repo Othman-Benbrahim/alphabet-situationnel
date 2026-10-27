@@ -1,0 +1,27 @@
+# Contrôles à chaque push et pull request : le contrat « Python ≥ 3.8, bibliothèque standard seule »
+# est vérifié sur la version minimale et sur une version courante.
+name: controles
+on: [push, pull_request]
+jobs:
+  moteur:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python: ['3.8', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Manifeste
+        run: sha256sum -c SHA256SUMS --quiet
+      - name: Audit
+        run: python scripts/moteur.py audit
+      - name: Autotests
+        run: python scripts/moteur.py autotest
+      - name: Bases livrées
+        run: |
+          python scripts/moteur.py valider assets/base-de-cas.exemple.jsonl
+          python scripts/moteur.py valider assets/cas-reels.jsonl
+      - name: Journal d'exemple
+        run: python scripts/moteur.py scorer assets/journal.exemple.jsonl > /dev/null

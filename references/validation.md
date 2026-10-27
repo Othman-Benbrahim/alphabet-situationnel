@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.6.13
+> Version : 0.6.14
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -253,6 +253,10 @@ d'étendre l'alphabet par méthode plutôt que par intuition ; `audit` contrôle
 5. Produire le journal avec empreintes et `rejeu:false`, `fictif:false` ; aucun champ inventé.
 6. `sceller`, publier l'empreinte à un tiers avant échéance et conserver le fichier exact. Ajouter
    ensuite le reçu `preuve_prepublication` (source, date, empreinte_prevision retournée par sceller).
+   **Depuis 0.6.14**, `source` est une adresse `https://` d'un dépôt horodaté par un tiers (commit ou
+   release GitHub contenant le journal, archive web) : sans elle, la prévision reste hors V4. Une
+   prévision réelle d'origine moteur joint aussi son calcul figé, dont les empreintes sont recopiées
+   telles quelles ; pour la version courante, moteur et paramètres sont recalculés sur les fichiers.
    L’empreinte individuelle exclut ce seul champ ; elle reste stable. Ne modifier aucun autre champ.
    Le hash local seul ne prouve pas la date ; le tiers vérifie la correspondance au dépôt original.
 7. Ne pas modifier les paris à la lecture de nouvelles informations : toute mise à jour est un

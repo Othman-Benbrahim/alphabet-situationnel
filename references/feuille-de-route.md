@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.6.13
+> Version : 0.6.14
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -225,7 +225,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | Audit V22 traité (0.6.11) : abstentions journalisées et comptées, `trajectoires` refuse la temporalité |
 | 2026-10-27 | — | Temporalité obligatoire (0.6.12) : le moteur pose la question, Claude la pose à l'utilisateur avec celle du critère |
 | 2026-10-27 | — | Audit de la 0.6.12 traité (0.6.13) : M1 à M3, m1 à m7, mineurs |
-| 2026-10-27 | 0 | À faire : installer la 0.6.13 |
+| 2026-10-27 | — | Audit Manus traité (0.6.14) : prévisions moteur liées à leur calcul, codeurs {id, role}, manifeste, CI 3.8/3.12 |
+| 2026-10-27 | 0 | À faire : installer la 0.6.14 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 
@@ -244,3 +245,5 @@ textes périmés ont passé tous les contrôles automatiques en 0.6.4. Avant cha
 8. Les exemples montrent la sortie courante (format), pas seulement les valeurs courantes.
 9. Aucun texte ne décrit un état révolu (« restante », « à faire », ancienne plage de versions).
 10. Tout constat du CHANGELOG qui engage une décision est recopié au journal des lacunes ou ici.
+11. En dernier : `moteur.py manifeste`, puis `audit` (qui vérifie `SHA256SUMS`) ; publication avec
+    `publier-github.ps1` (étiquette et release, `SHA256SUMS` joint).

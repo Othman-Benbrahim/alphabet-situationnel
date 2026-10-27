@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.6.13'
+  version: '0.6.14'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.6.13. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.6.14. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -82,6 +82,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… scorer J.jsonl` | validation du journal, score des questions et épisodes |
 | `… sceller J.jsonl` | empreinte à publier avant échéance ; ne prouve pas seul la prépublication |
 | `… sceller-jugement --question Q --evenement E --p 0.3 --date AAAA-MM-JJ [--origine jugement]` | empreinte de votre propre probabilité, à calculer **avant** le moteur ; à recopier dans `jugement_scelle` ; l'événement est validé (texte libre seulement avec `--origine jugement`), la date ne peut pas être future |
+| `… manifeste` | régénère `SHA256SUMS` (empreinte de chaque fichier livré), à lancer en dernier avant livraison |
 | `… audit` / `… autotest` / `… parametres` | intégrité / tests / table documentaire générée ; l'audit vérifie la forme et les recoupements internes, pas la justesse du contenu |
 
 `--fref` n'est admis que pour un événement simple, avec `--source-ref`, `--periode-ref`,
@@ -183,8 +184,9 @@ signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une c
 
 **CODER** (une fiche) : 1. parcours LIRE (1–4) pour chaque état daté, avec `disponible_le` ;
 2. fiche au schéma de `base-de-cas.md` §2 : garantie, option et, pour un cas actif, `corroboration`
-sur chaque F ; questions au premier état ; si Claude propose le codage, `codage.recodage`, et
-l'utilisateur confirme (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
+sur chaque F ; questions au premier état ; codeurs `{id, role: humain|modele}` (Claude est un codeur
+`modele`) ; si Claude propose le codage, `codage.recodage`, et l'utilisateur confirme sous son propre
+`id` (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
 `assets/rabbits.jsonl` ; 4. `moteur.py valider` ; une fiche refusée se corrige ou s'archive avec motif.
 
 **SCORER** : 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.6.13 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.6.14 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -564,6 +564,12 @@ def charger(chemin):
     return out
 
 
+def ids_codeurs(c):
+    """Identifiants des codeurs, qu'ils soient écrits en chaîne (fiches fictives, archives) ou en
+    {id, role} (cas réel actif, 0.6.14)."""
+    return [x['id'] if isinstance(x,dict) else x for x in (c.get('codage') or {}).get('codeurs') or []]
+
+
 def usage_attendu(cid):
     return 'test' if hashlib.sha256(cid.encode()).hexdigest()[0] in P['partage_test'] else 'apprentissage'
 
@@ -607,7 +613,7 @@ def base_active(base, asof, demo=False):
 
 def mode_solo(base, strate=None):
     lot = [c for c in base if strate is None or strate in c.get('strates', [])]
-    doubles = [c for c in lot if len(set(c['codage']['codeurs'])) >= 2 and c['codage'].get('independants') is True
+    doubles = [c for c in lot if len(set(ids_codeurs(c))) >= 2 and c['codage'].get('independants') is True
                and c['codage'].get('au_moins_un_humain') is True]
     return not lot or len(doubles) < P['double_codage_min_cas'] or len(doubles)/len(lot) < P['double_codage_part']
 
@@ -664,8 +670,12 @@ def valider_base(base):
         coding = c.get('codage')
         exiger(isinstance(coding,dict) and coding.get('mode') in ('manuel','declenche'), f'{cid} : mode de codage requis')
         coders = coding.get('codeurs')
-        exiger(isinstance(coders,list) and bool(coders) and all(isinstance(x,str) and x.strip() for x in coders)
-               and len(set(coders))==len(coders), f'{cid} : codeurs distincts requis')
+        exiger(isinstance(coders,list) and bool(coders), f'{cid} : codeurs distincts requis')
+        for x in coders:
+            exiger((isinstance(x,str) and x.strip()) or (isinstance(x,dict) and isinstance(x.get('id'),str) and x['id'].strip()
+                   and x.get('role') in ('humain','modele')), f'{cid} : codeur = identifiant, ou {{id, role: humain|modele}}')
+        ids_=ids_codeurs(c)
+        exiger(len(set(ids_))==len(ids_), f'{cid} : codeurs distincts requis')
         for flag in ('independants','au_moins_un_humain'):
             exiger(coding.get(flag) is None or type(coding[flag]) is bool, f'{cid} : codage.{flag} doit être true ou false')
         if len(coders) >= 2:
@@ -685,12 +695,19 @@ def valider_base(base):
                 # 0.6.7 : une sortie de modèle ne devient pas un fait sans relecture (« unchecked output »).
                 # Un cas dont le codage a été proposé par un modèle (codage.recodage renseigné) n'entre dans
                 # les calculs qu'avec la confirmation datée d'un codeur humain nommé.
+                # 0.6.14 (audit Manus, haute 2) : l'identité des codeurs est structurée. Une liste de noms
+                # libres et une liste noire (« claude ») laissaient passer GPT-4o seul, ou une confirmation
+                # par un autre modèle. Un cas réel actif nomme au moins un codeur {role: humain} ; une
+                # confirmation de recodage renvoie à l'identifiant de ce codeur humain.
+                exiger(all(isinstance(x,dict) for x in coders),
+                       f'{cid} : cas réel actif : chaque codeur est {{id, role: humain|modele}}')
+                humains={x['id'] for x in coders if x['role']=='humain'}
+                exiger(bool(humains), f'{cid} : cas réel actif : au moins un codeur de rôle « humain »')
                 if coding.get('recodage'):
                     rc=coding.get('recodage_confirme')
-                    exiger(isinstance(rc,dict) and isinstance(rc.get('par'),str) and rc['par'].strip()
-                           and 'claude' not in rc['par'].lower() and isinstance(rc.get('date'),str),
+                    exiger(isinstance(rc,dict) and rc.get('par') in humains and isinstance(rc.get('date'),str),
                            f'{cid} : codage proposé par un modèle ({coding["recodage"][:40]}…) : codage.recodage_confirme '
-                           '{par: codeur humain, date} requis avant activation')
+                           '{par: identifiant d’un codeur humain de la fiche, date} requis avant activation')
                     date_iso(rc['date'])
         observed = set(); prev=None; objets = {}; origine_f = {}
         for ix,x in enumerate(states):
@@ -812,7 +829,11 @@ def refs_valider(refs, fenetre, asof):
             texte_requis(r.get(k),f'{event}.{k}')
         exiger(meme_fenetre(r['fenetre'],fenetre), f'{event} : référence d’une autre fenêtre')
         exiger(jour(r['disponible_le'])<=jour(asof),f'{event} : référence indisponible à la date de prévision')
-        key,typ=event.split(' ',1);cle_valide(key)
+        # 0.6.14 : une clé mal formée nomme la clé fautive et le format attendu.
+        exiger(isinstance(event,str) and len(event.split(' ',1))==2,f'référence « {event} » : clé « CARTE@strate type » requise (ex. « SEU@7 apparait »)')
+        key,typ=event.split(' ',1)
+        try:cle_valide(key)
+        except (ValueError,IndexError):raise ValueError(f'référence « {event} » : « {key} » n’est pas une clé CARTE@strate') from None
         exiger(typ in ('apparait','persiste','disparait','hausse|persiste','transformation|persiste'),f'{event} : type de référence inconnu')
     return refs
 
@@ -1156,6 +1177,13 @@ def valider_journal(data):
         exiger(jour(x['date']) < jour(x['echeance']), f'{ident} : prévision datée à échéance ou après')
         exiger(jour(x['date'])<=jour(x['echeance']),f'{ident} : date après échéance')
         calc=x.get('calcul')
+        # 0.6.14 (audit Manus, haute 1) : une prévision réelle d'origine moteur porte le calcul qui l'a
+        # produite. Sans lui, une probabilité saisie à la main pouvait compter comme sortie du moteur.
+        # Un chiffre humain relève d'origine « jugement ».
+        if not x.get('fictif'):
+            exiger(isinstance(calc,dict) and 'p' in calc and isinstance(calc.get('contexte'),dict),
+                   f'{ident} : prévision réelle d’origine moteur sans calcul figé (JSON complet de calculer, contexte compris) ; '
+                   'une probabilité saisie à la main se journalise avec origine « jugement »')
         # 0.6.11 : un calcul « non estimé » (p null) ne devient pas une prévision chiffrée. La ligne est
         # une **abstention** : probabilite null, calcul joint, hors partition ; scorer la compte à part.
         abst=isinstance(calc,dict) and 'p' in calc and calc['p'] is None
@@ -1262,6 +1290,14 @@ def valider_journal(data):
             for key in ('moteur','parametres','base'):
                 value=x['empreintes'].get(key)
                 exiger(isinstance(value,str) and re.fullmatch(r'[0-9a-f]{64}',value),f'{ident} : SHA-256 {key} requis')
+            # 0.6.14 : les empreintes sont celles du calcul figé, et non des chaînes déclarées. Si la
+            # prévision porte la version courante, moteur et paramètres sont recalculés sur les fichiers.
+            ce=(calc.get('contexte') or {}).get('empreintes') if isinstance(calc,dict) else None
+            if ce is not None:
+                exiger(ce==x['empreintes'],f'{ident} : empreintes différentes de celles du calcul figé')
+            if not x.get('fictif') and x['version_regles']==P['version']:
+                exiger(x['empreintes']['moteur']==fichier_sha(__file__) and x['empreintes']['parametres']==fichier_sha(RACINE/'assets/parametres.json'),
+                       f'{ident} : empreintes moteur/paramètres différentes des fichiers de la version {P["version"]} : le calcul ne vient pas de ce moteur')
         proof=x['preuve_prepublication']
         if proof is not None:
             exiger(isinstance(proof,dict),f'{ident} : preuve de prépublication invalide')
@@ -1353,7 +1389,12 @@ def score_result(data):
         bsc=None if any(x.get('p_sans_cartes') is None for x in items) else ech*sum((x['p_sans_cartes']-scores[x['id']]['issue'])**2 for x in items)
         bj=None if any(x.get('probabilite_jugement') is None for x in items) else ech*sum((x['probabilite_jugement']-scores[x['id']]['issue'])**2 for x in items)
         ref=None if len(items)>1 else items[0].get('frequence_de_base') if items[0].get('frequence_de_base') is not None else items[0].get('p_sans_cartes')
-        verified=all(x.get('preuve_prepublication') is not None and x.get('empreintes') is not None and x.get('resolution_verifiee') for x in items)
+        # 0.6.14 : éligibilité V4 = calcul figé joint, empreintes, résolution vérifiée et prépublication
+        # **publique** (adresse https d'un dépôt horodaté par un tiers : release, commit, archive web).
+        # Une preuve qui ne pointe que vers elle-même ne prouve ni l'origine ni la date.
+        verified=all(x.get('preuve_prepublication') is not None and x.get('empreintes') is not None and x.get('resolution_verifiee')
+                     and isinstance(x.get('calcul'),dict)
+                     and re.match(r'https://\S+',str(x['preuve_prepublication'].get('source',''))) is not None for x in items)
         excluded=origine=='jugement' or any(x['rejeu'] or x['fictif'] for x in items) or not verified
         units.append({'ids':[x['id'] for x in items],'episode_id':items[0]['episode_id'],'origine':origine,'rejeu':any(x['rejeu'] for x in items),
                       'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_jugement':bj,
@@ -1560,7 +1601,7 @@ def bilan(base_chemin=None, refs_chemin=None, journal_chemin=None):
     act=[c for c in reels if c.get('statut_donnees')=='actif']
     for s in sorted({s for c in act for s in c['strates']}):
         lot=[c for c in act if s in c['strates']]
-        dbl=sum(len(set(c['codage']['codeurs']))>=2 and c['codage'].get('independants') is True for c in lot)
+        dbl=sum(len(set(ids_codeurs(c)))>=2 and c['codage'].get('independants') is True for c in lot)
         sans=sum(bool(c['sans_evenement']) for c in lot)
         out.append(f"Étape 5 · strate {s} : {len(lot)} cas actifs (ρ1 dès {P['c_min_rho1']} homologues, ρ0 dès {P['seuil_rho0_cas_distincts']}) · "
                    f"{dbl} double-codés (sortie du mode solo : {P['double_codage_min_cas']} et {P['double_codage_part']:.0%}) · {sans} sans événement")
@@ -1603,8 +1644,44 @@ def erreurs_parametres(params=None):
     return err
 
 
+EXCLUS_MANIFESTE = {'SHA256SUMS'}
+
+
+def fichiers_livres():
+    """Fichiers du paquet, chemins relatifs POSIX triés (hors .git, __pycache__, *.pyc, manifeste)."""
+    out=[]
+    for p in sorted(RACINE.rglob('*')):
+        r=p.relative_to(RACINE).as_posix()
+        if p.is_dir() or r in EXCLUS_MANIFESTE or r.startswith('.git/') or '__pycache__' in r or r.endswith('.pyc'):continue
+        out.append(r)
+    return out
+
+
+def manifeste_texte():
+    return ''.join(f'{fichier_sha(RACINE/r)}  {r}\n' for r in fichiers_livres())
+
+
+def erreurs_manifeste(texte=None):
+    """0.6.14 (audit Manus, haute 4) : SHA256SUMS relie le contenu décompressé à la version livrée,
+    fichier par fichier (`sha256sum -c SHA256SUMS`). L'audit refuse un fichier modifié, ajouté ou absent."""
+    f=RACINE/'SHA256SUMS'
+    if texte is None:
+        if not f.is_file():return ['SHA256SUMS absent : le générer avec « moteur.py manifeste » avant livraison']
+        texte=f.read_text(encoding='utf-8')
+    attendu={};err=[]
+    for l in texte.splitlines():
+        if l.strip():
+            h,_,r=l.partition('  ');attendu[r]=h
+    reels=set(fichiers_livres())
+    for r in sorted(set(attendu)-reels):err.append(f'SHA256SUMS : {r} absent du paquet')
+    for r in sorted(reels-set(attendu)):err.append(f'SHA256SUMS : {r} non répertorié')
+    for r in sorted(set(attendu)&reels):
+        if fichier_sha(RACINE/r)!=attendu[r]:err.append(f'SHA256SUMS : {r} modifié depuis la livraison')
+    return err
+
+
 def audit():
-    exiger(P['version']=='0.6.13','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.6.14','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
@@ -1677,6 +1754,13 @@ def audit():
     schema=schema_documente()
     try:valider_base([schema])
     except ValueError as e:raise ValueError(f'base-de-cas.md §2 : le schéma documenté ne passe pas valider — {e}') from None
+    # 0.6.14 (audit Manus, haute 3) : les JSONL livrés sont validés, pas seulement la documentation.
+    for nom in ('base-de-cas.exemple.jsonl','cas-reels.jsonl','cas-reels-originaux.jsonl'):
+        try:valider_base(charger(RACINE/'assets'/nom))
+        except ValueError as e:raise ValueError(f'assets/{nom} : {e}') from None
+    try:score_result(charger(RACINE/'assets/journal.exemple.jsonl'))
+    except ValueError as e:raise ValueError(f'assets/journal.exemple.jsonl : {e}') from None
+    errs=erreurs_manifeste();exiger(not errs,' ; '.join(errs[:8])+(f' (+{len(errs)-8})' if len(errs)>8 else ''))
     errs=erreurs_statuts()+erreurs_index()+erreurs_repetitions([RACINE/'SKILL.md',RACINE/'README.md']+paths)
     for f in ('constitution.md','simulation.md'):
         if OUVERTURE not in (RACINE/'references'/f).read_text(encoding='utf-8'):errs.append(f'{f} : ligne d’ouverture normative absente (« {OUVERTURE} »)')
@@ -1687,7 +1771,8 @@ def audit():
     exiger(not errs,'renvois : '+' ; '.join(errs))
     exiger(voisines() and all(voisines().get(ab) for ab in NOMS),'cartes.md : listes de voisines illisibles (A6)')
     incompatibles()
-    print(f'audit : conforme — fichiers, versions, {16*NS} statuts, paramètres exhaustifs et lus, matrice et inerties, '
+    print(f'audit : conforme — fichiers, versions, {16*NS} statuts, paramètres exhaustifs (chacun référencé par le code), '
+          f'JSONL livrés validés, manifeste SHA256SUMS ({len(fichiers_livres())} fichiers), matrice et inerties, '
           f'{sum(len(RENVOI_RE.findall(p.read_text(encoding="utf-8"))) for p in [RACINE/"SKILL.md",RACINE/"README.md"]+paths)} renvois §, '
           'voisines A6, incompatibilités G6, schéma de fiche validé, répartition des statuts, index des cartes, répétitions ; '
           'contrôle de forme et de recoupement interne, pas de la justesse du contenu ni certification empirique')
@@ -1816,6 +1901,7 @@ def main():
     for name in ('valider','scorer','sceller'):
         s=subs.add_parser(name);s.add_argument('fichier')
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
+    subs.add_parser('manifeste')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
     for name in ('calculer','trajectoires'):
@@ -1836,6 +1922,9 @@ def main():
     if a.cmd=='parametres':print(parametres_markdown());return
     if a.cmd=='valider':valider(a.fichier);return
     if a.cmd=='bilan':print(bilan(a.base,a.references,a.journal));return
+    if a.cmd=='manifeste':
+        (RACINE/'SHA256SUMS').write_text(manifeste_texte(),encoding='utf-8')
+        print(f'SHA256SUMS : {len(fichiers_livres())} fichiers ; vérifier avec « sha256sum -c SHA256SUMS » ou « moteur.py audit »');return
     if a.cmd=='partager':
         # 0.6.13 : même format que valider_base, refusé en amont.
         for ident in a.ids:
@@ -1960,7 +2049,7 @@ def autotest():
         states[0]['questions']=[{'question':'Une médiation impose-t-elle une règle commune ?','si_oui':'CTR@7','si_non':'POL@7'}]
         return {'id':cid,'version_regles':P['version'],'titre':'Cas technique fictif','strates':[7],'fenetre':'3 mois',
                 'sequence':states[:-1],'issue':states[-1],'sans_evenement':True,'fictif':True,'statut_donnees':'actif',
-                'codage':{'mode':'manuel','codeurs':['test']},'usage':'apprentissage'}
+                'codage':{'mode':'manuel','codeurs':[{'id':'codeur-1','role':'humain'}]},'usage':'apprentissage'}
     def forecast(ident='P-1',**kw):
         x={'type':'prevision','id':ident,'date':'2026-01-01','echeance':'2026-04-01','version_regles':P['version'],
            'question':'Une rupture survient-elle ?','evenement':'SEU@7 apparait','episode_id':'episode-A','pas':1,
@@ -1970,6 +2059,14 @@ def autotest():
            'resolution_verifiee':True,'frequence_de_base':.3,'p_sans_cartes':None,'probabilite_jugement':None,'temporalite':'generique','rejeu':False,'fictif':True,'partition':None,
            'empreintes':None,'preuve_prepublication':None}
         x.update(kw);return x
+    def calc_reel(**kw):
+        # Calcul figé minimal d'une prévision réelle de la version courante (0.6.14).
+        e={'moteur':fichier_sha(__file__),'parametres':fichier_sha(RACINE/'assets/parametres.json'),'base':'a'*64}
+        c={'evenement':'SEU@7 apparait','p':.2,'rho':4,'contexte':{'empreintes':e}};c.update(kw);return c
+    def reel(ident='P-1',**kw):
+        c=calc_reel();x=forecast(ident,fictif=False,calcul=c,empreintes=dict(c['contexte']['empreintes']),
+            preuve_prepublication={'source':'https://github.com/exemple/depot/releases/tag/v0','date':'2026-01-02'});x.update(kw)
+        x['preuve_prepublication']['empreinte_prevision']=empreinte_prevision(x);return x
     def score(i='P-1',issue=0):return {'type':'score','id':i,'date':'2026-04-02','issue':issue,'preuve':'registre consulté'}
     class Tests(unittest.TestCase):
         def test_calendar_invalid(self):
@@ -2070,13 +2167,22 @@ def autotest():
             r=score_result([p,q,score(issue=1),score('P-2',0)]);self.assertEqual(r['questions_resolues'],1);self.assertAlmostEqual(r['details'][0]['brier'],.25)   # échelle binaire (0.6.13)
         def test_missing_score_counted(self):self.assertEqual(score_result([forecast()])['sans_score'],1)
         def test_fiction_never_validated(self):self.assertEqual(score_result([forecast(),score()])['questions_eligibles'],0)
-        def test_unverified_never_validated(self):self.assertEqual(score_result([forecast(fictif=False),score()])['questions_eligibles'],0)
+        def test_unverified_never_validated(self):
+            p=reel();p['preuve_prepublication']=None
+            self.assertEqual(score_result([p,score()])['questions_eligibles'],0)
+        def test_moteur_sans_calcul(self):
+            # 0.6.14 (audit Manus, haute 1) : reproduction de l'auditeur, puis les voies fermées une à une.
+            with self.assertRaises(ValueError):valider_journal([forecast(fictif=False)])                 # sans calcul
+            self.assertEqual(score_result([reel(),score()])['questions_eligibles'],1)                    # chemin légitime
+            p=reel();p['empreintes']={k:'0'*64 for k in ('moteur','parametres','base')}
+            p['preuve_prepublication']['empreinte_prevision']=empreinte_prevision(p)
+            with self.assertRaises(ValueError):valider_journal([p])                                      # empreintes factices
+            p=reel();p['preuve_prepublication']['source']='moi';p['preuve_prepublication']['empreinte_prevision']=empreinte_prevision(p)
+            self.assertEqual(score_result([p,score()])['questions_eligibles'],0)                         # preuve non publique
         def test_episode_count(self):
             data=[]
             for i in range(50):
-                p=forecast(f'P-{i}',fictif=False,empreintes={k:'0'*64 for k in ('moteur','parametres','base')},preuve_prepublication={'source':'registre externe','date':'2026-01-02'})
-                p['preuve_prepublication']['empreinte_prevision']=empreinte_prevision(p)
-                data.extend([p,score(f'P-{i}')])
+                data.extend([reel(f'P-{i}'),score(f'P-{i}')])
             r=score_result(data);self.assertEqual(r['episodes_comparables'],1);self.assertEqual(r['statut'],'non encore évalué')
         def test_trajectory_mass(self):
             e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[f]');r=trajectoires(e,2,[],{'liaisons':[],'bouge':[],'manque':[]});self.assertAlmostEqual(r['somme'],1)
@@ -2252,6 +2358,18 @@ def autotest():
             with self.assertRaises(ValueError):valider_base([c])            # un modèle ne se confirme pas lui-même
             c['codage']['recodage_confirme']={'par':'codeur-1','date':'2026-10-27'}
             self.assertEqual(valider_base([c])['actifs'],1)
+            # 0.6.14 (audit Manus, haute 2) : identité structurée, pas de liste noire de noms.
+            c['codage']['codeurs']=[{'id':'GPT-4o','role':'modele'}]
+            c['codage']['recodage_confirme']={'par':'GPT-4o','date':'2026-10-27'}
+            with self.assertRaises(ValueError):valider_base([c])            # codeur modèle seul
+            c['codage']['codeurs']=[{'id':'codeur-1','role':'humain'},{'id':'Gemini','role':'modele'}]
+            c['codage'].update(independants=True,au_moins_un_humain=True)
+            c['codage']['recodage_confirme']={'par':'Gemini','date':'2026-10-27'}
+            with self.assertRaises(ValueError):valider_base([c])            # confirmation par un modèle
+            c['codage']['recodage_confirme']={'par':'quelqu-un','date':'2026-10-27'}
+            with self.assertRaises(ValueError):valider_base([c])            # confirmation non reliée
+            c['codage']['codeurs']=['codeur-1']
+            with self.assertRaises(ValueError):valider_base([c])            # chaîne libre sur cas réel actif
         def test_proposition(self):
             c=fake_case();c['fictif']=False;c['statut_donnees']='proposition';c['sources_verifiees']=False;c['motif_proposition']='recodage à vérifier'
             r=valider_base([c]);self.assertEqual((r['actifs'],r['propositions']),(0,1))
@@ -2389,6 +2507,22 @@ def autotest():
             for v in ('abc','0.6.x','6',''):
                 with self.assertRaises(ValueError):valider_journal([forecast(version_regles=v)])
             self.assertEqual(version_lue('0.6'),(0,6,0));self.assertEqual(version_lue('0.6.12'),(0,6,12))
+        def test_manifeste_mutation(self):
+            # 0.6.14 : un fichier livré modifié, ajouté ou retiré fait échouer audit.
+            t=manifeste_texte();self.assertEqual(erreurs_manifeste(t),[])
+            l=t.splitlines();h,_,r=l[0].partition('  ')
+            self.assertTrue(erreurs_manifeste('\n'.join([('0'*64)+'  '+r]+l[1:])))           # modifié
+            self.assertTrue(erreurs_manifeste('\n'.join(l[1:])))                             # non répertorié
+            self.assertTrue(erreurs_manifeste(t+'0'*64+'  assets/fantome.jsonl\n'))          # absent
+        def test_jsonl_livre_mutation(self):
+            lignes=(RACINE/'assets/base-de-cas.exemple.jsonl').read_text(encoding='utf-8').splitlines()
+            c=json.loads(lignes[0]);c['fenetre']='0 jour'
+            with self.assertRaises(ValueError):valider_base([c]+[json.loads(x) for x in lignes[1:]])
+        def test_reference_cle_malformee(self):
+            r={'frequence':.2,'source':'x','definition':'x','periode':'x','fenetre':'3 mois','disponible_le':'2020-01-01'}
+            for k in ('SEU@7','POL apparait','SEU@99 apparait','SEU@7 explose'):
+                with self.assertRaises(ValueError) as cm:refs_valider({k:dict(r)},'3 mois','2026-01-01')
+                self.assertIn(k.split(' ')[0],str(cm.exception))
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))

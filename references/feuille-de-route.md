@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.6.14
+> Version : 0.6.15
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -186,6 +186,7 @@ Chaque élément attend une condition de données ; le coder avant serait coder 
 | Pondération continue des homologues par similarité | au moins une strate avec 30 cas actifs | `jaccard_H15` |
 | Intervalles des événements composés et multi-pas | premières références conditionnelles vérifiées | — |
 | Calibration des multiplicateurs et des inerties | jalon V4 atteint | `lambda`, `inertie` |
+| Scinder `moteur.py` en modules (validation, calcul, score, autotests) | jalon V4 atteint ; d'ici là, un fichier unique reste plus simple à auditer et à recopier | — |
 
 ---
 
@@ -226,7 +227,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | Temporalité obligatoire (0.6.12) : le moteur pose la question, Claude la pose à l'utilisateur avec celle du critère |
 | 2026-10-27 | — | Audit de la 0.6.12 traité (0.6.13) : M1 à M3, m1 à m7, mineurs |
 | 2026-10-27 | — | Audit Manus traité (0.6.14) : prévisions moteur liées à leur calcul, codeurs {id, role}, manifeste, CI 3.8/3.12 |
-| 2026-10-27 | 0 | À faire : installer la 0.6.14 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-27 | — | Audit Scira traité (0.6.15) : corrections documentaires ; deux anomalies écartées après vérification |
+| 2026-10-27 | 0 | À faire : installer la 0.6.15 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 

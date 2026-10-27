@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.6.14 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.6.15 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -1528,11 +1528,13 @@ def erreurs_statuts(texte_skill=None):
     # 0.6.13 (audit 0.6.12, M1) : le texte est coupé par un retour à la ligne, la regex ne trouvait rien
     # et le contrôle ne s'exécutait jamais. Blancs normalisés, trois nombres comparés, absence = erreur.
     sk=' '.join((texte_skill if texte_skill is not None else (RACINE/'SKILL.md').read_text(encoding='utf-8')).split())
-    trouves=re.findall(r'(\d+) Documenté, (\d+) Proposé, (\d+) Vide',sk)
-    if not trouves:err.append('SKILL.md : répartition « N Documenté, N Proposé, N Vide » introuvable')
-    for d,pr,v in trouves:
-        if [int(d),int(pr),int(v)]!=[tot['Documenté'],tot['Proposé'],tot['Vide']]:
-            err.append(f'SKILL.md : {d} Documenté / {pr} Proposé / {v} Vide ≠ cellules ({tot["Documenté"]}/{tot["Proposé"]}/{tot["Vide"]})')
+    # 0.6.15 : les cinq statuts, comme protocole.md (audit Scira, anomalie 3).
+    trouves=re.findall(r'(\d+) Attesté, (\d+) Documenté, (\d+) Proposé, (\d+) Vide, (\d+) Hors domaine',sk)
+    if not trouves:err.append('SKILL.md : répartition « N Attesté, N Documenté, N Proposé, N Vide, N Hors domaine » introuvable')
+    ordre=('Attesté','Documenté','Proposé','Vide','Hors domaine')
+    for g in trouves:
+        if [int(x) for x in g]!=[tot[k] for k in ordre]:
+            err.append(f'SKILL.md : {"/".join(g)} ≠ cellules ({"/".join(str(tot[k]) for k in ordre)}, ordre {", ".join(ordre)})')
     return err
 
 
@@ -1681,7 +1683,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.6.14','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.6.15','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
@@ -2542,8 +2544,8 @@ def autotest():
         def test_mutation_statuts_skill(self):
             # 0.6.13 : un contrôle par regex sur texte libre a son test de mutation.
             sk=(RACINE/'SKILL.md').read_text(encoding='utf-8');self.assertEqual(erreurs_statuts(sk),[])
-            m=re.search(r'(\d+) Documenté,\s+(\d+) Proposé,\s+(\d+) Vide',sk);self.assertIsNotNone(m)
-            for g in (1,2,3):
+            m=re.search(r'(\d+) Attesté,\s+(\d+) Documenté,\s+(\d+) Proposé,\s+(\d+) Vide,\s+(\d+) Hors domaine',sk);self.assertIsNotNone(m)
+            for g in (1,2,3,4,5):
                 mut=sk[:m.start(g)]+str(int(m.group(g))+1)+sk[m.end(g):]
                 self.assertTrue(erreurs_statuts(mut),f'mutation du nombre {g} non détectée')
             self.assertTrue(erreurs_statuts(sk.replace(m.group(0),'(répartition supprimée)')))

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.6.14
+> Version : 0.6.15
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -88,7 +88,8 @@ et le statut Descriptif. Le plafond ne protégeait rien : si le marqueur local e
 fausse en f comme en F. Le statut reste affiché et rappelé dans « À vérifier auprès de vous ».
 
 Les 117 anciens « Documentés » à référence « à fournir » sont rétrogradés en **Proposé** en 0.4.0.
-Le bilan est 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine. Aucun résultat historique n’est réécrit
+Le bilan est 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine ; les 13 Documentés sont tous en
+strate 7 (géopolitique), strate pilote de l'étape 3 (`feuille-de-route.md` §5.1). Aucun résultat historique n’est réécrit
 pour fabriquer une attestation. Promotion seulement après lecture de la source et recodage ; la
 bibliographie du noyau ne valide pas automatiquement chaque traduction locale. Les cas fictifs peuvent
 stipuler F sans valeur empirique ; leurs chiffres restent réservés au mode `--demo`.
@@ -452,7 +453,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.6.14"` |
+| `version` | `"0.6.15"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

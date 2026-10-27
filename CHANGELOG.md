@@ -1,8 +1,30 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.6.14
+> Version : 0.6.15
 
-## 0.6.14 — 2026-10-27 · après l'audit Manus (dépôt GitHub, commit c9a8086)
+> Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
+> contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.6.15 — 2026-10-27 · après l'audit Scira (commit audité : e107a61)
+
+Corrections documentaires ; aucun calcul ne change. 96 autotests (le test de mutation porte désormais
+sur cinq nombres).
+
+- **Anomalie 3 retenue** : `SKILL.md` publie les cinq statuts (0 Attesté, 13 Documenté, 182 Proposé,
+  13 Vide, 0 Hors domaine), comme `protocole.md` ; `audit` compare les cinq nombres.
+- **Anomalie 5 retenue** : `protocole.md` A3 dit que les 13 Documentés sont tous en strate 7.
+- **Anomalie 4, en partie** : `simulation.md` figurait déjà dans la ligne PRÉVOIR de la table de
+  chargement ; il manquait à la ligne LIRE, dont le format de sortie y est décrit (§1, §6) : ajouté.
+- **Anomalie 2, précisée** : c9a8086 est le commit audité, pas une erreur. Une entrée du CHANGELOG ne
+  peut pas citer le commit qui la contient, créé après elle ; règle écrite en tête du fichier, et les
+  intitulés disent « commit audité ».
+- **Anomalie 1 écartée** : « puis valid » n'est pas tronqué dans le fichier ; la phrase continue à la
+  ligne suivante (« valider la base, fixer la date d'information… »). Le découpage vient de l'extraction.
+- **Modularisation du moteur** : inscrite au code différé (jalon V4), comme l'audit le propose.
+- Non retenu : publier des artefacts de CI (l'audit le juge lui-même non critique) ; `kappa_min` reste
+  réservé, déclaré comme tel et contrôlé par `audit`.
+
+## 0.6.14 — 2026-10-27 · après l'audit Manus (commit audité : c9a8086)
 
 Audit de l'intégrité de la preuve plutôt que du calcul. Les quatre constats « haute » reproduits et
 corrigés. 96 autotests (92 + 4), qui passent aussi sous Python 3.8.

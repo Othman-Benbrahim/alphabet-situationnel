@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.6.14'
+  version: '0.6.15'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.6.14. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.6.15. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -42,7 +42,7 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | Situation | Fichiers |
 |---|---|
 | Tout mode | ce fichier ; principes de `constitution.md` §2 et §5–6 |
-| LIRE | `protocole.md` couches 0–2 ; `strates.md` ; `cartes-index.md` ; `grammaire.md` |
+| LIRE | `protocole.md` couches 0–2 ; `strates.md` ; `cartes-index.md` ; `grammaire.md` ; format de sortie : `simulation.md` §1 et §6 |
 | PRÉVOIR | parcours LIRE, puis couches 4–6 du protocole ; `graphe.md`, `simulation.md` |
 | CODER | parcours LIRE, puis couche 3 du protocole ; `base-de-cas.md` |
 | SCORER | `validation.md` et couche 6 du protocole ; ne charger cartes/strates que pour un diagnostic demandé |
@@ -201,8 +201,8 @@ jalon V4. Aucun score ne se commente comme validation de l'alphabet tant que V4 
   sortie se lit « si le motif observé se répète, alors… ».
 - L'alphabet décrit des structures, pas des issues nominatives : qui gagne, quel nom, quel effectif
   exact relèvent du jugement, journalisé à part (`origine: jugement`).
-- Treize équivalents ont une référence lue, tous en strate 7 : 13 Documenté, 182 Proposé,
-  13 Vide. En 0.4.0, les 117 anciens
+- Treize équivalents ont une référence lue, tous en strate 7 : 0 Attesté, 13 Documenté, 182 Proposé,
+  13 Vide, 0 Hors domaine. En 0.4.0, les 117 anciens
   Documentés avaient été rétrogradés. Aucun cas réel actif : les quatre premiers, codés avant les règles
   courantes, sont archivés (décision d'auteur, 0.6.8) ; le premier cas actif sera codé sous la version
   courante, de préférence avant son issue (`feuille-de-route.md`, étape 2).

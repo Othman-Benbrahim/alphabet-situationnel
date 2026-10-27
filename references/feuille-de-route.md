@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.6.10
+> Version : 0.6.12
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -87,6 +87,11 @@ questions éligibles au test à l'aveugle (V4), ce qu'aucun rejeu ne peut être.
 3. Si Claude propose le codage : `codage.recodage`, puis relecture et `codage.recodage_confirme`.
 4. Sceller votre jugement (`sceller-jugement`), puis calculer et journaliser 2 à 5 prévisions.
 5. À l'échéance : coder l'issue, `statut_donnees: actif`, `valider`, `scorer`, `bilan`.
+
+Les épisodes déjà cités dans le skill (France, Ukraine, Yémen, Alberta, sénatoriales, présidentielle
+brésilienne, ouragan Polo) ont servi à corriger le moteur : ce sont des tests de régression, plus des
+épreuves de généralisation. Le premier test de l'apport des cartes porte sur des épisodes nouveaux,
+critères fixés avant l'issue, scores **et** abstentions mesurés ensemble.
 
 ---
 
@@ -217,7 +222,9 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | 2 | Décision d'auteur : les quatre premiers cas réels sont abandonnés et archivés (0.6.8) ; l'étape 2 devient « premiers cas sous les règles courantes, de préférence prospectifs » |
 | 2026-10-27 | — | Audit du test brésilien traité (0.6.9) : plafond, journal lié au calcul, événements de calendrier |
 | 2026-10-27 | — | Audit V21 et test Polo traités (0.6.10) : journal entièrement lié au calcul, temporalité déclarée |
-| 2026-10-27 | 0 | À faire : installer la 0.6.10 |
+| 2026-10-27 | — | Audit V22 traité (0.6.11) : abstentions journalisées et comptées, `trajectoires` refuse la temporalité |
+| 2026-10-27 | — | Temporalité obligatoire (0.6.12) : le moteur pose la question, Claude la pose à l'utilisateur avec celle du critère |
+| 2026-10-27 | 0 | À faire : installer la 0.6.12 |
 
 ---
 

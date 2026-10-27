@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.6.10
+> Version : 0.6.12
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -199,7 +199,7 @@ et leur comparateur doivent porter sur le même horizon et la même définition 
 ```bash
 python3 scripts/moteur.py calculer --demo --base assets/base-de-cas.exemple.jsonl \
   --etat "[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]" \
-  --evenement "SEUIL@7 apparait" --liaison "CONTRAINTE@6 echo POLARITÉ@7" --json
+  --evenement "SEUIL@7 apparait" --liaison "CONTRAINTE@6 echo POLARITÉ@7" --temporalite generique --json
 ```
 
 Base entièrement fictive. Les sorties courantes, régénérées avec le moteur livré, figurent dans

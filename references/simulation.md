@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.6.10
+> Version : 0.6.12
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -125,7 +125,8 @@ estimée ». **Durée de vie propre (0.6.10)** : même règle pour un phénomèn
 rien à voir avec la fenêtre de référence de 3 mois (test Polo : un cyclone, ÉMERGENCE@11, « persiste »
 à 96,75 % sur 7 jours par l'inertie trimestrielle générique, et se dissipe le quatrième jour) :
 `--temporalite duree_de_vie`, puis une référence de domaine (durée de vie des cyclones du bassin) ou
-pas de chiffre. Ne pas non plus le coder comme la disparition d'INCERTITUDE : la proclamation lève une
+pas de chiffre. Une réponse « non estimée » se journalise comme abstention (`validation.md` §1) :
+elle compte, sans score. Ne pas non plus le coder comme la disparition d'INCERTITUDE : la proclamation lève une
 incertitude, pas la structure ; recours et contestations peuvent la prolonger. La structure qui porte
 un calendrier est PÉRIODICITÉ.
 

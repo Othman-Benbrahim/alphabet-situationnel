@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.6.10
+> Version : 0.6.12
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -47,6 +47,7 @@
 | Statut de lecture | Descriptif, Spéculatif, Nul ; porte sur la lecture, pas sur les prévisions | `simulation.md` §2 |
 | Strate | l'un des 13 registres où se rangent les faits (niveaux d'organisation, domaines, longue durée) | `strates.md` |
 | Transition | paire d'états consécutifs d'un cas ; unité de comptage | `graphe.md` §3 |
+| Abstention | prévision journalisée dont le calcul figé est « non estimé » (`probabilite` null) ; sans Brier, comptée à part par `scorer` | `validation.md` §1 |
 | Angle mort | ce qu'aucune carte ne peut exprimer dans une strate ; entrée réfutable, ou exclusion déclarée « délibéré » | `angles-morts.md` |
 | Bande de sensibilité | p le plus bas et le plus haut sur six variantes des hypothèses non calibrées ; « non identifié » si elle traverse `seuil_decision`, « bande large » au-delà de 30 points, « saturée » si une variante touche le plafond des cartes ; sensibilité paramétrique globale, pas structurelle | `graphe.md` §2.3 |
 | Barreau | degré causal d'une transition (Pearl) : A association, I intervention documentée, C contrefactuel documenté ; toutes les transitions sont A | `dynamiques.md`, S5 |

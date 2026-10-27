@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.6.10
+> Version : 0.6.12
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -103,12 +103,25 @@ ne l'a pas estimé est refusé ; `resolution.marqueur` doit recopier le marqueur
 de la source de résolution reste un jugement humain ; sa **conservation** est garantie par
 l'empreinte de la prévision (`sceller`, §8).
 
+**Abstentions (0.6.11).** Quand le moteur répond « non estimée » (`calcul.p` null : temporalité
+déclarée sans référence, composé sans référence conditionnelle), la prévision se journalise quand même,
+comme **abstention** : `probabilite: null`, calcul joint, hors partition. Une probabilité ajoutée à la
+main sur un calcul non estimé est refusée : ce chiffre ne viendrait pas du moteur (le journaliser
+comme jugement, `origine: jugement`, s'il est celui du codeur). `scorer` rend `abstentions` (nombre,
+part des questions, issues réalisées) à côté du Brier, qu'elles n'entrent pas : une abstention ne vaut
+pas une prédiction parfaite, et un outil qui s'abstiendrait sur les questions difficiles améliorerait
+son score sans rien prévoir. Scores et abstentions se lisent ensemble.
+
 **Temporalité (0.6.10).** Chaque prévision déclare `temporalite` : `generique`, `programmee`
 (échéance fixée par un texte : scrutin, proclamation, échéance légale) ou `duree_de_vie` (phénomène à
 durée de vie propre, sans rapport avec la fenêtre de référence de 3 mois : cyclone, grève reconductible,
 session). Hors `generique`, une prévision ρ4, c'est-à-dire sur le seul taux générique, est refusée ;
-`calculer --temporalite …` répond alors « non estimée ». Le moteur ne sait pas reconnaître seul une
-échéance ou une durée de vie : la déclaration est humaine, son effet est contrôlé.
+`calculer --temporalite …` répond alors « non estimée » (à journaliser comme abstention).
+`trajectoires` refuse l'option (0.6.11) : ses chemins reposent sur les taux génériques de toutes les
+cartes à la fois. Le moteur ne sait pas reconnaître seul une
+échéance ou une durée de vie : la déclaration est humaine, son effet est contrôlé. Depuis 0.6.12,
+`calculer` n'a plus de valeur par défaut : sans `--temporalite`, il refuse de calculer et pose la
+question ; un oubli ne retombe plus sur l'inertie générique.
 `episode_id` regroupe les questions liées au même épisode, même si leurs cartes ou strates diffèrent.
 `semantique` décrit présence finale, occurrence au moins une fois ou persistance continue.
 `resolution_verifiee` signifie que le lien entre marqueur, objet et critère a été contrôlé, pas que

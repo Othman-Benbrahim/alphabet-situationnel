@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.6.10 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.6.12 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -1144,8 +1144,16 @@ def valider_journal(data):
         exiger(fin_fenetre(state['date'], state['fenetre'], x['pas']) == date_iso(x['echeance']), f'{ident} : échéance incompatible avec état, fenêtre et pas')
         exiger(jour(x['date']) < jour(x['echeance']), f'{ident} : prévision datée à échéance ou après')
         exiger(jour(x['date'])<=jour(x['echeance']),f'{ident} : date après échéance')
-        proba(x.get('probabilite'),ident+'.probabilite')
         calc=x.get('calcul')
+        # 0.6.11 : un calcul « non estimé » (p null) ne devient pas une prévision chiffrée. La ligne est
+        # une **abstention** : probabilite null, calcul joint, hors partition ; scorer la compte à part.
+        abst=isinstance(calc,dict) and 'p' in calc and calc['p'] is None
+        if abst:
+            exiger(x.get('probabilite') is None,f'{ident} : le calcul figé n’a pas estimé p ; une probabilité journalisée ne vient pas du moteur (journaliser une abstention, probabilite null, ou un jugement, origine jugement)')
+            exiger(not x.get('partition'),f'{ident} : une abstention ne fait pas partie d’une partition')
+        else:
+            exiger(x.get('probabilite') is not None or calc is not None,f'{ident} : probabilite null seulement pour une abstention, avec le calcul figé « non estimé » joint')
+            proba(x.get('probabilite'),ident+'.probabilite')
         if calc is not None:
             # Le calcul figé est la preuve de la probabilité journalisée : ils doivent coïncider.
             exiger(isinstance(calc,dict),f'{ident} : calcul doit être le résultat JSON du moteur')
@@ -1203,7 +1211,7 @@ def valider_journal(data):
         if tuple(int(v) for v in re.findall(r'\d+',x['version_regles'])[:3])>=(0,6,10):
             exiger(x.get('temporalite') in ('generique','programmee','duree_de_vie'),
                    f'{ident} : temporalite requise depuis 0.6.10 (generique, programmee ou duree_de_vie)')
-        if x.get('temporalite') not in (None,'generique'):
+        if x.get('temporalite') not in (None,'generique') and x.get('probabilite') is not None:
             exiger(str(x.get('rho'))!='ρ4',f'{ident} : temporalité {x["temporalite"]} : une prévision ρ4 (taux générique) est refusée ; fournir une référence de domaine')
         if isinstance(calc,dict) and calc.get('temporalite') is not None:
             exiger(calc['temporalite']==x.get('temporalite','generique'),f'{ident} : temporalite différente du calcul figé')
@@ -1311,6 +1319,12 @@ def difficulte(units):
 
 def score_result(data):
     prev,scores,partitions=valider_journal(data);units=[];used=set();unresolved=0;missing=0
+    # 0.6.11 : abstentions (calcul « non estimé ») comptées à part. Elles n'ont pas de Brier et ne valent
+    # pas une prédiction parfaite ; mais un outil qui s'abstient sur les questions difficiles et répond
+    # aux faciles améliorerait son score sans rien prévoir : leur nombre et leurs issues se publient.
+    abst=[x for x in prev.values() if x.get('probabilite') is None]
+    ab_res=[x for x in abst if x['id'] in scores and scores[x['id']]['issue'] is not None]
+    prev={k:v for k,v in prev.items() if v.get('probabilite') is not None}
     groups=list(partitions.values())+[[x] for x in prev.values() if not x.get('partition')]
     for items in groups:
         if any(x['id'] not in scores for x in items):missing+=1;continue
@@ -1349,7 +1363,11 @@ def score_result(data):
     for i in ok_ids:
         x=prev[i];bins[min(9,int(x['probabilite']*10))].append((x['probabilite'],scores[i]['issue']))
     calibration={f'{k*10}–{k*10+10}':{'n':len(v),'p_moyenne':sum(x[0] for x in v)/len(v),'frequence':sum(x[1] for x in v)/len(v)} for k,v in sorted(bins.items())}
-    return {'questions_resolues':len(units),'questions_eligibles':len(eligible),
+    abstentions={'questions':len(abst),'resolues':len(ab_res),'issues_realisees':sum(scores[x['id']]['issue'] for x in ab_res),
+                 'part_des_questions':len(abst)/(len(abst)+len(prev)) if abst or prev else None,
+                 'motifs':sorted({x['calcul'].get('non_estime_motif') or 'référence manquante' for x in abst}),
+                 'lecture':'une abstention n’a pas de score ; un Brier calculé sur les seules questions chiffrées ne dit rien de celles que l’outil a refusées'} if abst else None
+    return {'questions_resolues':len(units),'questions_eligibles':len(eligible),'abstentions':abstentions,
             'incertitude_annoncee_moyenne':sum(x['incertitude_annoncee'] for x in units)/len(units) if units else None,
             'apport_des_cartes':apport_cartes([x for x in units if x['origine']=='moteur']),
             'jugements':jugements(units),
@@ -1529,6 +1547,8 @@ def bilan(base_chemin=None, refs_chemin=None, journal_chemin=None):
         mj=r['moteur_contre_jugement'];df=r['difficulte']
         if mj:out.append(f"Mesure · moteur contre jugement scellé : {mj['questions']} questions · {mj['ameliorations']} améliorations · {mj['degradations']} dégradations · {mj['lecture']}")
         if df:out.append(f"Mesure · questions à référence extrême : {df['part_extremes']:.0%} · {df['lecture']}")
+        ab=r.get('abstentions')
+        if ab:out.append(f"Mesure · abstentions (non estimé) : {ab['questions']} · {ab['part_des_questions']:.0%} des questions · {ab['resolues']} résolues, {ab['issues_realisees']} réalisées")
     else:
         out.append("Test à l'aveugle : aucun journal fourni (--journal)")
     out.append('Étapes 0, 1 et 6 (installation, décisions d’auteur, code différé) : état déclaré dans references/feuille-de-route.md')
@@ -1544,7 +1564,7 @@ def schema_documente():
 
 
 def audit():
-    exiger(P['version']=='0.6.10','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.6.12','version du moteur et des paramètres différente')
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
@@ -1753,7 +1773,7 @@ def main():
         c.add_argument('--echeance');c.add_argument('--journal');c.add_argument('--strates',default='')
         c.add_argument('--json',action='store_true');c.add_argument('--demo',action='store_true')
         c.add_argument('--sans-cartes',action='store_true')
-        c.add_argument('--temporalite',choices=('generique','programmee','duree_de_vie'),default='generique')
+        c.add_argument('--temporalite',choices=('generique','programmee','duree_de_vie'),default=None)
         if name=='calculer':c.add_argument('--evenement',required=True)
     a=parser.parse_args()
     if a.cmd=='audit':audit();return
@@ -1813,11 +1833,22 @@ def main():
     exiger(all(x.isdigit() and 1<=int(x)<=NS for x in a.ctr_materielle),'strate de contrainte matérielle invalide')
     opts=dict(liaisons=links,bouge=bouge,manque=manque,refs=refs,ctr_materielle=a.ctr_materielle,asof=asof,sans_cartes=a.sans_cartes)
     if a.cmd=='trajectoires':
+        # 0.6.11 : l'option était acceptée et sans effet. Les trajectoires reposent sur les taux génériques
+        # de toutes les cartes à la fois ; une échéance programmée ou une durée de vie propre ne s'y déclare pas.
+        exiger(getattr(a,'temporalite',None) in (None,'generique'),
+               'trajectoires : --temporalite programmee ou duree_de_vie refusée ; les trajectoires reposent sur les taux génériques de toutes les cartes. Utiliser calculer, événement par événement, avec une référence de domaine')
         exiger(not a.sans_cartes,'trajectoires : comparaison sans cartes disponible via calculer')
         brut=[x.strip() for x in a.strates.split(',') if x.strip()]
         exiger(all(x.isdigit() for x in brut),f'--strates : numéros de strate séparés par des virgules (ex. 8,11), reçu « {a.strates} »')
         sup=[int(x) for x in brut];result=trajectoires(etat,a.pas,active,opts,sup)
     else:
+        # 0.6.12 : la temporalité n'a plus de défaut. Un oubli faisait retomber sur l'inertie générique
+        # (Polo : 96,75 %) ; la question se pose donc avant tout calcul.
+        exiger(a.temporalite is not None,
+               '--temporalite requis. Avant de calculer, répondre à cette question : l’événement est-il fixé par '
+               'un calendrier (scrutin, proclamation, échéance légale) → programmee ; ou le phénomène a-t-il '
+               'une durée de vie propre, sans rapport avec trois mois (cyclone, grève, session) → duree_de_vie ; '
+               'sinon → generique')
         cible,typ=evenement_lire(a.evenement)
         exiger(typ not in ('renforce','affaiblit'),'f ↔ F est une révision de confiance, pas un événement physique ; utiliser s’intensifie avec une mesure ou reformuler le critère observable')
         if typ in ('intensifie','transforme'):
@@ -2113,6 +2144,9 @@ def autotest():
             import subprocess
             r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@99 apparait','--json'],capture_output=True,text=True)
             self.assertEqual(r.returncode,2);self.assertIn('erreur',json.loads(r.stdout))
+            # 0.6.12 : sans --temporalite, la question est posée et le calcul refusé.
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09-26 | 7 jours] ÉMERGENCE@11[f]','--evenement','ÉMERGENCE@11 persiste','--json'],capture_output=True,text=True)
+            self.assertEqual(r.returncode,2);self.assertIn('durée de vie propre',json.loads(r.stdout)['erreur'])
         def test_sortie_doree(self):
             # Sortie humaine de l'exemple 1 : ouverture constitutionnelle, ligne S5, marquage « large ».
             e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
@@ -2264,6 +2298,19 @@ def autotest():
             with self.assertRaises(ValueError):valider_journal([dict(ok,intervalle=[.1,.3])])
             with self.assertRaises(ValueError):valider_journal([dict(ok,resolution=dict(ok['resolution'],marqueur='autre chose'))])
             self.assertTrue(valider_journal([dict(ok,resolution=dict(ok['resolution'],marqueur='autre chose',ecart_marqueur='source mesurant un marqueur voisin, motif'))]))
+        def test_abstention(self):
+            # 0.6.11 (audit V22) : un calcul non estimé ne devient pas une prévision chiffrée.
+            calc={'evenement':'SEU@7 apparait','p':None,'rho':4,'intervalle':None,'p_sans_cartes':None,
+                  'temporalite':'duree_de_vie','non_estime_motif':'durée de vie propre au phénomène'}
+            triche=forecast(calcul=dict(calc),probabilite=.5,temporalite='duree_de_vie',intervalle=None)
+            with self.assertRaises(ValueError):valider_journal([triche])
+            ab=forecast(calcul=dict(calc),probabilite=None,temporalite='duree_de_vie',intervalle=None)
+            p2=forecast('P-2',episode_id='episode-B')
+            r=score_result([ab,score(),p2,dict(score(),id='P-2')])
+            self.assertEqual(r['questions_resolues'],1)                              # l'abstention n'a pas de Brier
+            self.assertEqual((r['abstentions']['questions'],r['abstentions']['resolues']),(1,1))
+            self.assertAlmostEqual(r['abstentions']['part_des_questions'],.5)
+            with self.assertRaises(ValueError):valider_journal([forecast(probabilite=None)])   # null sans calcul
         def test_cloture_vide(self):
             rv=recherches_vide();self.assertEqual(rv[(carte_id('RÉSONANCE'),7)],2)
             self.assertEqual(sum(1 for v in rv.values() if v>=P['vide_recherches_cloture']),0)

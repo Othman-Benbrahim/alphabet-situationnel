@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.6.10'
+  version: '0.6.12'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.6.10. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.6.12. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
 Exécuter `python3 scripts/moteur.py audit` ; après modification, `python3 scripts/moteur.py autotest`.
 Le premier vérifie les fichiers, versions, paramètres exhaustifs, statuts, matrice et inerties ; le
@@ -64,11 +64,11 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 
 | Commande | Usage |
 |---|---|
-| `python3 scripts/moteur.py calculer --etat "…" --evenement "SEUIL@7 apparait" --json` | un événement, sortie structurée et empreintes ; avec `--json`, une erreur sort aussi en JSON (`{"erreur": …, "code": 2}`) |
+| `python3 scripts/moteur.py calculer --etat "…" --evenement "SEUIL@7 apparait" --temporalite generique --json` | un événement, sortie structurée et empreintes ; avec `--json`, une erreur sort aussi en JSON (`{"erreur": …, "code": 2}`) |
 | `… calculer --base B --etat "…" --evenement "…" --date-information AAAA-MM-JJ --references R.json` | base validée, références propres à chaque événement |
 | `… calculer … --pas 4 --semantique presence` | présence à l'horizon ; alternatives : au-moins-une-fois, continue selon l'événement |
 | `… calculer … --sans-cartes` | ablation : référence sans multiplicateurs ni sélection d'homologues |
-| `… calculer … --temporalite programmee` (ou `duree_de_vie`) | échéance programmée ou durée de vie propre : « non estimée » sans référence de domaine ni cas |
+| `… calculer … --temporalite generique\|programmee\|duree_de_vie` | **obligatoire** (0.6.12) : échéance programmée ou durée de vie propre → « non estimée » sans référence de domaine ni cas |
 | `… trajectoires --etat "…" --pas 2 [--strates 11,8] --json` | exploration à un changement par pas |
 | `… valider B.jsonl` | validation commune aux fiches et au calcul |
 | `… partager C-0042-S07` | partage par empreinte, fixé avant codage |
@@ -131,6 +131,13 @@ ne voit pas ici » (`angles-morts.md`), coût du codage (faits écartés, candid
 État nul : pas de prévision par défaut. → LIRE s'arrête ici. → CODER suit `base-de-cas.md` et `valider`.
 
 **6. Événements et résolution.** Définir 2 à 5 questions observables, sans quotas forcés de rupture.
+**Avant tout calcul, poser à l'utilisateur ces deux questions, pour chaque événement, et attendre sa
+réponse** (s'il est absent, prendre la réponse la plus prudente et la déclarer) :
+1. « Cet événement est-il fixé par un calendrier (scrutin, proclamation, échéance), ou le phénomène
+   a-t-il une durée de vie propre (ouragan, grève, session), ou ni l'un ni l'autre ? » → `--temporalite`,
+   obligatoire dans `calculer`.
+2. « La source de résolution mesure-t-elle bien [marqueur local affiché par le moteur], ou un
+   phénomène voisin ? » → si voisin, reformuler la question ou justifier `ecart_marqueur`.
 Figer objet, source, critère, seuil et sémantique temporelle. Une intensification porte sur une
 mesure réelle, jamais sur f → F. Un événement fixé par un calendrier (scrutin, proclamation, échéance)
 ou un phénomène à durée de vie propre (cyclone, grève) exige une référence externe ou reste non

@@ -1,6 +1,39 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.6.10
+> Version : 0.6.12
+
+## 0.6.12 — 2026-10-27 · la temporalité devient une question obligatoire
+
+Proposition de l'auteur : plutôt qu'une option qu'on peut oublier, que l'outil pose la question.
+87 autotests (assertion ajoutée au test d’erreur).
+
+- **`calculer --temporalite` sans défaut** : sans réponse, le calcul est refusé et le message pose la
+  question (calendrier → `programmee` ; durée de vie propre → `duree_de_vie` ; sinon `generique`). Un
+  oubli ne fait plus retomber sur l'inertie générique (Polo : 96,75 %).
+- **`SKILL.md` étape 6** : avant tout calcul, Claude pose à l'utilisateur deux questions par événement
+  et attend la réponse : la temporalité, et « la source de résolution mesure-t-elle bien le marqueur
+  local, ou un phénomène voisin ? ». Utilisateur absent : réponse la plus prudente, déclarée.
+- Commandes documentées mises à jour (`README.md`, `exemples.md`, `graphe.md`, `SKILL.md`).
+- La réponse reste humaine ; ce qui change, c'est qu'elle ne peut plus être omise.
+
+## 0.6.11 — 2026-10-27 · après l'audit V22
+
+L'audit confirme 0.6.10 (86 tests, 112/112 contrôles numériques, 12/12 de temporalité dans
+`calculer`) et relève deux défauts reproductibles, corrigés. 87 autotests (86 + 1).
+
+- **Un calcul « non estimé » devenait une prévision chiffrée** (présent depuis 0.6.9) : avec
+  `calcul.p` null, une `probabilite` ajoutée à la main passait `valider_journal` et `scorer` la
+  traitait comme une sortie du moteur. Désormais refusé. La ligne se journalise comme **abstention**
+  (`probabilite: null`, calcul joint, hors partition) ; `scorer` rend `abstentions` (nombre, part des
+  questions, issues réalisées), `bilan --journal` les affiche. Sans Brier, mais comptées : un outil qui
+  s'abstient sur les questions difficiles améliorerait son score sans rien prévoir.
+- **`trajectoires` acceptait `--temporalite` sans effet** : l'option y est refusée avec un message ;
+  les chemins reposent sur les taux génériques de toutes les cartes, la temporalité se traite
+  événement par événement avec `calculer` et une référence de domaine.
+- **Feuille de route** : les épisodes déjà cités (dont Polo et la présidentielle brésilienne) sont des
+  tests de régression ; le premier test de l'apport des cartes portera sur des épisodes nouveaux.
+- Inchangé, par construction : la pertinence du critère de résolution reste humaine ; sans déclaration
+  de temporalité, l'inertie générique s'applique (96,75 % pour Polo).
 
 ## 0.6.10 — 2026-10-27 · après l'audit V21 et le test Polo
 

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Exemples
 
-> Version : 0.6.10
+> Version : 0.6.12
 
 > Exemples 1–6 : démonstrations entièrement fictives du contrat courant. Exemples 7–10 : archives
 > critiques de versions antérieures, non revérifiées et exclues des calculs actuels. Ne jamais
@@ -24,7 +24,8 @@
 ```bash
 python3 scripts/moteur.py calculer --demo --base assets/base-de-cas.exemple.jsonl \
  --etat "[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]" \
- --liaison "CONTRAINTE@6 echo POLARITÉ@7" --evenement "SEUIL@7 apparait" --json
+ --liaison "CONTRAINTE@6 echo POLARITÉ@7" --evenement "SEUIL@7 apparait" \
+ --temporalite generique --json
 ```
 
 Les forces F sont **stipulées dans un univers fictif** pour tester le calcul ; elles ne promeuvent
@@ -117,7 +118,8 @@ Sortie du moteur (fichier de références fictif au format de `graphe.md` §2.2,
 
 ```bash
 python3 scripts/moteur.py calculer --etat "[2026-09 | 3 mois] POLARITÉ@7[F]" \
- --evenement "POLARITÉ@7 s'intensifie" --references R.json --resolution resolution.json
+ --evenement "POLARITÉ@7 s'intensifie" --references R.json --resolution resolution.json \
+ --temporalite generique
 ```
 
 ```

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.2
+> Version : 0.7.4
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -211,6 +211,13 @@ familles de requêtes : **observation** (les faits, séries, décisions), **disc
 départagerait deux candidates), **contradiction** (exceptions, corrections, interruptions). Un
 document pertinent qui contredit la lecture reste au dossier : ce n'est pas un document hors sujet.
 Plusieurs relais d'une même origine ne sont pas des confirmations indépendantes (`corroboration`).
+**Plancher (0.7.4).** En mode PRÉVOIR, le dossier de lecture consigne ses requêtes (`recherches` :
+famille, cartes, texte exact). Minimum : chaque carte de l'état cherchée dans les **trois familles**, et
+une requête de discrimination pour chaque **paire de candidates** d'une même strate. Le plancher porte
+sur les familles couvertes, pas sur un compte : une requête répétée compte une fois, et une requête
+formée sur le nom de sa carte est signalée. En dessous, le dossier est **incomplet** : statut de lecture
+Spéculatif, manques reportés dans « À vérifier ». Un plancher n'est pas un plafond : il dit ce qu'une
+lecture ne peut pas omettre, pas quand elle a assez cherché.
 **Arrêt.** La recherche s'arrête quand les contrôles requis sont faits (A6, A7, passage, questions) et
 qu'aucune vérification accessible ne changerait la conclusion ; pas quand la lecture « paraît sûre »,
 ni parce que des réponses répétées concordent. Un budget épuisé avant un contrôle décisif donne un
@@ -322,7 +329,11 @@ changement de force ne survienne sur toute la séquence ; `moteur.py valider` le
 
 **B5 · Séparation apprentissage / test.** Un cas sert soit à estimer les transitions (couche 4), soit
 à valider (couche 6), jamais aux deux. L'usage est fixé à l'entrée du cas par l'empreinte de son
-identifiant (`moteur.py partager`, `base-de-cas.md` §5) et ne change plus.
+identifiant (`moteur.py partager`, `base-de-cas.md` §5) et ne change plus. **Daté (0.7.4)** : `partager`
+inscrit `{id, usage, date}` au registre `partage.jsonl`, jamais réécrit ; la fiche recopie
+`usage_fige_le`, et un cas réel déclare `codage.debut` : `usage_fige_le` ≤ `codage.debut`. Le partage
+précède le codage, pas les faits : un cas historique a des états anciens et un partage récent.
+`valider --registre` recoupe la fiche avec le registre, qui fait foi ; publié, il prouve la date.
 
 ---
 
@@ -511,7 +522,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.2"` |
+| `version` | `"0.7.4"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |
@@ -560,6 +571,9 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `seuil_affichage` | `0.05` |
 | `intervalle` | `0.8` |
 | `largeur_max_affichage` | `0.3` |
+| `ecart_niveaux_max` | `0.1` |
+| `placebo_tirages` | `200` |
+| `v4_dossier_depuis` | `"2026-10-29"` |
 | `demi_vie_ans` | `20` |
 | `ratio_non_stationnarite` | `2.0` |
 | `min_transitions_par_moitie` | `5` |

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -41,6 +41,9 @@ moteur ; null si indisponibles, auquel cas la prévision reste hors V4) :
   "partition": null,
   "frequence_de_base": 0.8372000588523011,
   "p_sans_cartes": 0.8372000588523011,
+  "p_placebo": null,
+  "graine_placebo": null,
+  "apport_homologie": null,
   "temporalite": "generique",
   "rejeu": true,
   "fictif": true,
@@ -67,6 +70,19 @@ Ligne de score :
 cartes, que `calculer` imprime à côté de p : le **comparateur inertiel**. `scorer` en tire
 `apport_des_cartes` (Brier avec cartes moins Brier sans cartes) : un score flatteur dont l'apport est
 nul ne vient que du statu quo et ne valide pas la lecture (exemple 11).
+**Placebo d'homologie (0.7.4, décision 3).** `p_placebo`, `graine_placebo` et `apport_homologie`
+(obligatoires depuis 0.7.4, null si non évaluable) recopient le placebo de `calculer` : autant de cas
+que la classe retenue, tirés au hasard dans la même strate et la même fenêtre, sous le même a priori,
+moyennés sur `placebo_tirages` tirages (§H), graine dérivée de la question et non choisie.
+`apport_homologie` = p − p_placebo sépare ce qu'apporte l'analogie structurale de ce qu'apporte le taux
+de base de la strate ; `apport_cartes` (p − p_sans_cartes) mesure, lui, les multiplicateurs et la
+classe ensemble. Un apport d'homologie nul se publie comme tel.
+**Sceau de dossier (0.7.4, décision 1).** À compter de `v4_dossier_depuis` (§H, 2026-10-29), une
+prévision du moteur n'est éligible à V4 que si son calcul figé porte le sceau d'un dossier de lecture
+(`calculer --dossier`) et si `preuve_dossier` `{source, date, sceau}` atteste sa publication (adresse
+`https://` d'un dépôt daté) **au plus tard à la date d'information** du calcul, avec le même sceau.
+Prospectif : les prévisions antérieures restent au journal, hors de cette exigence ; rien n'est
+invalidé rétroactivement. Un dossier incomplet (plancher A7) reste éligible mais se lit Spéculatif.
 **Deux probabilités (0.6.0).** Avant de lancer le moteur, le codeur écrit sa propre probabilité et la
 scelle : `moteur.py sceller-jugement --question … --evenement … --p … --date …` rend
 `probabilite_jugement` et `jugement_scelle`, à recopier dans la ligne. Le champ est obligatoire à
@@ -252,7 +268,10 @@ d'étendre l'alphabet par méthode plutôt que par intuition ; `audit` contrôle
 ## 8. Test à l'aveugle
 
 1. Choisir une population, un domaine et des événements dont la résolution est vérifiable.
-2. Sourcer un sous-ensemble des équivalents, coder indépendamment et figer la version. À déclarer
+2. Sourcer un sous-ensemble des équivalents, coder indépendamment et figer la version. Chaque
+   prévision du test part d'un dossier de lecture scellé (`calculer --dossier`), publié au plus tard à
+   la date d'information (`preuve_dossier`) : exigé pour V4 depuis 0.7.4 (§1). Le dossier scellé est
+   aussi la pièce qu'un second codeur peut relire (A4). À déclarer
    avec le résultat : le moteur contrôle la forme de A6 et la cohérence de A7, pas la justesse d'un
    verdict ni la portée choisie. Le score mesure donc le jugement du codeur autant que le modèle ;
    avant de comparer deux codeurs ou deux versions, mesurer leur accord (A4) sur les mêmes états.

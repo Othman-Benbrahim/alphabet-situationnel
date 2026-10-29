@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -40,11 +40,17 @@ Coût du codage : [faits examinés et écartés (dont faits sans option changée
  non retenues ; rejets A7 ; hésitations consignées]
 
 | Événement | Résolution externe | p / non estimé | Intervalle conditionnel | ρ | Comparateur même horizon | Calcul et limites |
-[sous la ligne S5 : la lecture en association (« si le motif observé se répète, alors… ») ; la bande
- de sensibilité et, si elle traverse 50 %, « non identifié » ; si elle est large (plus de 30 points),
+[sous la ligne S5 : la lecture en association (« si le motif observé se répète, alors… ») ; les deux
+ bandes de sensibilité, celle des hypothèses de modèle et celle de la classe de référence, avec la
+ mention « classe instable » si le niveau d'homologie ou l'effectif retenu change ; si la bande retenue
+ traverse 50 %, « non identifié » et l'origine de la traversée ; si elle est large (plus de 30 points),
  le dire : le résultat dépend des hypothèses non calibrées ; si elle est saturée (une variante touche
- le plafond des cartes), dire que la bande ne mesure rien ; le jugement scellé avant le calcul ;
- la probabilité sans cartes et l'écart en points ; un écart nul se dit : la question
+ le plafond des cartes), dire que la bande ne mesure rien ; l'écart entre niveaux d'homologie quand il
+ dépasse `ecart_niveaux_max` (§H, 10 points : le seuil c_min_rho1 décide seul du niveau retenu) ; le sceau du dossier de lecture
+ s'il a été fourni ; le jugement scellé avant le calcul ;
+ la probabilité sans cartes et l'écart en points ; le placebo d'homologie et l'apport de l'homologie
+ (p − p_placebo), y compris nul ; si le dossier est incomplet (plancher A7), statut de lecture Spéculatif et
+ manques dans « À vérifier » ; un écart nul se dit : la question
  ne teste que l'inertie ;
  afficher p en pourcentage entier (une décimale sous 1 % et au-dessus de 99 %) avec son intervalle ;
  ρ dit d'où vient le chiffre, pas sa fiabilité ; recopier les valeurs non arrondies dans le journal et

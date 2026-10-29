@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -67,6 +67,12 @@
 | Statut d'une question | ouverte, partielle, résolue (avec la réponse) ou présupposé invalidé, chacun avec la preuve qui l'a fait changer | `base-de-cas.md` §2 |
 | Passage | localisation, dans la source, du fait d'ancrage et relation à ce fait (soutient, partiel, contredit, insuffisant) ; F exige un passage qui soutient le fait tel qu'il est écrit | A6 |
 | État de travail | résumé révisable d'un dossier long, séparé des pièces et des prévisions scellées, au contenu minimal fixé ; un index, jamais une preuve | `simulation.md` §7 |
+| Dossier de lecture | fichier JSON d'une lecture en mode PRÉVOIR (état, candidates par strate et rejets, pièces de chaque F, questions, événements déclarés), contrôlé par `moteur.py dossier` avec les mêmes règles qu'une fiche, et scellé avant le calcul (`calculer --dossier`) ; contrôle la forme, pas la justesse | `SKILL.md` |
+| Bande de classe | seconde bande de sensibilité : huit variantes sur le choix des cas retenus (Jaccard, lissages k et k₀, demi-vie) ; « instable » si l'ensemble des cas retenus change | `graphe.md` §2.3 |
+| Fragilité de niveau | écart de p entre niveaux d'homologie non vides ; signalée au-delà de `ecart_niveaux_max`, car le niveau retenu se décide sur un compte | `graphe.md` §2.3 |
+| Placebo d'homologie | même calcul avec autant de cas tirés au hasard dans la strate et la fenêtre, moyenné sur 200 tirages sous graine dérivée de la question ; p − p_placebo = apport de l'homologie | `validation.md` §1 |
+| Registre du partage | `partage.jsonl`, fichier de l'utilisateur où `partager` inscrit id, usage et date, sans réécriture ; recoupé par `valider --registre` | B5 |
+| Plancher A7 | minimum de couverture des recherches d'un dossier : trois familles par carte de l'état, une discrimination par paire de candidates ; en dessous, dossier incomplet | A7 |
 | Banc d'essai | épreuves de stabilité et de réexamen, avec corrigé indépendant et comparaison qui isole l'apport, par lesquelles une modification du skill doit passer avant de devenir une règle | `validation.md` §9 |
 | Rabbit | construction ad hoc d'un codage (carte, strate, règle inventée en cours de route) ; dette ouverte jusqu'à sa résorption | `validation.md` §6 |
 | Temporalité | déclaration d'une prévision : générique, programmée (échéance fixée par un texte) ou durée de vie propre ; hors générique, le taux générique (ρ4) est refusé | `validation.md` §1 |

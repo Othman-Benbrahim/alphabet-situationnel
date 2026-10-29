@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -29,10 +29,22 @@
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.4 (faite) | Version de preuve | décisions 1 à 4 du 2026-10-29 ; probabilités identiques à la 0.7.3 | — |
+| 0.7.3 (faite) | Contrôler la lecture qui produit le chiffre | dossier de lecture scellé avant `calculer` ; bande de classe ; fragilité de niveau ; sources du calcul et propagation inter-strates affichées | — |
 | 0.7.2 (faite) | Éprouver les étapes | questions avec résolution et justification par branche (« non A » ne vaut pas « B ») ; passage qui soutient chaque F ; banc d'essai des modifications (`validation.md` §9) | — |
 | 0.8 | Structurer | objets-frontière sourcés (strate 7 en cours, §5) ; cases Vides à combler (décision 1b = universelles) ; échelle de dureté (portes par niveau ρ, date de révision des sources) ; comparateur de marché de prévision (étape 4) | étapes 2 et 3 |
 | 0.9 | Éprouver | séquence H1.6 (motifs ordonnés), comparée à l'état courant seul ; banque de cas adverses ; mode « scénarios » à la manière d'ACH (`apports-theoriques.md` §7) ; registre de dépendances et dossier externe (`apports-theoriques.md` §10) | 30 cas actifs dans une strate ; pour le registre, une source corrigée dans un cas réel |
 | 1.0 | Grammaire | cartes comme règles de transformation, écrites par un rédacteur indépendant de la matrice puis comparées à elle ; liaisons comme opérateurs ; dérivation de l'alphabet en note séparée | rédacteur indépendant |
+
+**Décisions d'auteur du 2026-10-29** (fiche « cinq arbitrages de la 0.7.3 ») :
+
+| # | Décision | État |
+|---|---|---|
+| 1 | À compter du 2026-10-29, une prévision n'est éligible à V4 que si son dossier de lecture porte un sceau publié au plus tard à la date d'information ; les prévisions antérieures restent au journal, hors V4 sans être invalidées | appliquée (0.7.4) |
+| 2 | `partager` inscrit `{id, usage, date}` au registre ; `valider_base` exige le partage par empreinte **et** sa date ; un partage non daté rend la fiche non valide | appliquée (0.7.4), date comparée à `codage.debut` et non au premier état (sinon tout cas historique serait refusé) ; registre `partage.jsonl` dans le dossier de travail et non dans `assets/` (remplacé à chaque installation) |
+| 3 | `calculer` rend `p_placebo`, `graine_placebo` et `apport_homologie` ; exigés au journal comme `p_sans_cartes` | appliquée (0.7.4), placebo moyenné sur 200 tirages, graine dérivée de la question |
+| 4 | Le dossier consigne ses requêtes A7 par carte et par famille ; une famille ou une paire de candidates sans discrimination manquante → dossier incomplet, lecture Spéculative | appliquée (0.7.4) |
+| 5 | Principe retenu : la qualité de l'ancrage atténue l'inférence (λ_eff = 1 + (λ − 1)·w, w = 1 pour F, 0,5 pour f) ; d'abord comme variante de la bande de sensibilité, sans effet sur p ; promotion au défaut en version mineure dédiée, à ≥ 20 cas, quand l'effet se distingue de la sélection des homologues | à faire, version séparée de la 0.7.4 |
 
 Le test à l'aveugle peut commencer dès la fin de l'étape 2. Avant les étapes 3 et 4, il mesure la
 lecture structurelle, pas la calibration : sans équivalent sourcé ni fréquence externe, toute
@@ -234,7 +246,9 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | 0.7.0 : tests de preuve (F exige un fait suffisant) et décomposition de Murphy ; fin de la série d'audits, début des tests à l'aveugle |
 | 2026-10-27 | — | Audit hacker.ai traité (0.7.1) : sortie Windows, CI Windows et macOS, sources, `scorer --csv` |
 | 2026-10-27 | — | Cinq apports triés (0.7.2) : sémantique inquisitive, VECTOR, Shao, Hao Zhang, Alex Zhang ; questions résolubles, `passage`, banc d'essai ; le fichier *Intuition Machine* reversé était déjà trié (0.6.7) |
-| 2026-10-27 | 0 | À faire : installer la 0.7.2 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-29 | — | Audit d'ingénierie traité (0.7.3) : correctif reçu repris et corrigé (six défauts) ; décisions laissées à l'auteur : atténuation λ par F/f, datation du partage, plancher de recherche A7, placebo d'homologie, dossier exigé pour V4 |
+| 2026-10-29 | 1 | Cinq arbitrages tranchés par l'auteur ; décisions 1 à 4 appliquées en 0.7.4 (version de preuve), décision 5 réservée à une version dédiée |
+| 2026-10-29 | 0 | À faire : installer la 0.7.4 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 

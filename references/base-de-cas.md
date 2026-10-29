@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -153,11 +153,13 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
       {"id": "codeur-1", "role": "humain"}
     ],
     "regle_declenchement": null,
+    "debut": "2026-10-29",
     "accord": "exemple construit",
     "independants": false,
     "au_moins_un_humain": true
   },
   "usage": "test",
+  "usage_fige_le": "2026-10-29",
   "notes": "EXEMPLE CONSTRUIT — données fictives, ne pas utiliser pour prévoir",
   "fictif": true,
   "statut_donnees": "actif"
@@ -198,6 +200,8 @@ nom libre. Les fiches fictives et les archives gardent la forme courte (chaîne)
 | `sources_verifiees` | true pour un cas réel actif ; ne pas déclarer sans avoir consulté les sources |
 | `statut_donnees` | actif, proposition (exige `motif_proposition` et `sources_verifiees: false`) ou archive_a_revoir (exige `motif_archive`) ; seuls les cas actifs entrent dans les calculs |
 | `usage` | partage par empreinte ; les cas test ne contribuent jamais aux estimations |
+| `usage_fige_le` | requis pour toute fiche hors archive (0.7.4) : date à laquelle le partage a été fixé, recopiée de la sortie de `partager`, qui l'inscrit au registre `partage.jsonl` (fichier de l'utilisateur, jamais réécrit) ; un partage non daté rend la fiche non valide. `valider --registre partage.jsonl` recoupe chaque cas réel avec le registre, qui fait foi |
+| `codage.debut` | requis pour un cas réel (0.7.4) : date du début du codage ; `usage_fige_le` ≤ `codage.debut` (B5 : partage fixé avant codage). Le partage n'a pas à précéder le premier état : un cas historique a des états anciens et un partage récent |
 
 Deux états consécutifs sont espacés d'une fenêtre **calendaire exacte**. Les mois finissant plus tôt
 rabattent le jour au dernier jour du mois. Une transition irrégulière n'est pas un pas régulier ;
@@ -210,7 +214,8 @@ archive lisible, jamais présentée comme « active recevable ».
 ## 3. Coder un cas historique (mode CODER)
 
 1. Définir configuration, population, fenêtre et règles d'issue avant sélection des exemples.
-2. Attribuer l'id ; exécuter `partager` ; conserver ce partage.
+2. Attribuer l'id ; exécuter `partager` (dans le dossier de travail : il inscrit l'id, l'usage et la date
+   au registre `partage.jsonl`) ; recopier `usage_fige_le` ; noter `codage.debut` ; publier le registre.
 3. Réunir les faits avec dates d'événement **et de disponibilité des sources**.
 4. Coder chaque état à partir des seules informations alors disponibles ; identifier les objets.
 5. Documenter nouveaux mots, révisions de confiance et retraits, puis preuves des liaisons et Q.

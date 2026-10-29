@@ -1,5 +1,5 @@
 {
- "version": "0.7.2",
+ "version": "0.7.4",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -54,6 +54,9 @@
  "seuil_affichage": 0.05,
  "intervalle": 0.8,
  "largeur_max_affichage": 0.3,
+ "ecart_niveaux_max": 0.1,
+ "placebo_tirages": 200,
+ "v4_dossier_depuis": "2026-10-29",
  "demi_vie_ans": 20,
  "ratio_non_stationnarite": 2.0,
  "min_transitions_par_moitie": 5,

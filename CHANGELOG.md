@@ -1,9 +1,91 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.4 — 2026-10-29 · version de preuve : quatre décisions d'auteur
+
+Décisions 1 à 4 de la fiche « cinq arbitrages de la 0.7.3 » (`feuille-de-route.md` §1). **Aucune
+probabilité ne change** : p, p sans cartes, comparateur, intervalles et bandes de sensibilité sont
+identiques à l'octet à la 0.7.3 sur les événements de démonstration (vérifié). La décision 5
+(atténuation de λ par F/f) est réservée à une version séparée, pour que toute évolution de la
+performance ait une seule cause. 115 autotests (111 + 4).
+
+- **1 · Sceau de dossier pour V4.** À compter du 2026-10-29 (`v4_dossier_depuis`), une prévision du
+  moteur n'est éligible que si son calcul figé porte le sceau d'un dossier de lecture et si
+  `preuve_dossier` {source https, date, sceau} le publie au plus tard à la date d'information.
+  Prospectif ; rien n'est invalidé.
+- **2 · Partage daté.** `partager` inscrit `{id, usage, date}` au registre `partage.jsonl`, sans jamais
+  réécrire (un id essayé puis abandonné reste visible) ; `usage_fige_le` requis sur toute fiche hors
+  archive ; `codage.debut` requis pour un cas réel ; `valider --registre` recoupe avec le registre.
+  **Deux écarts à la lettre de la décision**, motivés : la date se compare à `codage.debut`, pas au
+  premier état (un partage de 2026 suit toujours un état de 1995 : la règle littérale refusait tout cas
+  historique, donc le mode CODER) ; le registre vit dans le dossier de travail, pas dans `assets/`,
+  remplacé à chaque installation.
+- **3 · Placebo d'homologie.** `calculer` rend `p_placebo` (même nombre de cas que la classe retenue,
+  tirés dans la même strate et la même fenêtre, même a priori), `graine_placebo` et
+  `apport_homologie` ; exigés au journal depuis 0.7.4, comme `p_sans_cartes`. Écart motivé : la moyenne
+  de 200 tirages (`placebo_tirages`) plutôt qu'un tirage unique, trop bruité pour être lu ; graine
+  dérivée de la question, non choisie ; tirage par SHA-256, identique sur toutes les versions de Python.
+  Sur la démonstration : homologie +0,7 point sur le placebo, cartes +10 points sur l'inertie : le gain
+  vient des multiplicateurs, pas du choix des homologues.
+- **4 · Plancher A7.** Le dossier consigne ses requêtes (`recherches` : famille, cartes, texte). Trois
+  familles par carte de l'état, une discrimination par paire de candidates d'une même strate ; une
+  requête répétée compte une fois ; une requête formée sur le nom de sa carte est signalée. En dessous :
+  dossier incomplet, drapeau, lecture Spéculative. Le dossier d'exemple atteint le plancher.
+
+## 0.7.3 — 2026-10-29 · audit d'ingénierie : contrôler la lecture qui produit le chiffre
+
+Aucun paramètre de calcul ne change (matrice, λ, inerties, homologie) : les p sont identiques à la
+0.7.2. Un paramètre d'affichage s'ajoute (`ecart_niveaux_max`, 0,10). 111 autotests (103 + 8).
+Le correctif reçu avec l'audit est repris, puis corrigé.
+
+**Retenu de l'audit, vérifié à l'exécution**
+- **PRÉVOIR sans contrôle de la lecture** (S1, S2) : exact. `moteur.py dossier --fichier D.json` passe
+  la lecture par `valider_base` (A1, A3, A6, A7, test, garantie, option, questions) et rend un sceau ;
+  `calculer --dossier` refuse un autre état, un événement non déclaré, une sémantique ou une temporalité
+  différentes. Sans dossier, la sortie le dit. Format : `assets/dossier.exemple.json`, validé par `audit`.
+- **Bande de sensibilité limitée à l'a priori** (M2) : exact. Huit variantes de classe de référence
+  (Jaccard, k, k₀, demi-vie), bande rendue à part, `origine_seuil`.
+- **Saut discret du niveau d'homologie** (M3) : exact, reproduit (53 % en H1 sur 2 cas, 33 % en H1.5
+  sur 5 : 20 points). `niveaux` et `fragilite_niveau`.
+- **F/f absent des multiplicateurs** (M1) : exact (λ vient de la matrice, `sources_de`). Sonde `effet_force`,
+  et distinction écrite dans `SKILL.md` et `graphe.md` §2.3.
+- **Apport des cartes sans ancrage** (M4), **propagation inter-strates par défaut** (M5), **sémantique et
+  date d'information par défaut** (S3), **ordre d'abandon sous contrainte de contexte** (S4) : exacts, repris.
+
+**Corrigé dans le correctif reçu**
+- `UnboundLocalError` sur **tout événement composé** (`se transforme`, `s'intensifie`) sans `--semantique` :
+  la variable `sem` n'était définie que pour les événements simples. Autotest.
+- Temporalité `duree_vie` dans le dossier, `duree_de_vie` dans `calculer` : un événement à durée de vie
+  propre ne pouvait jamais être calculé avec un dossier. Valeurs communes (`TEMPORALITES`).
+- **Corroboration et passage non exigés** dans un dossier (la fiche technique est une « proposition ») :
+  contrôlés désormais pour chaque F, comme pour une lecture réelle (0.7.1, 0.7.2).
+- **Candidates forcément ancrées** : une rivale écartée ne pouvait pas être déclarée, et la
+  contre-candidate était une carte retenue. Désormais 2 à 4 candidates **par strate** (SKILL étape 2),
+  chaque candidate non retenue avec son motif (`rejets`), une contre-candidate par strate.
+- `calculer --dossier` sans `evenements` acceptait tout événement en annonçant la définition contrôlée ;
+  des pièces disponibles après la date d'information passaient (B1). Refusés.
+- Le drapeau de fragilité se déclenchait au-delà de 30 points (`largeur_max_affichage`) : l'écart de
+  20 points cité par l'audit n'était signalé par rien. Seuil dédié de 10 points.
+- La classe était dite « instable » quand l'étiquette de niveau changeait sur les mêmes cas ;
+  instabilité = l'ensemble des cas retenus change. La sonde F → f entrait dans la bande retenue : c'est
+  une autre lecture, elle reste à part. L'alerte inter-strates visait aussi les propagations documentées.
+- L'exemple de dossier concluait « pas de mesure d'exception → POLARITÉ » : l'erreur « non A donc B »
+  que la 0.7.2 interdit. Réécrit (branche `indetermine`, question de documentation).
+- `SKILL.md` : nom de fichier `apports-théoriques.md` corrigé ; « dépasse ce qu'une session tient » ramené
+  à « peut dépasser », après la lecture par rubrique, déjà prescrite.
+
+**Inexact ou nuancé dans l'audit**
+- « La collision F/f – F/M/f n'est dite nulle part » : le glossaire la disait déjà ; ce qui manquait est
+  que F/f ne change pas λ.
+- « Six tests ajoutés » : cinq ajoutés et un étendu (103 → 108).
+- `SHA256SUMS` du correctif en fins de ligne CRLF, contraire à `.gitattributes` : régénéré.
+
+**Laissé à l'auteur** (`feuille-de-route.md` §1) : atténuation de λ par F/f, datation du partage,
+plancher de recherche A7, placebo d'homologie, sceau de dossier exigé pour V4.
 
 ## 0.7.2 — 2026-10-27 · cinq apports : éprouver les étapes de la lecture
 

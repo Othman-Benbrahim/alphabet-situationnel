@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.2
+> Version : 0.7.4
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -87,6 +87,19 @@ fausse parmi les 66 de la matrice déplacerait à peine la bande, et le modèle 
 Une bande étroite ne dit donc pas que la matrice est juste. Sur l'exemple 1,
 la bande (19–28 %) est plus étroite que l'intervalle bêta (5–43 %) : pour ce calcul, l'incertitude
 d'échantillonnage domine celle des hypothèses.
+
+**Classe de référence (0.7.3).** Les six variantes ne touchaient que l'a priori ; or le choix des cas
+retenus dépend du seuil de Jaccard, des lissages k et k₀ et de la demi-vie. Huit variantes de **classe**
+(Jaccard ± 0,1 ; k, k₀ et demi-vie × ½ et × 2) donnent une seconde bande, rendue à part ; la classe
+est dite **instable** si l'ensemble des cas retenus change d'une variante à l'autre (un simple
+changement d'étiquette de niveau sur les mêmes cas ne compte pas). La bande retenue réunit les deux, et
+`origine_seuil` nomme celle qui traverse 50 %. Une sonde « toutes les forces abaissées à f »
+(`effet_force`) est rendue à part, hors de la bande : c'est une autre lecture, pas une hypothèse de
+modèle. **Les multiplicateurs viennent de la matrice** (intensité F/M/f d'une arête, `dynamiques.md`),
+jamais de la force F/f d'un mot : la force n'agit que par la sélection des homologues, donc pas du tout
+sans base. **Fragilité de niveau** : le niveau d'homologie retenu (§3) se décide sur un compte
+(`c_min_rho1`) ; `calculer` rend p pour chaque niveau non vide (`niveaux`) et signale un écart supérieur
+à `ecart_niveaux_max` (§H, 10 points) entre niveaux.
 
 ```
 p₀ = f × LR / (1 − f + f × LR)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.2 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.4 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -713,6 +713,26 @@ def usage_attendu(cid):
     return 'test' if hashlib.sha256(cid.encode()).hexdigest()[0] in P['partage_test'] else 'apprentissage'
 
 
+def lire_registre(chemin):
+    """0.7.4 (décision 2). Registre du partage apprentissage/test : une ligne {id, usage, date} par
+    identifiant, écrite par `partager` au moment où le partage est consulté, jamais réécrite. Il rend
+    datée la décision « fixé avant codage » (B5) ; comme un scellé, il ne prouve l'antériorité que s'il
+    est publié (dépôt daté)."""
+    reg={}
+    path=Path(chemin)
+    if not path.is_file():return reg
+    for n,l in enumerate(path.read_text(encoding='utf-8').splitlines(),1):
+        if not l.strip():continue
+        try:r=json.loads(l)
+        except json.JSONDecodeError:raise ValueError(f'{chemin}:{n} : JSON invalide') from None
+        exiger(isinstance(r,dict) and isinstance(r.get('id'),str) and r.get('usage') in ('apprentissage','test'),f'{chemin}:{n} : {{id, usage, date}} attendu')
+        date_iso(r.get('date'))
+        exiger(r['id'] not in reg,f'{chemin}:{n} : {r["id"]} déjà enregistré ; un partage ne se réécrit pas')
+        exiger(r['usage']==usage_attendu(r['id']),f'{chemin}:{n} : usage différent du partage par empreinte')
+        reg[r['id']]=r
+    return reg
+
+
 def empreinte(x):
     return hashlib.sha256(json.dumps(x, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
 
@@ -778,7 +798,7 @@ def lire_liaisons(liste, etat=None):
     return out
 
 
-def valider_base(base):
+def valider_base(base, registre=None):
     ids = set(); stat = statuts(); archive = 0; propositions = 0; incomp = incompatibles()
     for c in base:
         cid = texte_requis(c.get('id'), 'id')
@@ -790,6 +810,22 @@ def valider_base(base):
         duree_jours(c['fenetre'])
         exiger(type(c.get('sans_evenement')) is bool and type(c.get('fictif')) is bool, f'{cid} : booléens requis')
         exiger(c.get('usage') == usage_attendu(cid), f'{cid} : partage apprentissage/test incorrect')
+        if c.get('statut_donnees') != 'archive_a_revoir':
+            # 0.7.4 (décision 2) : le partage est daté. La décision demandait usage_fige_le ≤ date du premier
+            # état : impossible pour tout cas historique (un partage fixé en 2026, un état de 1995). Ce que B5
+            # exige est « fixé avant codage » : usage_fige_le ≤ codage.debut, requis pour un cas réel.
+            exiger('usage_fige_le' in c, f'{cid} : usage_fige_le requis (date à laquelle le partage a été fixé, `partager`) ; un partage non daté rend la fiche non valide')
+            date_iso(c['usage_fige_le'])
+            deb=c['codage'].get('debut') if isinstance(c.get('codage'),dict) else None
+            if not c.get('fictif'):
+                exiger(deb is not None, f'{cid} : codage.debut requis (date du début du codage) : le partage doit le précéder (B5)')
+            if deb is not None:
+                date_iso(deb)
+                exiger(jour(c['usage_fige_le'])<=jour(deb), f'{cid} : partage fixé le {c["usage_fige_le"]}, après le début du codage ({deb}) : B5 exige un partage fixé avant codage')
+            if registre is not None and not c.get('fictif'):
+                r_=registre.get(cid)
+                exiger(r_ is not None, f'{cid} : absent du registre du partage ; lancer `partager` avant de coder')
+                exiger(r_['date']==c['usage_fige_le'], f'{cid} : usage_fige_le ({c["usage_fige_le"]}) différent du registre ({r_["date"]}) ; le registre fait foi')
         strata = c.get('strates')
         exiger(isinstance(strata,list) and bool(strata) and all(type(s) is int and 1<=s<=NS for s in strata)
                and len(set(strata)) == len(strata), f'{cid} : strates invalides')
@@ -942,11 +978,158 @@ def valider_base(base):
     return {'cas':len(base),'actifs':len(base)-archive-propositions,'propositions':propositions,'archives_exclues':archive}
 
 
-def valider(chemin):
-    result=valider_base(charger(chemin))
+FAMILLES_RECHERCHE=('observation','discrimination','contradiction')
+
+
+def controle_recherches(rs, mots_etat, candidats):
+    """0.7.4 (décision 4). Plancher de couverture A7 : chaque carte de l'état est cherchée dans les
+    trois familles (observation, discrimination, contradiction), et chaque paire de candidates d'une même
+    strate a sa requête de discrimination. Le plancher porte sur les **familles couvertes**, pas sur un
+    nombre de requêtes : dix requêtes d'observation ne remplacent pas une requête de contradiction.
+    Une requête qui contient le nom de sa carte est signalée (A7 : chercher le phénomène, pas le mot ;
+    coïncidence lexicale, A5). Rend (erreurs de forme, manques) : une forme fausse refuse le dossier, un
+    manque le rend incomplet (statut de lecture Spéculatif, « À vérifier »)."""
+    err=[];manques=[]
+    if rs is None:
+        return [],['aucune requête consignée (dossier.recherches) : couverture A7 non constatable']
+    if not isinstance(rs,list):
+        return ['dossier.recherches = liste de {famille, cartes, requete}'],[]
+    couvert=defaultdict(set);paires=set();vues=set()
+    for i,r in enumerate(rs):
+        if not isinstance(r,dict) or r.get('famille') not in FAMILLES_RECHERCHE:
+            err.append(f'dossier.recherches[{i}] : famille = {", ".join(FAMILLES_RECHERCHE)}');continue
+        q=r.get('requete')
+        if not (isinstance(q,str) and q.strip()):
+            err.append(f'dossier.recherches[{i}] : requete = le texte exact de la requête');continue
+        try:ks=[cle_valide(str(x)) for x in (r.get('cartes') or [])]
+        except (ValueError,IndexError):err.append(f'dossier.recherches[{i}] : cartes = liste de CARTE@strate');continue
+        if not 1<=len(ks)<=2 or not set(ks)<=set(candidats):
+            err.append(f'dossier.recherches[{i}] : une ou deux cartes, prises parmi les candidates');continue
+        cle_q=(r['famille'],' '.join(q.lower().split()))
+        if cle_q in vues:manques.append(f'requête répétée, comptée une fois : « {q[:50]} »')
+        vues.add(cle_q)
+        mots_q=set(re.findall(r'[A-Z0-9]+',_plat_mots(q)))
+        for k in ks:
+            ab=k.split('@')[0];noms=set(re.findall(r'[A-Z0-9]+',_plat_mots(NOMS[ab])))
+            if noms & mots_q or re.search(r'\b'+ab+r'\b',q):
+                manques.append(f'requête formée sur le nom de la carte {NOMS[ab]} (A7) : « {q[:50]} »')
+            couvert[k].add(r['famille'])
+        if r['famille']=='discrimination' and len(set(ks))==2:paires.add(frozenset(ks))
+    if err:return err,[]
+    for k in sorted(mots_etat):
+        for fam in FAMILLES_RECHERCHE:
+            if fam not in couvert[k]:manques.append(f'{k} : aucune requête de {fam}')
+    par_strate=defaultdict(list)
+    for k in candidats:par_strate[int(k.split('@')[1])].append(k)
+    for st_,ks in sorted(par_strate.items()):
+        for i,a in enumerate(ks):
+            for b in ks[i+1:]:
+                if frozenset((a,b)) not in paires:manques.append(f'paire {a} / {b} : aucune requête de discrimination')
+    return [],manques
+
+
+def _plat_mots(s):
+    """Majuscules sans accents, mots séparés (« TRACE·MÉMOIRE » → « TRACE MEMOIRE »)."""
+    s=unicodedata.normalize('NFD',s)
+    return ''.join(ch for ch in s if unicodedata.category(ch)!='Mn').upper().replace('·',' ')
+
+
+DOSSIER_ID='C-0001-S07'
+TEMPORALITES=('generique','programmee','duree_de_vie')
+
+
+def dossier_valider(d):
+    """0.7.3. Dossier de lecture d'un calcul (mode PRÉVOIR) : les règles A1, A3, A5, A6, A7, la garantie,
+    l'option, le test de preuve, la corroboration, le passage et les questions, contrôlés **avant** que le
+    chiffre n'existe. En 0.7.2, toute cette théorie de la preuve n'était vérifiée que pour une fiche
+    (CODER) : en PRÉVOIR, elle restait une obligation narrative, sans contrôle et sans trace. Le dossier
+    passe par `valider_base` — une fiche d'un état, sans issue observée — donc par exactement les mêmes
+    contrôles, et il porte un sceau qui fige la lecture et les événements avant le calcul."""
+    exiger(isinstance(d,dict),'dossier : objet JSON requis')
+    etat=texte_requis(d.get('etat'),'dossier.etat');e=lire_etat(etat)
+    mots=d.get('mots')
+    exiger(isinstance(mots,list) and bool(mots),'dossier.mots : documentation de chaque mot de l’état requise')
+    fm=forces(e)
+    # 0.7.3 (relecture de l'audit) : SKILL étape 2 teste 2 à 4 candidates **par strate**, dont une
+    # contre-candidate. Le correctif reçu exigeait que toute candidate soit ancrée dans l'état : une
+    # rivale écartée ne pouvait donc pas être déclarée, et la « contre-candidate » était forcément une
+    # carte retenue. Une candidate absente de l'état porte désormais le motif de son rejet (`rejets`).
+    cand=d.get('candidats')
+    exiger(isinstance(cand,list) and cand,'dossier.candidats : liste des cartes testées (2 à 4 par strate)')
+    keys=[cle_valide(str(x)) for x in cand]
+    exiger(len(set(keys))==len(keys),'dossier.candidats : doublon')
+    strates_etat=sorted({m['s'] for m in e['mots']})
+    for st_ in strates_etat:
+        n_=sum(1 for k in keys if int(k.split('@')[1])==st_)
+        exiger(2<=n_<=4,f'dossier.candidats : 2 à 4 candidates dans la strate {st_} ({n_} déclarée(s))')
+    exiger(set(fm)<=set(keys),f'dossier.candidats : un mot de l’état n’a pas été testé comme candidate ({sorted(set(fm)-set(keys))})')
+    rej=d.get('rejets') or {}
+    exiger(isinstance(rej,dict),'dossier.rejets : objet {CARTE@strate: motif}')
+    rejk={cle_valide(str(k)):v for k,v in rej.items()}
+    for k in keys:
+        if k not in fm:
+            texte_requis(rejk.get(k),f'dossier.rejets.{k} (motif du rejet d’une candidate non retenue : A6, A7 ou absence de fait)')
+    exiger(set(rejk)<=set(keys)-set(fm),'dossier.rejets : seulement pour des candidates absentes de l’état')
+    cc=d.get('contre_candidate')
+    cc=cc if isinstance(cc,list) else [cc]
+    contre=[cle_valide(str(x)) for x in cc]
+    exiger(contre and set(contre)<=set(keys),'dossier.contre_candidate : la carte rivale la plus plausible, prise parmi les candidates (une ou une liste)')
+    for st_ in strates_etat:
+        exiger(any(int(k.split('@')[1])==st_ for k in contre),f'dossier.contre_candidate : une contre-candidate pour la strate {st_}')
+    evs=d.get('evenements')
+    if evs is not None:
+        exiger(isinstance(evs,list) and evs,'dossier.evenements : liste non vide, ou champ absent')
+        for x in evs:
+            exiger(isinstance(x,dict),'dossier.evenements : objets requis')
+            evenement_lire(str(x.get('evenement','')))
+            exiger(x.get('semantique') in ('presence','au-moins-une-fois','continue'),
+                   'dossier.evenements.semantique : presence, au-moins-une-fois ou continue')
+            exiger(x.get('temporalite') in TEMPORALITES,
+                   'dossier.evenements.temporalite : '+', '.join(TEMPORALITES)+' (mêmes valeurs que calculer --temporalite)')
+            texte_requis(x.get('resolution'),'dossier.evenements.resolution')
+    d1=fin_fenetre(e['date'],e['fenetre']).isoformat()
+    etat_issue=etat.replace(f"[{e['date']} |",f"[{d1} |",1)
+    fiche={'id':DOSSIER_ID,'version_regles':P['version'],'titre':'Dossier de lecture (PRÉVOIR)',
+           'strates':sorted({m['s'] for m in e['mots']}),'fenetre':e['fenetre'],
+           'sans_evenement':True,'fictif':False,'statut_donnees':'proposition',
+           'motif_proposition':'dossier de lecture d’un calcul, sans issue observée',
+           'sources_verifiees':False,'usage':usage_attendu(DOSSIER_ID),
+           'usage_fige_le':d.get('disponible_le') or e['date'],   # sans objet pour un dossier : fiche technique
+           'codage':{'mode':'manuel','codeurs':[{'id':'codeur-dossier','role':'humain'}],'debut':d.get('disponible_le') or e['date']},
+           'sequence':[{'date':e['date'],'disponible_le':d.get('disponible_le') or e['date'],'etat':etat,'mots':mots,
+                        'retraits':[],'liaisons':d.get('liaisons',[]),'positions':d.get('positions'),
+                        'questions':d.get('questions'),'preuves_positions':d.get('preuves_positions'),
+                        'preuves_liaisons':d.get('preuves_liaisons'),
+                        'preuves_qualificatifs':d.get('preuves_qualificatifs')}],
+           'issue':{'date':d1,'disponible_le':d1,'etat':etat_issue,'mots':None}}
+    try:
+        valider_base([fiche])
+    except ValueError as err:
+        raise ValueError(f'dossier refusé — {err}') from None
+    # 0.7.3 : la fiche technique est une « proposition » (sources non vérifiées par un tiers) ; valider_base
+    # n'y exige donc ni corroboration ni passage. Une lecture réelle les doit pourtant (SKILL étape 3,
+    # 0.7.1 et 0.7.2) : on les contrôle ici, pour chaque mot F, comme pour un cas actif.
+    errs=[]
+    for item in mots:
+        if isinstance(item,dict) and item.get('intensite')=='F':
+            k=cle_valide(f"{item.get('carte')}@{item.get('strate')}")
+            errs+=controle_corroboration(k,item)+controle_passage(k,item,'F',True)
+    exiger(not errs,'dossier refusé — '+' ; '.join(errs))
+    errs,manques=controle_recherches(d.get('recherches'),set(fm),keys)
+    exiger(not errs,'dossier refusé — '+' ; '.join(errs))
+    return {'conforme':True,'complet':not manques,'manques':manques,'etat':etat,'mots':len(mots),'candidats':keys,'contre_candidate':contre,
+            'disponible_le':d.get('disponible_le') or e['date'],
+            'evenements':evs or [],'sceau':empreinte(d),
+            'instruction':'Publier ce sceau avant de lancer le calcul, puis lancer « calculer --dossier ». '
+                          'Il fige la lecture et les événements, pas le jugement (voir sceller-jugement).'}
+
+
+def valider(chemin, registre=None):
+    result=valider_base(charger(chemin), None if registre is None else lire_registre(registre))
     print(f"{result['cas']} cas · {result['actifs']} actifs recevables · {result['propositions']} propositions conformes, sources à vérifier"
           f" · {result['archives_exclues']} archives à revoir ; propositions et archives exclues des calculs")
-    print('Contrôle structurel seulement : ne certifie ni la vérité des sources ni le jugement du codeur.')
+    print('Contrôle structurel seulement : ne certifie ni la vérité des sources ni le jugement du codeur.'
+          +('' if registre else ' Partage non recoupé avec un registre (--registre) : dates déclarées seulement.'))
     return True
 
 # ───────────────────────── prévisions conditionnelles ─────────────────────────
@@ -1064,7 +1247,33 @@ def barreau_de(sources, cible):
     return min(rangs, key=ordre.index) if rangs else b['defaut']
 
 
-def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_materielle=(),asof=None,sans_cartes=False,**unused):
+def graine_placebo(etat,typ,cible,asof):
+    """0.7.4 (décision 3). Graine dérivée de la question (état, événement, date d'information), non
+    choisie : on ne peut pas essayer des graines jusqu'à obtenir le placebo qui arrange."""
+    return int(hashlib.sha256(f'{texte(etat)}|{cible} {typ}|{asof}'.encode()).hexdigest()[:12],16)
+
+
+def placebo_homologie(base,typ,cible,etat,asof,c_A,p0,graine):
+    """0.7.4 (décision 3). Placebo d'homologie : autant de cas distincts que la classe retenue, tirés au
+    hasard dans la même strate et la même fenêtre (sans regarder les cartes), sous le même a priori p0 et
+    la même révision. `p − p_placebo` sépare « l'analogie structurale apporte » de « le taux de base de la
+    strate apporte ». Un tirage seul est bruité : on en moyenne `placebo_tirages`, chacun reproductible
+    (rang de chaque cas par SHA-256 de graine:tirage:id, indépendant de la version de Python)."""
+    pool=echantillon(base,typ,cible,etat['fenetre'],asof)
+    ids=sorted({t[0] for t in pool})
+    if not ids:return None
+    n=min(c_A,len(ids));ps=[]
+    for r in range(P['placebo_tirages']):
+        choix=set(sorted(ids,key=lambda i:hashlib.sha256(f'{graine}:{r}:{i}'.encode()).hexdigest())[:n])
+        sm=ponderer([t for t in pool if t[0] in choix],asof)
+        a_=sum(x['poids'] for x in sm);e_=sum(x['poids']*x['issue'] for x in sm)
+        ps.append((e_+P['k']*p0)/(a_+P['k']))
+    ps.sort();q=lambda u:ps[min(len(ps)-1,int(u*len(ps)))]
+    return {'p':proba(sum(ps)/len(ps)),'graine':graine,'tirages':len(ps),'cas_tires':n,'cas_disponibles':len(ids),
+            'plage_90':[proba(q(.05)),proba(q(.95))]}
+
+
+def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_materielle=(),asof=None,sans_cartes=False,placebo=False,**unused):
     exiger(typ in ('apparait','persiste','disparait'),'type non prévisionnel : F/f mesure la confiance, pas une intensité physique')
     asof=asof or etat['date']; date_iso(asof);cible=cle_valide(cible)
     fm=forces(etat)
@@ -1115,6 +1324,16 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
     samples=ponderer(hom,asof,borrowed)
     nA=sum(x['poids'] for x in samples);nE=sum(x['poids']*x['issue'] for x in samples);cA=len({x['id'] for x in samples})
     prob=(nE+P['k']*ap['p0'])/(nA+P['k'])
+    # 0.7.3 — le choix du niveau d'homologie (H1 → H1.5 → H2) est discret et se décide sur un compte
+    # (c_min_rho1). Deux lectures également conformes peuvent donc différer d'un cran sans que rien ne
+    # le signale. On rend p pour chaque niveau non vide : la fragilité de niveau devient visible.
+    niveaux={}
+    for hx,ts in levels.items():
+        sm=ponderer(ts,asof,False);a_=sum(x['poids'] for x in sm);e_=sum(x['poids']*x['issue'] for x in sm)
+        if a_>0:
+            niveaux[hx]={'c_A':len({x['id'] for x in sm}),'p':proba((e_+P['k']*ap['p0'])/(a_+P['k']))}
+    fragilite=None if len(niveaux)<2 else max(v['p'] for v in niveaux.values())-min(v['p'] for v in niveaux.values())
+    if sans_cartes:niveaux={};fragilite=None
     rho=2 if borrowed and cA>=P['c_min_rho1'] else 0 if cA>=P['seuil_rho0_cas_distincts'] else 1 if cA>=P['c_min_rho1'] else 3 if ap['ancrage'] else 4
     flags=['Modèle expérimental : multiplicateurs hypothétiques, performance prospective non établie.']
     if rho==0 and (mode_solo(base,int(cible.split('@')[1])) or not any(x['sans_evenement'] for x in samples)):
@@ -1126,8 +1345,14 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
             if max(rates)/min(rates)>P['ratio_non_stationnarite']:rho=max(1,rho);flags.append('Non-stationnarité : plafond ρ1.')
     if not ap['ancrage']: flags.append('A priori non ancré : aucune référence externe vérifiée fournie et effectif de base insuffisant.')
     if ap['LR_plafonne']:flags.append('Produit des multiplicateurs plafonné.')
+    if fragilite is not None and fragilite>P['ecart_niveaux_max']:
+        detail=', '.join(f'{k} {v["p"]*100:.1f} % sur {v["c_A"]} cas' for k,v in niveaux.items())
+        flags.append(f'Fragilité de niveau : p varie de {fragilite*100:.1f} points selon le niveau d’homologie retenu '
+                     f'({detail}) ; le seuil c_min_rho1 décide seul du niveau.')
     return {'evenement':cible+' '+typ,'p':proba(prob),'intervalle':intervalle_beta(nE,nA,ap['p0']),
             'rho':rho,'homologie':h if hom else None,'nb_cas_par_niveau':counts,'c_A':cA,'n_A':nA,'n_E':nE,
+            'niveaux':niveaux,'fragilite_niveau':fragilite,
+            'placebo':placebo_homologie(base,typ,cible,etat,asof,cA,ap['p0'],graine_placebo(etat,typ,cible,asof)) if placebo and not sans_cartes and not borrowed else None,
             'a_priori':ap,'comparateur':ap['f_base'],'transitions':samples,'drapeaux':flags,
             'incertitude':'intervalle conditionnel approximatif : un cas pèse au plus une observation ; incertitude de codage et de modèle non intégrée',
             'barreau':barreau_de(ap['sources'],cible)}
@@ -1135,13 +1360,21 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
 
 def sensibilite(etat,typ,cible,base,opts,h,semantique):
     """0.6.0. Sous-spécification : une centaine de paramètres pour quelques cas, donc une infinité de
-    jeux compatibles. On relance le même calcul sous six variantes plausibles des hypothèses non
+    jeux compatibles. On relance le même calcul sous des variantes plausibles des hypothèses non
     calibrées et l'on rend la bande obtenue. Elle mesure l'incertitude de modèle, que l'intervalle bêta
-    (bruit d'échantillonnage seul) ne couvre pas. Aucun paramètre nouveau n'est estimé."""
+    (bruit d'échantillonnage seul) ne couvre pas. Aucun paramètre nouveau n'est estimé.
+
+    0.7.3. La version 0.6.0 ne faisait varier que le PRIOR (multiplicateurs, inerties, fréquence par
+    défaut). Or l'estimateur dépend aussi du choix de la CLASSE DE RÉFÉRENCE — seuil de Jaccard, force
+    du lissage k et k₀, demi-vie de la pondération — et c'est cette classe qui décide quels cas entrent.
+    Une bande qui ne bouge pas quand la classe change donne une fausse assurance : elle mesure le
+    désaccord sur le prior, pas sur les données retenues. On sépare donc deux bandes, `modele` et
+    `classe`, et l'on rend aussi l'effet de la force d'ancrage (canal homologie seulement)."""
     import copy
-    sauve={k:copy.deepcopy(P[k]) for k in ('lambda','inertie','f_defaut','inertie_contrainte_materielle')}
-    lam=sauve['lambda']
-    variantes=[
+    sauve={k:copy.deepcopy(P[k]) for k in ('lambda','inertie','f_defaut','inertie_contrainte_materielle',
+                                           'jaccard_H15','k','k0_frequence','demi_vie_ans')}
+    lam=sauve['lambda'];jac=sauve['jaccard_H15']
+    modele=[
         ('multiplicateurs un cran plus bas', {'lambda':{'F':lam['M'],'M':lam['f'],'f':1.0}}),
         ('multiplicateurs un cran plus haut', {'lambda':{'F':lam['F'],'M':lam['F'],'f':lam['M']}}),
         ('inerties − 0,05', {'inertie':{k:min(.99,max(.01,v-.05)) for k,v in sauve['inertie'].items()},
@@ -1151,22 +1384,61 @@ def sensibilite(etat,typ,cible,base,opts,h,semantique):
         ('fréquence par défaut × ½', {'f_defaut':sauve['f_defaut']/2}),
         ('fréquence par défaut × 2', {'f_defaut':min(.99,sauve['f_defaut']*2)}),
     ]
+    classe=[
+        ('classe : Jaccard − 0,1', {'jaccard_H15':max(.05,round(jac-.1,10))}),
+        ('classe : Jaccard + 0,1', {'jaccard_H15':min(.95,round(jac+.1,10))}),
+        ('classe : lissage k ÷ 2', {'k':sauve['k']/2}),
+        ('classe : lissage k × 2', {'k':sauve['k']*2}),
+        ('classe : lissage k₀ ÷ 2', {'k0_frequence':sauve['k0_frequence']/2}),
+        ('classe : lissage k₀ × 2', {'k0_frequence':sauve['k0_frequence']*2}),
+        ('classe : demi-vie ÷ 2', {'demi_vie_ans':sauve['demi_vie_ans']/2}),
+        ('classe : demi-vie × 2', {'demi_vie_ans':sauve['demi_vie_ans']*2}),
+    ]
     sortie=[]
     try:
-        for nom,modif in variantes:
-            P.update(copy.deepcopy(sauve));P.update(modif)
-            sortie.append({'variante':nom,'p':horizon_result(etat,typ,cible,base,opts,h,semantique)['p']})
+        P.update(copy.deepcopy(sauve))
+        reference=horizon_result(etat,typ,cible,base,opts,h,semantique)['p']
+        for groupe,variantes in (('modele',modele),('classe',classe)):
+            for nom,modif in variantes:
+                P.update(copy.deepcopy(sauve));P.update(modif)
+                r=horizon_result(etat,typ,cible,base,opts,h,semantique)
+                sortie.append({'variante':nom,'groupe':groupe,'p':r['p'],'c_A':r.get('c_A'),
+                               'homologie':r.get('homologie'),'frappee':False,
+                               'cas':sorted({t['id'] for t in r.get('transitions') or []})})
+        # Force d'ancrage : seule la sélection des homologues y réagit (les λ viennent de la matrice).
+        faible={'date':etat['date'],'fenetre':etat['fenetre'],
+                'mots':[{'c':m['c'],'s':m['s'],'i':'f','q':m['q']} for m in etat['mots']]}
+        P.update(copy.deepcopy(sauve))
+        rf=horizon_result(faible,typ,cible,base,opts,h,semantique)
+        sortie.append({'variante':'forces d’ancrage abaissées d’un cran (F → f)','groupe':'lecture',
+                       'p':rf['p'],'c_A':rf.get('c_A'),'homologie':rf.get('homologie'),'frappee':True})
     finally:
         P.update(sauve)
-    ps=[x['p'] for x in sortie]
+    # 0.7.3 : la sonde F → f est une autre lecture, pas une hypothèse de modèle : elle reste hors de la bande.
+    ps=[x['p'] for x in sortie if x['groupe']!='lecture']
+    pm=[x['p'] for x in sortie if x['groupe']=='modele']
+    pc=[x['p'] for x in sortie if x['groupe']=='classe']
     s=P['seuil_decision']
-    # 0.6.5 : second drapeau, indépendant de tout seuil de décision. Une bande de 10 à 45 % ne traverse
-    # pas 50 % mais ne permet aucune lecture : sa largeur est jugée à l'aune de largeur_max_affichage (§H).
-    # 0.6.9 : une bande dont une borne touche le plafond des cartes est étroite par saturation, pas par
-    # robustesse ; elle se signale (audit du test brésilien : bande [95 % ; 95 %]).
-    return {'min':min(ps),'max':max(ps),'variantes':sortie,'seuil_decision':s,'traverse_seuil':min(ps)<s<=max(ps),
+    # La classe est dite instable si le niveau retenu ou l'effectif change : c'est un saut discret, que
+    # la bande continue ne montre pas nécessairement.
+    # 0.7.3 : instabilité = l'ensemble des cas retenus change. Un changement d'étiquette (H1.5 → H2) sur
+    # les mêmes cas ne change pas la classe ; le correctif reçu le signalait comme une instabilité.
+    signatures={tuple(x['cas']) for x in sortie if x['groupe']=='classe'}
+    retour={'reference':reference,'min':min(ps),'max':max(ps),'variantes':sortie,'seuil_decision':s,
+            'traverse_seuil':min(ps)<s<=max(ps),
+            'modele':{'min':min(pm),'max':max(pm),'traverse_seuil':min(pm)<s<=max(pm)},
+            'classe':{'min':min(pc),'max':max(pc),'traverse_seuil':min(pc)<s<=max(pc),
+                      'instable':len(signatures)>1,
+                      'niveaux':sorted({str(x['homologie']) for x in sortie if x['groupe']=='classe'}),
+                      'effectifs':sorted({x['c_A'] for x in sortie if x['groupe']=='classe' if x['c_A'] is not None})},
+            'effet_force':rf['p']-reference,
             'bande_large':max(ps)-min(ps)>P['largeur_max_affichage'],
             'saturee':any(abs(p-P['plafond_p0'])<1e-12 for p in ps)}
+    # Deux bandes qui traversent le seuil ne se lisent pas de la même façon : on nomme celle qui décide.
+    retour['origine_seuil']=('classe de référence' if retour['classe']['traverse_seuil'] else
+                             'hypothèses de modèle' if retour['modele']['traverse_seuil'] else None)
+    return retour
+
 
 
 def cumul(a,r,h,q0=0):
@@ -1198,7 +1470,12 @@ def horizon_result(etat,typ,cible,base,opts,h,semantique):
     baseline=f(ra['comparateur'],rp['comparateur']) if ra['comparateur'] is not None and rp['comparateur'] is not None else None
     if semantique!='presence':
         b=used[0]['comparateur'];baseline=None if b is None else (1-(1-b)**h if typ=='apparait' else b**h if typ=='persiste' else 1-b**h)
-    r.update(p=proba(f(ra['p'],rp['p'])),comparateur=baseline,rho=max(x['rho'] for x in used),intervalle=None,
+    pl=None
+    if all(x.get('placebo') for x in used):
+        # 0.7.4 : placebo multi-pas = même combinaison que p, appliquée aux moyennes des tirages (approximation déclarée).
+        pa=ra['placebo']['p'] if ra.get('placebo') else ra['p'];pp=rp['placebo']['p'] if rp.get('placebo') else rp['p']
+        pl=dict(used[0]['placebo'],p=proba(f(pa,pp)),plage_90=None,multi_pas='combinaison des moyennes par pas')
+    r.update(p=proba(f(ra['p'],rp['p'])),comparateur=baseline,rho=max(x['rho'] for x in used),intervalle=None,placebo=pl,
              pas=h,semantique=semantique,composantes={'apparition':ra,'persistance':rp})
     r['drapeaux']+=['Sources et probabilités supposées fixes sur l’horizon. Intervalle multi-pas non estimé : aucune propagation partielle de bornes.']
     return r
@@ -1381,6 +1658,29 @@ def valider_journal(data):
         if vr>=(0,5,0):
             exiger('p_sans_cartes' in x,f'{ident} : p_sans_cartes requis depuis 0.5 (null pour un composé) : comparateur inertiel')
         if x.get('p_sans_cartes') is not None:proba(x['p_sans_cartes'],ident+'.p_sans_cartes')
+        # 0.7.4 (décision 3) : placebo d'homologie, au même titre que p_sans_cartes (null si non évaluable).
+        if vr>=(0,7,4):
+            for k_ in ('p_placebo','graine_placebo','apport_homologie'):
+                exiger(k_ in x,f'{ident} : {k_} requis depuis 0.7.4 (null si non évaluable) : placebo d’homologie')
+        if x.get('p_placebo') is not None:
+            proba(x['p_placebo'],ident+'.p_placebo')
+            exiger(type(x.get('graine_placebo')) is int,f'{ident} : graine_placebo entière requise avec p_placebo')
+            exiger(x.get('probabilite') is None or (type(x.get('apport_homologie')) in (int,float) and abs(x['apport_homologie']-(x['probabilite']-x['p_placebo']))<1e-12),
+                   f'{ident} : apport_homologie = probabilite − p_placebo')
+        if isinstance(calc,dict):
+            for k_ in ('p_placebo','graine_placebo'):
+                if k_ in calc:
+                    a_,b_=calc[k_],x.get(k_)
+                    exiger(a_==b_ if not isinstance(a_,float) else (isinstance(b_,(int,float)) and abs(a_-b_)<1e-12),f'{ident} : {k_} différent du calcul figé')
+        # 0.7.4 (décision 1) : sceau du dossier de lecture et sa publication.
+        pdos=x.get('preuve_dossier')
+        if pdos is not None:
+            exiger(isinstance(pdos,dict),f'{ident} : preuve_dossier = {{source, date, sceau}}')
+            for k_ in ('source','date','sceau'):texte_requis(pdos.get(k_),f'{ident}.preuve_dossier.{k_}')
+            date_iso(pdos['date'])
+            exiger(re.fullmatch(r'[0-9a-f]{64}',pdos['sceau']) is not None,f'{ident} : preuve_dossier.sceau = SHA-256')
+            sd=((calc or {}).get('dossier') or {}).get('sceau') if isinstance(calc,dict) else None
+            exiger(sd is None or sd==pdos['sceau'],f'{ident} : sceau publié différent de celui du calcul figé')
         if vr>=(0,6,0):
             exiger('probabilite_jugement' in x,f'{ident} : probabilite_jugement requis depuis 0.6 (null si aucun jugement scellé)')
         if x.get('probabilite_jugement') is not None:
@@ -1526,6 +1826,16 @@ def murphy(paires):
                        'fiabilité 0 = calibré ; résolution haute = discrimine ; incertitude = difficulté de l’ensemble posé')}
 
 
+def dossier_publie(x):
+    """0.7.4 (décision 1) : le dossier de lecture d'une prévision est scellé dans le calcul figé et
+    publié (adresse https d'un dépôt daté) au plus tard à la date d'information."""
+    c=x.get('calcul');pd=x.get('preuve_dossier')
+    if not isinstance(c,dict) or not isinstance(pd,dict):return False
+    sd=(c.get('dossier') or {}).get('sceau');di=(c.get('contexte') or {}).get('date_information')
+    return (sd is not None and sd==pd.get('sceau') and di is not None and jour(pd['date'])<=jour(di)
+            and re.match(r'https://\S+',str(pd.get('source',''))) is not None)
+
+
 def score_result(data):
     prev,scores,partitions=valider_journal(data);units=[];used=set();unresolved=0;missing=0
     # 0.6.11 : abstentions (calcul « non estimé ») comptées à part. Elles n'ont pas de Brier et ne valent
@@ -1554,6 +1864,10 @@ def score_result(data):
         verified=all(x.get('preuve_prepublication') is not None and x.get('empreintes') is not None and x.get('resolution_verifiee')
                      and isinstance(x.get('calcul'),dict)
                      and re.match(r'https://\S+',str(x['preuve_prepublication'].get('source',''))) is not None for x in items)
+        # 0.7.4 (décision 1) : à compter de v4_dossier_depuis, une prévision du moteur n'est éligible que si
+        # son dossier de lecture porte un sceau publié (https) au plus tard à la date d'information, et que
+        # ce sceau est celui du calcul figé. Prospectif : les prévisions antérieures ne sont pas invalidées.
+        verified=verified and all(dossier_publie(x) for x in items if origine=='moteur' and jour(x['date'])>=jour(P['v4_dossier_depuis']))
         excluded=origine=='jugement' or any(x['rejeu'] or x['fictif'] for x in items) or not verified
         units.append({'ids':[x['id'] for x in items],'episode_id':items[0]['episode_id'],'origine':origine,'rejeu':any(x['rejeu'] for x in items),
                       'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_jugement':bj,
@@ -1864,13 +2178,14 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.2','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.4','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
-    for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2'):
+    for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2','ecart_niveaux_max'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
         exiger(type(P[k]) in (int,float) and math.isfinite(P[k]) and P[k]>0,f'paramètre positif : {k}')
-    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_frequence','c_min_rho1'):
+    date_iso(P['v4_dossier_depuis'])
+    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_frequence','c_min_rho1','placebo_tirages'):
         exiger(type(P[k]) is int and P[k]>0,f'paramètre entier positif : {k}')
     for ab,p in P['inertie'].items():exiger(ab in NOMS and 0<proba(p)<1,'inertie invalide')
     exiger(set(P['inertie'])==set(NOMS),'inerties incomplètes')
@@ -1943,6 +2258,9 @@ def audit():
         except ValueError as e:raise ValueError(f'assets/{nom} : {e}') from None
     try:score_result(charger(RACINE/'assets/journal.exemple.jsonl'))
     except ValueError as e:raise ValueError(f'assets/journal.exemple.jsonl : {e}') from None
+    # 0.7.3 : le dossier de lecture d'exemple est le format que l'on recopiera ; il doit passer `dossier`.
+    try:dossier_valider(lire_json(RACINE/'assets/dossier.exemple.json','dossier d’exemple'))
+    except ValueError as e:raise ValueError(f'assets/dossier.exemple.json : {e}') from None
     errs=erreurs_manifeste();exiger(not errs,' ; '.join(errs[:8])+(f' (+{len(errs)-8})' if len(errs)>8 else ''))
     errs=erreurs_statuts()+erreurs_index()+erreurs_repetitions([RACINE/'SKILL.md',RACINE/'README.md']+paths)
     for f in ('constitution.md','simulation.md'):
@@ -1955,7 +2273,7 @@ def audit():
     exiger(voisines() and all(voisines().get(ab) for ab in NOMS),'cartes.md : listes de voisines illisibles (A6)')
     incompatibles()
     print(f'audit : conforme — fichiers, versions, {16*NS} statuts, paramètres exhaustifs (chacun référencé par le code), '
-          f'JSONL livrés validés, manifeste SHA256SUMS ({len(fichiers_livres())} fichiers), matrice et inerties, '
+          f'JSONL et dossier d’exemple validés, manifeste SHA256SUMS ({len(fichiers_livres())} fichiers), matrice et inerties, '
           f'{sum(len(RENVOI_RE.findall(p.read_text(encoding="utf-8"))) for p in [RACINE/"SKILL.md",RACINE/"README.md"]+paths)} renvois §, '
           'voisines A6, incompatibilités G6, schéma de fiche validé, répartition des statuts, index des cartes, répétitions ; '
           'contrôle de forme et de recoupement interne, pas de la justesse du contenu ni certification empirique')
@@ -2013,6 +2331,7 @@ def appliquer_temporalite(result, temporalite):
     if temporalite!='generique' and not externe and result.get('p') is not None:
         motif={'programmee':'échéance programmée','duree_de_vie':'durée de vie propre au phénomène'}[temporalite]
         result.update(p=None,intervalle=None,p_sans_cartes=None,apport_cartes=None,sensibilite=None,
+                      p_placebo=None,apport_homologie=None,
                       non_estime_motif=f'{motif} : référence de domaine requise (--fref ou --references) ; ni le taux générique ni des cas appariés par cartes ne représentent ce calendrier')
         result.setdefault('drapeaux',[]).append(f'Non estimé : {motif} ; l’inertie et la fréquence par défaut ne représentent pas ce calendrier ou cette durée de vie (simulation.md §4).')
     return result
@@ -2055,22 +2374,74 @@ def afficher(result,as_json=False):
         print("Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ;"
               " aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »")
     print('Comparateur au même horizon : '+('non évaluable' if result.get('comparateur') is None else pct(result['comparateur'])))
-    if result.get('p_sans_cartes') is not None:
-        d=result['apport_cartes']*100
-        print(f"Sans cartes (inertie et fréquences seules) : {pct(result['p_sans_cartes'])} — "
-              +('les cartes ne changent rien à ce calcul : un bon score ne validerait pas la lecture' if abs(d)<0.05
-                else f"les cartes déplacent la probabilité de {d:+.1f} points".replace('.',',')))
+    ap=result.get('a_priori')
+    if result.get('p_sans_cartes') is not None and result.get('p') is not None:
+        d=(result['p']-result['p_sans_cartes'])*100
+        if ap is not None and not ap.get('ancrage'):
+            # 0.7.3. Sans ancrage, f est surtout le défaut (5 % à trois mois) lissé : l'écart mesure la
+            # distance au défaut, pas l'apport des cartes. L'annoncer comme un apport était un contresens.
+            print(f"Sans cartes (inertie et fréquences seules) : {pct(result['p_sans_cartes'])} — écart de {d:+.1f} points "
+                  "non interprétable : l’a priori n’est pas ancré (effectif pondéré sous n_min), "
+                  "l’écart mesure la distance au défaut, pas ce que les cartes ajoutent")
+        else:
+            print(f"Sans cartes (inertie et fréquences seules) : {pct(result['p_sans_cartes'])} — "
+                  +('les cartes ne changent rien à ce calcul : un bon score ne validerait pas la lecture' if abs(d)<0.05
+                    else f"les cartes déplacent la probabilité de {d:+.1f} points".replace('.',',')))
+    pl=result.get('placebo')
+    if result.get('p') is not None and 'p_placebo' in result:
+        if pl and result.get('p_placebo') is not None:
+            d=result['apport_homologie']*100
+            plage=f" ; 90 % des tirages entre {pct(pl['plage_90'][0],False)} et {pct(pl['plage_90'][1])}" if pl.get('plage_90') else ''
+            print(f"Placebo d’homologie : {pct(result['p_placebo'])} ({pl['tirages']} tirages de {pl['cas_tires']} cas parmi "
+                  f"{pl['cas_disponibles']} de la strate et de la fenêtre, graine {pl['graine']}{plage}) — apport de l’homologie "
+                  +f"{d:+.1f} points".replace('.',',')
+                  +(' : le choix des homologues ne fait pas mieux que des cas tirés au hasard' if abs(d)<0.05 else ''))
+        else:
+            print('Placebo d’homologie : non évaluable (aucun cas de la strate et de la fenêtre, emprunt H3, ou composé)')
+    if ap and ap.get('sources'):
+        print('Sources du calcul (carte · intensité de matrice · multiplicateur · motif) :')
+        for x in ap['sources']:
+            print(f"  {NOMS.get(x['mot'].split('@')[0],x['mot'].split('@')[0])}"
+                  f"{'@'+x['mot'].split('@')[1] if '@' in x['mot'] else ''} · {x['intensite']} · λ {x['lambda']:.2f} · {x['note']}")
+        if any(x['note']=="autre strate, abaissée d'un cran" for x in ap['sources']):
+            # 0.7.3 : l'alerte visait aussi les propagations documentées (autre_strate) et les transferts ancrés.
+            print('! Influence inter-strates par défaut : arête de la matrice abaissée d’un cran, sans propagation documentée '
+                  '(autre_strate) ni transfert ancré (P1 ne présume pas que les dynamiques se transportent) : à déclarer dans « À vérifier ».')
+    if result.get('fragilite_niveau') is not None and result['fragilite_niveau']>P['ecart_niveaux_max']:
+        lv=', '.join(f"{k} {v['p']*100:.1f} % ({v['c_A']} cas)" for k,v in (result.get('niveaux') or {}).items())
+        print(f"Fragilité de niveau : p varie de {result['fragilite_niveau']*100:.1f} points selon le niveau d’homologie "
+              f"({lv}) ; le seuil c_min_rho1 décide seul. Comparabilité et effectif s’échangent sans que le lecteur le voie.")
     sb=result.get('sensibilite')
     if sb:
-        print(f"Sensibilité du modèle : {pct(sb['min'],False)}–{pct(sb['max'])} sur {len(sb['variantes'])} variantes "
-              "(multiplicateurs d'un cran, inerties ± 0,05, fréquence par défaut × ½ et × 2)"
-              +(f" — non identifié : la bande traverse {pct(sb['seuil_decision'])}" if sb['traverse_seuil'] else '')
+        print(f"Sensibilité du modèle : {pct(sb['modele']['min'],False)}–{pct(sb['modele']['max'])} sur "
+              f"{len([x for x in sb['variantes'] if x['groupe']=='modele'])} variantes "
+              "(multiplicateurs d'un cran, inerties ± 0,05, fréquence par défaut × ½ et × 2)")
+        print(f"Sensibilité de la classe de référence : {pct(sb['classe']['min'],False)}–{pct(sb['classe']['max'])} "
+              f"sur {len([x for x in sb['variantes'] if x['groupe']=='classe'])} variantes "
+              "(Jaccard ± 0,1, k et k₀ × ½ et × 2, demi-vie × ½ et × 2)"
+              +(' — classe instable : les cas retenus ou le niveau changent selon le seuil' if sb['classe'].get('instable') else ' — classe stable'))
+        print(f"Bande retenue : {pct(sb['min'],False)}–{pct(sb['max'])}"
+              +(f" — non identifié : elle traverse {pct(sb['seuil_decision'])}" if sb['traverse_seuil'] else '')
+              +(f" (origine : {sb['origine_seuil']})" if sb.get('origine_seuil') else '')
               +(f" — bande large (plus de {pct(P['largeur_max_affichage'])}) : le résultat dépend des hypothèses non calibrées" if sb.get('bande_large') else '')
               +(f" — saturée : une variante touche le plafond des cartes ({pct(P['plafond_p0'])}), la bande ne mesure plus rien" if sb.get('saturee') else ''))
+        if sb.get('effet_force') is not None and abs(sb['effet_force'])<1e-12:
+            print("Force d’ancrage : aucun effet numérique ici (les multiplicateurs viennent de la matrice, pas du degré de preuve ; "
+                  "F/f ne pèse que sur la sélection des homologues"
+                  +(", nulle sans base)." if not result.get('c_A') else ", sans effet sur les cas retenus ici)."))
+        elif sb.get('effet_force') is not None:
+            print(f"Force d’ancrage : toutes les forces abaissées à f, p varie de {sb['effet_force']*100:+.1f} points "
+                  "(par la seule sélection des homologues)".replace('.',','))
     if 'a_priori' in result:
-        ap=result['a_priori'];print(f"Trace : multiplicateur {ap['LR']:.2f} · homologie {result['homologie'] or '—'} · c_A {result['c_A']} · n_A {result['n_A']:.1f} · n_E {result['n_E']:.1f}")
+        ap=result['a_priori']
+        part=P['k0_frequence']/(ap['effectif_reference']+P['k0_frequence'])
+        print(f"Trace : multiplicateur {ap['LR']:.2f} · homologie {result['homologie'] or '—'} · c_A {result['c_A']} · "
+              f"n_A {result['n_A']:.1f} · n_E {result['n_E']:.1f} · part de l’a priori dans f {round(part*100)} %")
     ml=result.get('marqueur_local')
     if ml:print(f"Résolution (S1) : la source doit mesurer le marqueur local « {ml['marqueur']} » ({ml['equivalent']}, {ml['statut']}) ; sinon reformuler l'événement")
+    ds=result.get('dossier')
+    if ds:print(f"Dossier de lecture : sceau {ds['sceau'][:16]}… · contre-candidate(s) "
+                f"{', '.join(NOMS.get(k.split('@')[0],k)+'@'+k.split('@')[1] for k in ds['contre_candidate'])} · {ds['controle']}")
     for flag in result.get('drapeaux',[]):print('! '+flag)
     print('Valeurs non arrondies, détails et empreintes : ajouter --json. Aucun score de validation acquis.')
 
@@ -2084,8 +2455,11 @@ def main():
     for name in ('valider','scorer','sceller'):
         s=subs.add_parser(name);s.add_argument('fichier')
         if name=='scorer':s.add_argument('--csv',action='store_true')
+        if name=='valider':s.add_argument('--registre')
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
+    p.add_argument('--registre',default='partage.jsonl');p.add_argument('--date')
     subs.add_parser('manifeste')
+    ds=subs.add_parser('dossier');ds.add_argument('--fichier',required=True);ds.add_argument('--json',action='store_true')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
     for name in ('calculer','trajectoires'):
@@ -2098,22 +2472,46 @@ def main():
         c.add_argument('--echeance');c.add_argument('--journal');c.add_argument('--strates',default='')
         c.add_argument('--json',action='store_true');c.add_argument('--demo',action='store_true')
         c.add_argument('--sans-cartes',action='store_true')
-        c.add_argument('--temporalite',choices=('generique','programmee','duree_de_vie'),default=None)
-        if name=='calculer':c.add_argument('--evenement',required=True)
+        c.add_argument('--temporalite',choices=TEMPORALITES,default=None)
+        if name=='calculer':c.add_argument('--evenement',required=True);c.add_argument('--dossier')
     a=parser.parse_args()
     if a.cmd=='audit':audit();return
     if a.cmd=='autotest':autotest();return
     if a.cmd=='parametres':print(parametres_markdown());return
-    if a.cmd=='valider':valider(a.fichier);return
+    if a.cmd=='valider':valider(a.fichier,a.registre);return
+    if a.cmd=='dossier':
+        dr=dossier_valider(lire_json(a.fichier,'--fichier'))
+        if a.json:print(json.dumps(dr,ensure_ascii=False,indent=2));return
+        print(f"dossier conforme — {dr['mots']} mots · candidates {', '.join(NOMS[k.split('@')[0]]+'@'+k.split('@')[1] for k in dr['candidats'])} · "
+              f"contre-candidate(s) {', '.join(NOMS[k.split('@')[0]]+'@'+k.split('@')[1] for k in dr['contre_candidate'])} · {len(dr['evenements'])} événement(s) déclaré(s)")
+        print('recherches A7 : '+('plancher atteint (familles et paires couvertes)' if dr['complet'] else
+              'dossier INCOMPLET — statut de lecture Spéculatif ; à reporter dans « À vérifier » :\n  - '+'\n  - '.join(dr['manques'])))
+        print(f"sceau : {dr['sceau']}")
+        print(dr['instruction'])
+        return
     if a.cmd=='bilan':print(bilan(a.base,a.references,a.journal));return
     if a.cmd=='manifeste':
         (RACINE/'SHA256SUMS').write_text(manifeste_texte(),encoding='utf-8')
         print(f'SHA256SUMS : {len(fichiers_livres())} fichiers ; vérifier avec « sha256sum -c SHA256SUMS » ou « moteur.py audit »');return
     if a.cmd=='partager':
         # 0.6.13 : même format que valider_base, refusé en amont.
+        # 0.7.4 (décision 2) : chaque consultation s'inscrit au registre, datée, sans réécriture : un
+        # identifiant essayé puis abandonné y reste visible. Le registre est un fichier de l'utilisateur
+        # (dossier courant), pas du skill : `assets/` est remplacé à chaque installation.
+        d_=a.date or datetime.date.today().isoformat();date_iso(d_)
+        exiger(jour(d_)<=jour(datetime.date.today().isoformat()),'partager : --date ne peut pas être future')
+        reg=lire_registre(a.registre);nouv=[]
         for ident in a.ids:
             exiger(re.fullmatch(r'C-\d{4}-S(?:0[1-9]|[1-9]\d)',ident) is not None,f'partager : identifiant C-NNNN-SNN attendu, reçu « {ident} »')
-            print(ident+' → '+usage_attendu(ident))
+            if ident in reg:
+                print(f"{ident} → {reg[ident]['usage']} · fixé le {reg[ident]['date']} (déjà au registre, inchangé)")
+            else:
+                r_={'id':ident,'usage':usage_attendu(ident),'date':d_};reg[ident]=r_;nouv.append(r_)
+                print(f"{ident} → {r_['usage']} · fixé le {d_} · usage_fige_le à recopier dans la fiche")
+        if nouv:
+            with open(a.registre,'a',encoding='utf-8') as f:
+                for r_ in nouv:f.write(json.dumps(r_,ensure_ascii=False)+'\n')
+            print(f'registre : {a.registre} ({len(nouv)} ligne(s) ajoutée(s)) ; le publier (dépôt daté) pour prouver la date')
         return
     if a.cmd=='equivalences':
         # 0.6.13 : table lisible, ou JSON (--json), au lieu de tuples Python.
@@ -2148,7 +2546,8 @@ def main():
     exiger(type(a.pas) is int and 1<=a.pas<=P['pas_max'],f'pas entre 1 et {P["pas_max"]}')
     end=fin_fenetre(etat['date'],etat['fenetre'],a.pas).isoformat()
     if a.echeance:exiger(date_iso(a.echeance).isoformat()==end,'échéance différente de date état + pas × fenêtre')
-    exiger(jour(asof)<jour(end),'date d’information à l’échéance ou après : rejeu explicite requis hors calcul prospectif')
+    exiger(jour(asof)<jour(end),'date d’information à l’échéance ou après : le calcul serait rétrospectif. '
+           'Donner une date d’information antérieure à l’échéance ; un cas déjà survenu se code (mode CODER), il ne se prévoit pas')
     st=statuts()
     for m in etat['mots']:
         exiger(m['i']!='F' or st.get((m['c'],m['s']))!='Vide',f'{cle(m)} : F impossible sur un équivalent Vide (A3)')
@@ -2190,6 +2589,22 @@ def main():
                'une durée de vie propre, sans rapport avec trois mois (cyclone, grève, session) → duree_de_vie ; '
                'sinon → generique')
         cible,typ=evenement_lire(a.evenement)
+        dossier=None;sem=None
+        if a.dossier:
+            # 0.7.3 : le dossier fige la lecture et la définition de l'événement avant le chiffre,
+            # comme `sceller-jugement` fige le jugement. Un dossier ne vaut que pour son état.
+            dd=lire_json(a.dossier,'--dossier');dossier=dossier_valider(dd)
+            exiger(' '.join(str(dd.get('etat','')).split())==' '.join(a.etat.split()),
+                   '--dossier : l’état du dossier diffère de --etat ; un dossier ne vaut que pour l’état qu’il documente')
+            # 0.7.3 : sans événements déclarés, tout événement passait et la sortie annonçait pourtant la
+            # définition contrôlée ; et des preuves postérieures à la date d'information étaient admises.
+            exiger(bool(dossier['evenements']),'--dossier : dossier.evenements requis pour un calcul (la définition de l’événement précède le chiffre)')
+            exiger(jour(dossier['disponible_le'])<=jour(asof),
+                   f'--dossier : pièces disponibles le {dossier["disponible_le"]}, après la date d’information {asof} (B1)')
+            if dossier['evenements']:
+                exiger(any(evenement_lire(x['evenement'])==(cible,typ) for x in dossier['evenements']),
+                       f'--dossier : « {cible} {typ} » n’est pas déclaré dans dossier.evenements ; '
+                       'la définition de l’événement précède le chiffre, sinon elle peut suivre le résultat')
         exiger(typ not in ('renforce','affaiblit'),'f ↔ F est une révision de confiance, pas un événement physique ; utiliser s’intensifie avec une mesure ou reformuler le critère observable')
         if typ in ('intensifie','transforme'):
             exiger(a.pas==1,'événements composés : --pas > 1 non pris en charge')
@@ -2197,7 +2612,15 @@ def main():
             result=compose(etat,typ,cible,active,opts,res)
         else:
             sem=a.semantique or ('continue' if typ=='persiste' else 'au-moins-une-fois' if typ=='disparait' else 'presence')
-            result=horizon_result(etat,typ,cible,active,opts,a.pas,sem)
+            if dossier and dossier['evenements']:
+                decl=next(x for x in dossier['evenements'] if evenement_lire(x['evenement'])==(cible,typ))
+                exiger(decl['semantique']==sem,f'--dossier : sémantique « {sem} » différente du dossier (« {decl["semantique"]} »)')
+                exiger(decl['temporalite']==a.temporalite,f'--dossier : temporalité « {a.temporalite} » différente du dossier (« {decl["temporalite"]} »)')
+            result=horizon_result(etat,typ,cible,active,dict(opts,placebo=True),a.pas,sem)
+            pl_=result.get('placebo')
+            result['p_placebo']=pl_['p'] if pl_ else None
+            result['graine_placebo']=pl_['graine'] if pl_ else None
+            result['apport_homologie']=None if pl_ is None or result.get('p') is None else result['p']-pl_['p']
             if not a.sans_cartes:
                 # Comparateur inertiel : même calcul sans cartes (inertie, fréquences, références seules).
                 # Sans lui, un bon Brier peut ne venir que du statu quo (exemple 11).
@@ -2205,11 +2628,26 @@ def main():
                 result['p_sans_cartes']=nu['p'];result['apport_cartes']=result['p']-nu['p']
                 result['sensibilite']=sensibilite(etat,typ,cible,active,opts,a.pas,sem)
         result['echeance']=end;result['journal']=a.journal;result['etat']=a.etat
+        if dossier and not dossier['complet']:
+            result.setdefault('drapeaux',[]).append('Dossier incomplet (plancher A7) : '+' ; '.join(dossier['manques'][:4])
+                +(f' (+{len(dossier["manques"])-4})' if len(dossier['manques'])>4 else '')+' → statut de lecture Spéculatif, à reporter dans « À vérifier ».')
+        if dossier:result['dossier']={'sceau':dossier['sceau'],'candidats':dossier['candidats'],'complet':dossier['complet'],'manques':dossier['manques'],
+                                      'contre_candidate':dossier['contre_candidate'],'controle':'forme de A1–A7, passages et questions contrôlée avant calcul (pas leur justesse)'}
+        if a.semantique is None and sem is not None:
+            result.setdefault('drapeaux',[]).append(f'Sémantique non déclarée : « {sem} » appliqué par défaut. '
+                                                   'À déclarer par --semantique (présence finale, au moins une fois, persistance continue).')
+        if a.date_information is None:
+            result.setdefault('drapeaux',[]).append(f'Date d’information non déclarée : date de l’état ({asof}) appliquée. '
+                                                   'Les cas disponibles après cette date sont exclus du calcul.')
+        for k_ in ('p_placebo','graine_placebo','apport_homologie'):result.setdefault(k_,None)   # composés : null
         result=appliquer_temporalite(result,a.temporalite)
     if a.cmd=='calculer':
         ml=marqueur_local(*cible.split('@'))
         st_=statuts().get((cible.split('@')[0],int(cible.split('@')[1])))
         result['marqueur_local']=None if ml is None else {'equivalent':ml[0],'marqueur':ml[1],'statut':st_}
+    if a.cmd=='calculer' and not a.dossier:
+        result.setdefault('drapeaux',[]).append('Aucun dossier de lecture (--dossier) : A1, A3, A6, A7, questions et définition de '
+                                               'l’événement ne sont pas contrôlés par le moteur pour ce calcul.')
     result['contexte']=metadata(base,asof,a.demo);result['base']=summary
     result['base']['cas_apprentissage_disponibles']=len(active)
     nv=[cle(m) for m in etat['mots'] if m['i']=='F' and st.get((m['c'],m['s'])) not in ('Attesté','Documenté')]
@@ -2235,7 +2673,7 @@ def autotest():
                                  'justification':{'oui':'une règle commune retire des options aux deux camps','non':'sans règle, les deux camps restent seuls à se définir l’un par l’autre'}}]
         return {'id':cid,'version_regles':P['version'],'titre':'Cas technique fictif','strates':[7],'fenetre':'3 mois',
                 'sequence':states[:-1],'issue':states[-1],'sans_evenement':True,'fictif':True,'statut_donnees':'actif',
-                'codage':{'mode':'manuel','codeurs':[{'id':'codeur-1','role':'humain'}]},'usage':'apprentissage'}
+                'codage':{'mode':'manuel','codeurs':[{'id':'codeur-1','role':'humain'}],'debut':'2026-01-01'},'usage':'apprentissage','usage_fige_le':'2026-01-01'}
     def forecast(ident='P-1',**kw):
         x={'type':'prevision','id':ident,'date':'2026-01-01','echeance':'2026-04-01','version_regles':P['version'],
            'question':'Une rupture survient-elle ?','evenement':'SEU@7 apparait','episode_id':'episode-A','pas':1,
@@ -2243,6 +2681,7 @@ def autotest():
            'etat_present':'[2026-01-01 | 3 mois] POLARITÉ@7[f]','probabilite':.2,'intervalle':None,'rho':'ρ4',
            'resolution':{'source':'registre public','critere':'rupture publiée','seuil':'une publication','marqueur':'rupture diplomatique','objet':'relation A-B'},
            'resolution_verifiee':True,'frequence_de_base':.3,'p_sans_cartes':None,'probabilite_jugement':None,'temporalite':'generique','rejeu':False,'fictif':True,'partition':None,
+           'p_placebo':None,'graine_placebo':None,'apport_homologie':None,
            'empreintes':None,'preuve_prepublication':None}
         x.update(kw);return x
     def calc_reel(**kw):
@@ -2631,9 +3070,197 @@ def autotest():
         def test_sensibilite(self):
             e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[f]');avant=json.dumps(P,sort_keys=True)
             s=sensibilite(e,'apparait','SEU@7',[],{},1,'presence')
-            self.assertEqual(len(s['variantes']),6);self.assertLessEqual(s['min'],s['max'])
+            # 0.7.3 : deux familles (modèle, classe de référence) et une sonde de force d'ancrage.
+            self.assertEqual(len([x for x in s['variantes'] if x['groupe']=='modele']),6)
+            self.assertEqual(len([x for x in s['variantes'] if x['groupe']=='classe']),8)
+            self.assertEqual(len([x for x in s['variantes'] if x['groupe']=='lecture']),1)
+            self.assertLessEqual(s['min'],s['max']);self.assertLessEqual(s['modele']['min'],s['modele']['max'])
+            self.assertLessEqual(s['classe']['min'],s['classe']['max'])
+            self.assertTrue(s['modele']['min']<=s['reference']<=s['modele']['max'])
+            self.assertEqual(s['min'],min(s['modele']['min'],s['classe']['min']))   # 0.7.3 : sonde F → f hors bande
             self.assertEqual(json.dumps(P,sort_keys=True),avant)               # paramètres restaurés
             self.assertEqual(s['bande_large'],s['max']-s['min']>P['largeur_max_affichage'])
+        def test_sensibilite_classe_vide(self):
+            # Base vide : la classe ne peut pas bouger, seule la sonde de force mesure un canal nul.
+            e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@7[F]')
+            s=sensibilite(e,'apparait','SEU@7',[],{},1,'presence')
+            self.assertEqual(len(s['classe']['effectifs']),1)
+            self.assertAlmostEqual(s['effet_force'],0.0)      # les λ viennent de la matrice, pas de la force
+        def test_fragilite_niveau(self):
+            # 2 cas stricts (H1) qui touchent, 3 cas à force de lecture différente (H1.5) qui ne touchent
+            # pas : c_min_rho1 écarte H1 et retient H1.5. Le calcul doit rendre les deux p, pas les seuls effectifs.
+            def mini(y,ctr,hit):
+                d0=f'{y}-01-01';d1=fin_fenetre(d0,'3 mois').isoformat()
+                e0=f'POLARITÉ@7[F] + CONTRAINTE@7[{ctr}]'
+                return {'id':f'C-{y-2000:04d}-S07','strates':[7],'fenetre':'3 mois','sans_evenement':False,
+                        'sequence':[{'date':d0,'disponible_le':d0,'etat':f'[{d0} | 3 mois] '+e0}],
+                        'issue':{'date':d1,'disponible_le':d1,
+                                 'etat':f'[{d1} | 3 mois] '+e0+(' + SEUIL@7[f]' if hit else '')}}
+            base=[mini(2010,'F',True),mini(2011,'F',True)]+[mini(2012,'f',False),mini(2013,'f',False),mini(2014,'f',False)]
+            e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@7[F]')
+            r=calculer(e,'apparait','SEU@7',base)
+            self.assertEqual(r['nb_cas_par_niveau']['H1'],2)
+            self.assertEqual(r['homologie'],'H1.5')
+            self.assertEqual(r['niveaux']['H1']['c_A'],2);self.assertEqual(r['niveaux']['H1.5']['c_A'],5)
+            self.assertGreater(r['fragilite_niveau'],0.1)
+            self.assertNotEqual(r['niveaux']['H1']['p'],r['niveaux']['H1.5']['p'])
+            # 0.7.3 : l'écart de 20 points n'était signalé par rien (seuil de 30 points) ; seuil dédié de 10.
+            self.assertTrue(any(f.startswith('Fragilité de niveau') for f in r['drapeaux']))
+            sb=sensibilite(e,'apparait','SEU@7',base,{},1,'presence')
+            ids={tuple(x['cas']) for x in sb['variantes'] if x['groupe']=='classe'}
+            self.assertEqual(sb['classe']['instable'],len(ids)>1)          # instabilité = cas retenus, pas étiquette
+        def test_dossier_refuse_sans_a6(self):
+            d={'etat':'[2026-01-01 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@7[F]','candidats':['POL@7','CTR@7'],
+               'contre_candidate':'CTR@7',
+               'mots':[{'carte':'POL','strate':7,'intensite':'F','fait':'deux camps se définissent l’un par l’autre',
+                        'source':'source A ; source B','objet':'relation A-B','contre_observation':'médiation acceptée, marginale',
+                        'portee':'marginale','test':'pistolet','corroboration':'independantes',
+                        'passage':[{'localisation':'p. 3','relation':'soutient'},{'localisation':'p. 4','relation':'soutient'}],
+                        'garantie':{'mecanisme':'x','attendu':'y','contredirait':'z'},'option':{'acteur':'A','avant':'a','apres':'b'}}]}
+            with self.assertRaises(ValueError) as cm:dossier_valider(d)
+            self.assertIn('a6',str(cm.exception))
+        def test_dossier_rejette_contre_candidate_hors_liste(self):
+            d={'etat':'[2026-01-01 | 3 mois] POLARITÉ@7[f] + CONTRAINTE@7[f]','candidats':['POL@7','CTR@7'],
+               'contre_candidate':'SEU@7','mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'f','source':'s',
+                                                   'objet':'o','contre_observation':'c','portee':'marginale'}]}
+            with self.assertRaises(ValueError):dossier_valider(d)
+        def test_dossier_sceau_stable(self):
+            d={'etat':'[2026-01-01 | 3 mois] POLARITÉ@7[f] + CONTRAINTE@7[f]','candidats':['POL@7','CTR@7'],
+               'contre_candidate':'CTR@7',
+               'questions':[{'question':'Une règle commune est-elle imposée ?','si_oui':'CTR@7','si_non':'POL@7',
+                             'resolution':'texte publié au registre',
+                             'justification':{'oui':'une règle commune retire une option aux deux camps',
+                                              'non':'sans règle, chaque camp reste seul à se définir'}}],
+               'mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'f','source':'s','objet':'o',
+                        'contre_observation':'c','portee':'marginale'},
+                       {'carte':'CTR','strate':7,'intensite':'f','fait':'f','source':'s','objet':'o',
+                        'contre_observation':'c','portee':'marginale'}]}
+            a=dossier_valider(d);b=dossier_valider(copy.deepcopy(d))
+            self.assertEqual(a['sceau'],b['sceau']);self.assertEqual(len(a['sceau']),64)
+            d['contre_candidate']='POL@7'
+            self.assertNotEqual(dossier_valider(d)['sceau'],a['sceau'])
+        def _dossier(self,**kw):
+            d=json.loads((RACINE/'assets/dossier.exemple.json').read_text(encoding='utf-8'));d.update(kw);return d
+        def test_dossier_corrections(self):
+            # 0.7.3 : relecture du correctif reçu avec l'audit d'ingénierie.
+            self.assertTrue(dossier_valider(self._dossier())['conforme'])
+            d=self._dossier();d['evenements'][0]['temporalite']='duree_de_vie'
+            self.assertTrue(dossier_valider(d)['conforme'])                  # même valeur que calculer --temporalite
+            d['evenements'][0]['temporalite']='duree_vie'
+            with self.assertRaises(ValueError):dossier_valider(d)
+            for champ in ('passage','corroboration'):                         # exigés pour F d'une lecture réelle
+                d=self._dossier();d['mots'][0].pop(champ)
+                with self.assertRaises(ValueError):dossier_valider(d)
+            d=self._dossier();d['rejets'].pop('SEU@7')                         # rivale écartée sans motif
+            with self.assertRaises(ValueError):dossier_valider(d)
+            d=self._dossier(candidats=['POL@7','CTR@6','HIE@6'],contre_candidate=['HIE@6'])
+            d['rejets'].pop('SEU@7')
+            with self.assertRaises(ValueError):dossier_valider(d)            # strate 7 : une seule candidate
+            d=self._dossier(contre_candidate='HIE@6')
+            with self.assertRaises(ValueError):dossier_valider(d)            # strate 7 sans contre-candidate
+            d=self._dossier();d['rejets']['POL@7']='x'
+            with self.assertRaises(ValueError):dossier_valider(d)            # rejet d'une carte retenue
+        def test_dossier_calculer(self):
+            import subprocess,tempfile
+            et='[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]'
+            base=[sys.executable,__file__,'calculer','--etat',et,'--temporalite','generique','--json']
+            def run(d,*extra):
+                with tempfile.TemporaryDirectory() as t:
+                    f=Path(t)/'d.json';f.write_text(json.dumps(d,ensure_ascii=False),encoding='utf-8')
+                    r=subprocess.run(base+['--dossier',str(f)]+list(extra),capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
+                return r.returncode,json.loads(r.stdout)
+            ok=['--evenement','SEUIL@7 apparait','--semantique','presence','--date-information','2026-09-20']
+            c,o=run(self._dossier(),*ok);self.assertEqual(c,0);self.assertIn('dossier',o)
+            d=self._dossier();d.pop('evenements')
+            c,o=run(d,*ok);self.assertEqual(c,2)                               # événement non déclaré : refus
+            c,o=run(self._dossier(disponible_le='2026-10-20'),*ok);self.assertEqual(c,2)   # pièces postérieures (B1)
+            c,o=run(self._dossier(),'--evenement','SEUIL@7 apparait','--semantique','au-moins-une-fois','--date-information','2026-09-20')
+            self.assertEqual(c,2)
+        def test_compose_sans_semantique(self):
+            # 0.7.3 : le correctif reçu levait UnboundLocalError (« sem ») sur tout événement composé.
+            import subprocess,tempfile
+            with tempfile.TemporaryDirectory() as t:
+                f=Path(t)/'r.json';f.write_text(json.dumps({'source':'x','critere':'x','seuil':'x','marqueur':'x','objet':'x'}),encoding='utf-8')
+                r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','POL@7 se transforme',
+                                  '--temporalite','generique','--resolution',str(f),'--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
+            self.assertNotIn('UnboundLocalError',r.stdout);self.assertEqual(r.returncode,0)
+        def test_partage_date(self):
+            # 0.7.4 (décision 2) : partage daté, registre qui fait foi, partage avant codage.
+            import tempfile,subprocess
+            c=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)')
+            self.assertEqual(valider_base([c])['actifs'],1)
+            c2=copy.deepcopy(c);c2.pop('usage_fige_le')
+            with self.assertRaises(ValueError):valider_base([c2])            # partage non daté
+            c2=copy.deepcopy(c);c2['codage'].pop('debut')
+            with self.assertRaises(ValueError):valider_base([c2])            # cas réel sans début de codage
+            c2=copy.deepcopy(c);c2['usage_fige_le']='2026-02-01'
+            with self.assertRaises(ValueError):valider_base([c2])            # partage fixé après le début du codage
+            c2=copy.deepcopy(c);c2['sequence'][0]['date']  # un état ancien n'empêche rien : historique admis
+            self.assertTrue(jour(c2['sequence'][0]['date'])<=jour(c2['usage_fige_le']))
+            with tempfile.TemporaryDirectory() as t:
+                reg=Path(t)/'partage.jsonl'
+                with self.assertRaises(ValueError):valider_base([c],registre=lire_registre(reg))   # absent du registre
+                r=subprocess.run([sys.executable,__file__,'partager',c['id'],'--registre',str(reg),'--date','2026-01-01'],
+                                 capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
+                self.assertEqual(r.returncode,0)
+                self.assertEqual(valider_base([c],registre=lire_registre(reg))['actifs'],1)
+                r=subprocess.run([sys.executable,__file__,'partager',c['id'],'--registre',str(reg),'--date','2026-01-05'],
+                                 capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
+                self.assertIn('inchangé',r.stdout);self.assertEqual(lire_registre(reg)[c['id']]['date'],'2026-01-01')   # jamais réécrit
+                c2=copy.deepcopy(c);c2['usage_fige_le']='2025-12-31';c2['codage']['debut']='2026-01-01'
+                with self.assertRaises(ValueError):valider_base([c2],registre=lire_registre(reg))   # date différente du registre
+                reg.write_text(reg.read_text(encoding='utf-8')*2,encoding='utf-8')
+                with self.assertRaises(ValueError):lire_registre(reg)          # doublon : un partage ne se réécrit pas
+        def test_placebo(self):
+            # 0.7.4 (décision 3) : placebo d'homologie reproductible, absent sans base.
+            base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            r1=calculer(e,'apparait','SEU@7',base,asof='2026-09-20',placebo=True)
+            r2=calculer(e,'apparait','SEU@7',base,asof='2026-09-20',placebo=True)
+            self.assertEqual(r1['placebo'],r2['placebo']);self.assertEqual(r1['placebo']['tirages'],P['placebo_tirages'])
+            self.assertEqual(r1['placebo']['cas_tires'],r1['c_A'])
+            self.assertLessEqual(r1['placebo']['plage_90'][0],r1['placebo']['plage_90'][1])
+            self.assertEqual(r1['p'],calculer(e,'apparait','SEU@7',base,asof='2026-09-20')['p'])   # p inchangé par le placebo
+            self.assertIsNone(calculer(e,'apparait','SEU@7',[],placebo=True)['placebo'])
+            self.assertNotEqual(graine_placebo(e,'apparait','SEU@7','2026-09-20'),graine_placebo(e,'apparait','SEU@7','2026-09-21'))
+            p=forecast(version_regles='0.7.4',probabilite=.3,p_placebo=.25,graine_placebo=7,apport_homologie=.05)
+            self.assertTrue(valider_journal([p]))
+            with self.assertRaises(ValueError):valider_journal([dict(p,apport_homologie=.1)])
+            q=dict(p);q.pop('p_placebo')
+            with self.assertRaises(ValueError):valider_journal([q])        # requis depuis 0.7.4
+        def test_v4_sceau_dossier(self):
+            # 0.7.4 (décision 1) : à compter de v4_dossier_depuis, sceau de dossier publié requis pour V4.
+            sc='b'*64
+            def apres(**kw):
+                c=calc_reel(dossier={'sceau':sc});c['contexte']['date_information']='2026-11-01'
+                x=reel(date='2026-11-01',echeance='2027-02-01',etat_present='[2026-11-01 | 3 mois] POLARITÉ@7[f]',calcul=c,
+                       preuve_prepublication={'source':'https://github.com/exemple/depot/releases/tag/v1','date':'2026-11-02'})
+                x.update(kw);x['preuve_prepublication']['empreinte_prevision']=empreinte_prevision(x);return x
+            sco=lambda i:{'type':'score','id':i,'date':'2027-02-02','issue':0,'preuve':'registre'}
+            self.assertEqual(score_result([apres(),sco('P-1')])['questions_eligibles'],0)          # pas de sceau publié
+            ok=apres(preuve_dossier={'source':'https://github.com/exemple/depot/commit/abc','date':'2026-11-01','sceau':sc})
+            self.assertEqual(score_result([ok,sco('P-1')])['questions_eligibles'],1)
+            tard=apres(preuve_dossier={'source':'https://github.com/exemple/depot/commit/abc','date':'2026-11-02','sceau':sc})
+            self.assertEqual(score_result([tard,sco('P-1')])['questions_eligibles'],0)           # publié après la date d'information
+            with self.assertRaises(ValueError):
+                valider_journal([apres(preuve_dossier={'source':'https://x.org','date':'2026-11-01','sceau':'c'*64})])   # autre sceau
+            self.assertEqual(score_result([reel(),score()])['questions_eligibles'],1)             # avant la date : non rétroactif
+        def test_recherches_a7(self):
+            # 0.7.4 (décision 4) : plancher sur les familles couvertes, pas sur un nombre.
+            d=self._dossier();self.assertTrue(dossier_valider(d)['complet'])
+            d=self._dossier();d['recherches']=[r for r in d['recherches'] if r['famille']!='contradiction' or r['cartes']!=['POL@7']]
+            r=dossier_valider(d);self.assertFalse(r['complet']);self.assertTrue(any('POL@7 : aucune requête de contradiction' in m for m in r['manques']))
+            d=self._dossier();d['recherches']=[r for r in d['recherches'] if r['cartes']!=['CTR@6','HIE@6']]
+            self.assertTrue(any('paire' in m for m in dossier_valider(d)['manques']))
+            d=self._dossier();d['recherches'][0]['requete']='signes de polarité entre A et B'
+            self.assertTrue(any('nom de la carte' in m for m in dossier_valider(d)['manques']))
+            d=self._dossier();d['recherches']+= [dict(d['recherches'][0])]*10       # dix fois la même : comptée une fois
+            self.assertTrue(any('répétée' in m for m in dossier_valider(d)['manques']))
+            for bad in ({'famille':'autre','cartes':['POL@7'],'requete':'x'},{'famille':'observation','cartes':['RES@7'],'requete':'x'},
+                        {'famille':'observation','cartes':['POL@7'],'requete':''}):
+                d=self._dossier();d['recherches'].append(bad)
+                with self.assertRaises(ValueError):dossier_valider(d)
+            d=self._dossier();d.pop('recherches');self.assertFalse(dossier_valider(d)['complet'])
         def test_barreau_exception(self):
             # 0.6.5 (audit O7) : la mécanique des exceptions n'avait jamais été exercée.
             src=[{'mot':'POL@7'},{'mot':'CTR@6'}]

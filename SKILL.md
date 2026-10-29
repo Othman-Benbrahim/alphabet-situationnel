@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.2'
+  version: '0.7.4'
   author: Othman Ben Brahim
 ---
 
@@ -18,8 +18,8 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.2. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
-les 13 fichiers `references/equivalences/strate-NN.md`, les bases et journaux d'exemple.
+Version 0.7.4. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
 ou échoue, travailler « sans shell » (`simulation.md` §6) : lecture et commandes à exécuter, aucun
@@ -71,13 +71,15 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | Commande | Usage |
 |---|---|
 | `python3 scripts/moteur.py calculer --etat "…" --evenement "SEUIL@7 apparait" --temporalite generique --json` | un événement, sortie structurée et empreintes ; avec `--json`, une erreur sort aussi en JSON (`{"erreur": …, "code": 2}`) |
+| `… calculer … --dossier D.json` | contrôle de la forme de la lecture (A6, A7, passages, questions, définition de l'événement) **avant** le calcul ; refuse un événement non déclaré, une sémantique ou une temporalité différentes, des pièces postérieures à la date d'information ; sans dossier, la sortie déclare que ces contrôles n'ont pas été exécutés |
 | `… calculer --base B --etat "…" --evenement "…" --date-information AAAA-MM-JJ --references R.json` | base validée, références propres à chaque événement |
 | `… calculer … --pas 4 --semantique presence` | présence à l'horizon ; alternatives : au-moins-une-fois, continue selon l'événement |
 | `… calculer … --sans-cartes` | ablation : référence sans multiplicateurs ni sélection d'homologues |
 | `… calculer … --temporalite generique\|programmee\|duree_de_vie` | **obligatoire** : échéance programmée ou durée de vie propre → « non estimée » sans référence externe, même avec des cas |
 | `… trajectoires --etat "…" --pas 2 [--strates 11,8] --json` | exploration à un changement par pas |
-| `… valider B.jsonl` | validation commune aux fiches et au calcul |
-| `… partager C-0042-S07` | partage par empreinte, fixé avant codage |
+| `… valider B.jsonl [--registre partage.jsonl]` | validation commune aux fiches et au calcul ; avec le registre, recoupe la date de partage de chaque cas réel |
+| `… dossier --fichier D.json` | dossier de lecture d'un **calcul** : mêmes contrôles qu'une fiche (A1, A3, A6, A7, test, garantie, option, corroboration, passage, questions), rendus **avant** le chiffre ; rend un sceau. Format complet : `assets/dossier.exemple.json` |
+| `… partager C-0042-S07 [--registre partage.jsonl]` | partage par empreinte, fixé avant codage : inscrit id, usage et date au registre (jamais réécrit) ; recopier `usage_fige_le` dans la fiche |
 | `… bilan [--references R.json] [--journal J.jsonl]` | position mesurée sur la feuille de route |
 | `… equivalences --carte SEUIL [--json]` | les 13 équivalents d'une carte (statut, marqueur local) : le marqueur à recopier dans la résolution, **avant** tout calcul (étape 6) |
 | `… scorer J.jsonl --csv` | une ligne par question résolue (Brier, comparateurs, difficulté), séparateur « ; », pour un tableur |
@@ -90,7 +92,10 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 `--fref` n'est admis que pour un événement simple, avec `--source-ref`, `--periode-ref`,
 `--disponible-ref`. Pour les composés, utiliser `--references` et `--resolution` (formats :
 `graphe.md`). L'horizon multiple des composés est refusé. F/f est une confiance, pas une grandeur :
-`se renforce` et `s'affaiblit` sont refusés en prévision. F qualifie la lecture (fait précis, toutes
+`se renforce` et `s'affaiblit` sont refusés en prévision. **Deux échelles portent les mêmes lettres** :
+le F/f d'un mot est la confiance de l'ancrage, le F/M/f d'une case de matrice est la force postulée
+d'une transition (`dynamiques.md`) et c'est elle seule qui donne λ ; un ancrage F ne rend pas un λ plus
+fort, et la sortie du moteur nomme « intensité de matrice » la seconde. F qualifie la lecture (fait précis, toutes
 les voisines passées), pas le statut de l'équivalent : F est permis sur un équivalent Proposé, signalé
 « équivalent non vérifié », et impossible sur un équivalent Vide (A3, A6). Le moteur affiche le marqueur
 local que la résolution doit mesurer (S1). Les quatre cas réels historiques sont des archives exclues.
@@ -108,6 +113,7 @@ minimal est fixé (`simulation.md` §7) : un résumé est un index, jamais une p
 |---|---|---|
 | `base-de-cas.jsonl` | fiches actives ou archives exclues | `base-de-cas.md` §2 |
 | `journal-previsions.jsonl` | prévisions figées puis scores ajoutés | `validation.md` §1 |
+| `partage.jsonl` | registre daté du partage apprentissage/test, écrit par `partager`, jamais réécrit ; à publier | `protocole.md` B5 |
 | `journal-lacunes.md` | motifs et difficultés de lecture, séparés des erreurs du moteur | `validation.md` §6 |
 
 Produire les lignes à conserver ; écrire dans les fichiers si l'utilisateur le demande. Ne pas
@@ -172,8 +178,19 @@ jamais convertir), et la sceller (`sceller-jugement`), **puis**
 valider la base, fixer la date d'information et exécuter le moteur avec `--json` ; l'ordre est la
 condition pour que l'écart jugement / moteur mesure ce que le moteur ajoute (le scellé prouve que le
 jugement n'a pas été modifié, pas qu'il est antérieur : seul un dépôt externe daté le prouve). Recopier la bande de
-sensibilité : si elle traverse 50 %, dire « non identifié ».
-Recopier le résultat complet, ses références, avertissements et empreintes. Aucun cas/source futur.
+sensibilité : si la bande retenue traverse 50 %, dire « non identifié » et nommer son origine (classe de
+référence ou hypothèses de modèle) ; recopier les deux bandes, pas seulement la plus étroite. Recopier le résultat complet, ses références, avertissements et empreintes. Aucun cas/source futur.
+**Avant** ce calcul, écrire le dossier de lecture (`moteur.py dossier --fichier D.json`) : 2 à 4
+candidates par strate, dont la contre-candidate, chaque candidate non retenue avec le motif de son rejet
+(`rejets`), la ligne A6 de chaque F, le test, la garantie, l'option, la corroboration, le passage, les
+questions, les requêtes A7 (`recherches` : trois familles par carte, une discrimination par paire de
+candidates ; sinon dossier incomplet, lecture Spéculative) et les événements déclarés avec leur
+sémantique et leur temporalité (requis pour `--dossier`) ; ses pièces sont disponibles à la date
+d'information. Recopier aussi le placebo d'homologie (`p_placebo`, `graine_placebo`,
+`apport_homologie`), y compris quand l'apport est nul. Le dossier
+rend un sceau : le publier, puis passer `--dossier`. C'est le seul dispositif qui contrôle A6, A7 et les
+questions en mode PRÉVOIR ; une sortie sans dossier l'écrit elle-même. Un dossier ne vaut que pour son
+état et que pour les événements qu'il déclare.
 Pour un composé sans référence conditionnelle : non estimé. Ne pas recycler une fréquence pour un
 autre événement ni arrondir l'horizon sans l'indiquer. Recopier aussi `p_sans_cartes` : si les cartes
 ne déplacent pas p, le dire, car la question ne teste alors que l'inertie (persistances et
@@ -183,7 +200,9 @@ disparitions sans base, notamment).
 continue. Comparateur au même horizon. Trajectoires seulement si utiles, avec leur masse abandonnée.
 
 **9. Journal.** Conserver les probabilités non arrondies, la résolution, l'épisode, les empreintes,
-`rejeu`, `fictif` et les conditions de prépublication. Les lignes sans preuve restent hors V4. Une
+`rejeu`, `fictif` et les conditions de prépublication. Les lignes sans preuve restent hors V4 ; depuis
+le 2026-10-29, une prévision du moteur n'y entre qu'avec `preuve_dossier` (sceau du dossier publié au
+plus tard à la date d'information, `validation.md` §1). Une
 question nominative (« qui sera élu ? ») n'est pas un événement de carte : la journaliser avec
 `"origine": "jugement"` et une probabilité humaine, scorée à part (`validation.md` §1). Rejeux
 successifs : du plus ancien au plus récent ; une issue déjà vue rend la question `rejeu: true`.
@@ -199,7 +218,8 @@ départagent (résolution et justification par branche), « ce que l'alphabet ne
 signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une carte.
 
 **CODER** (une fiche) : 1. parcours LIRE (1–4) pour chaque état daté, avec `disponible_le` ;
-2. fiche au schéma de `base-de-cas.md` §2 : test de preuve, garantie, option et, pour un cas actif,
+2. `partager` l'id avant tout codage (registre daté), puis fiche au schéma de `base-de-cas.md` §2 :
+`usage_fige_le`, `codage.debut`, test de preuve, garantie, option et, pour un cas actif,
 `corroboration` et `passage` sur chaque F ; questions au premier état ; codeurs `{id, role: humain|modele}` (Claude est un codeur
 `modele`) ; si Claude propose le codage, `codage.recodage`, et l'utilisateur confirme sous son propre
 `id` (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
@@ -209,6 +229,27 @@ signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une c
 3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement ;
 exclusions (rejeux, fictifs, sans preuve) nommées ; 4. `bilan --journal J.jsonl` pour la position sur le
 jalon V4. Aucun score ne se commente comme validation de l'alphabet tant que V4 n'est pas atteint.
+
+## Sous contrainte de contexte
+
+Le parcours complet — protocole, cartes, strates, équivalents, graphe, simulation — peut dépasser ce
+qu'une session tient sans perte, surtout avec un dossier long ; lire d'abord par rubrique (ci-dessus).
+Si le contexte manque encore, abandonner dans cet ordre, et le déclarer :
+trajectoires ; `exemples.md` ; `dynamiques.md` au-delà de la fiche concernée ; fiches des cartes non
+candidates ; `apports-theoriques.md`. **Ne jamais abandonner** : l'état daté, la ligne A6, l'anti-résonance
+A7, les questions qui départagent, la définition de la résolution, ni la mention de ce qui n'a pas été
+chargé. Une lecture partielle se déclare ; elle ne se présente pas comme complète. Deux strates lues et
+contrôlées valent mieux que sept survolées : c'est la couverture qui est mesurée, pas le nombre de
+fichiers ouverts.
+
+## Ce que le moteur contrôle, et ce qu'il ne contrôle pas
+
+| Contrôlé sur une fiche ou un dossier (refus si absent) | Laissé au jugement, jamais certifié |
+|---|---|
+| forme de l'état (G6) ; statuts d'équivalent (A3) ; pièces de F (A6, A7, test, garantie, option, corroboration, passage) ; questions et leurs branches ; partage apprentissage/test ; empreintes | vérité d'un fait ; justesse d'une justification ; choix des strates ; pertinence de la contre-candidate ; qualité de la source de résolution |
+
+Un `audit` ou un `valider` conformes ne disent donc rien de la lecture : ils disent qu'elle est complète
+et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les questions — et le dit.
 
 ## Limites
 

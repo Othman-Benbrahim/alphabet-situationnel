@@ -1,9 +1,90 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.7 — 2026-10-30 · paramétrer avant de mesurer
+
+Décisions d'auteur du 30 octobre vérifiées avant application (`feuille-de-route.md` §1). **Aucune
+probabilité ne change** : p, p sans cartes, p placebo, intervalles, niveaux et bandes identiques à la
+0.7.6 sur les calculs de démonstration (vérifié). Changent, comme prévu : `frequence_de_base` (publiée
+plus souvent), ρ (ρ3 plus rare), les drapeaux, `confronter`, les rapports de `scorer`, les statuts. 126
+autotests (123 + 3).
+
+- **Seuil d'ancrage dédoublé** : `n_min_publication` 1 (f publié comme comparateur), `n_min_ancrage` 20
+  (= k₀, « ancré » et ρ3). `n_min_frequence` retiré.
+- **V4 absolu et testé** : d̄ ≤ −`v4_gain_abs` (0,025), test exact `v4_test` (signe) à `v4_alpha` (5 %),
+  épisodes ≥ max(`v4_n`, ⌈((z₁₋α/₂ + z_puissance)·σ̂/0,025)²⌉). `v4_gain` retiré ; le gain relatif reste
+  publié, à titre descriptif. **Corrigé dans la décision** : sans plancher, un σ̂ sous-estimé sur quelques
+  épisodes déclarait V4 atteint ; 50 reste le plancher.
+- **Questions discriminantes** (`delta_discriminant` 0,02, en points de probabilité) et second rapport V4
+  (`v4_discriminant`), jamais filtre du premier.
+- **Seuil de niveau séparé** (`c_min_niveau`), à la valeur du statu quo, 3. **Décision 4 non appliquée
+  ici** : à 2, elle change un calcul de démonstration (SEUIL@7 à trois pas, 52,0 % → 51,7 %, ρ1 → ρ4),
+  contrairement à ce qu'annonçait la fiche ; par la règle de l'auteur (0.7.3), une version qui change un
+  p est séparée. Le passage à 2 est un changement d'un seul paramètre.
+- **Âge** : intervalles de Wilson et critère figé d'ouverture d'une loi à taux variable
+  (`weibull_occasions_min` 30, |z| ≥ 2, cas réels actifs) dans `confronter`.
+- **Règles figées** pour l'atténuation (reformulée : « dépasse l'effet du placebo » ne comparait pas deux
+  grandeurs commensurables), Weibull et le refus pour circularité.
+- **Strate 7** : CROISSANCE rétrogradée en Vide (Choucri, Altman) ; RÉSONANCE close après une troisième
+  recherche faite sur résumés consultés (Granovetter 1978, Kuran 1991), non de mémoire ; PÉRIODICITÉ garde
+  « Cycles électoraux ». 181 Proposé, 14 Vide ; 14 cases traitées sur 16.
+
+## 0.7.6 — 2026-10-30 · éprouver les paramètres avant le premier cas
+
+Deux notes triées (`apports-theoriques.md` §12). **Aucune probabilité ne change** (vérifié sur les
+calculs de démonstration et les scores du journal). 123 autotests (120 + 3).
+
+- **`moteur.py sonde`** : variable sonde sur les paramètres (arêtes tirées au hasard, intensités ou
+  inerties permutées), contre la référence « cas seuls, sans multiplicateurs ». Sur la démonstration :
+  matrice +3,2 points, matrice aléatoire médiane +0,0, centile réel 99 ; intensités permutées : 83ᵉ centile.
+- **`confronter`** compte les occasions d'éprouver chaque arête (`couverture_aretes`).
+- **Kish** : taille effective et part du cas le plus lourd dans la trace.
+- **Décision 5 en sondes** : atténuation de λ par la force et, avec un dossier, par corroboration et
+  passage (`attenuation_w_f`), publiées hors du p.
+- **Circularité de la garantie** signalée dans le dossier ; **`signe_suffisant`** daté avant le codage.
+- **Documentation** : règle de niveau écrite comme compromis biais-variance ; capacité arête par arête
+  et P8 ; critère du premier cas ; une case Proposé ne se clôt pas, elle devient Vide si les textes lus
+  ne la soutiennent pas ; candidats de la strate 7 examinés (Richardson écarté).
+- **Corrigé** : la feuille de route 0.7.5 disait que `n_min_frequence` « change des p » (faux) ; la note
+  attribuait à la matrice aléatoire l'effet de la révision par les cas, et lisait la règle de niveau à
+  l'envers.
+
+## 0.7.5 — 2026-10-30 · confronter la matrice, tester les écarts
+
+Note « ce qu'il manque » triée : chaque chiffre recalculé, douze points retenus, sept corrigés avant
+intégration (`apports-theoriques.md` §11). **Aucune probabilité ne change** : p, p sans cartes, p placebo,
+comparateur, intervalles et bandes identiques à la 0.7.4 sur les calculs de démonstration (vérifié).
+Le libellé de l'intervalle change dans le JSON du calcul : la comparaison porte sur les valeurs. 120
+autotests (115 + 5).
+
+- **`confronter`** : chaque apparition codée, classée par la règle même du moteur (dans la strate,
+  propagation documentée, transfert ancré, position manque, arête inter-strates abaissée, non
+  atteignable, état nul) ; maintien selon l'âge. Cas archivés : 2 apparitions non atteignables sur 3
+  (la note en comptait 1).
+- **Tests des écarts de score** : différentiel par épisode, σ(d), erreur-type, autocorrélation d'ordre 1,
+  tests exacts du signe et de Wilcoxon (Diebold et Mariano 1995), pour l'apport des cartes, le moteur
+  contre le jugement et le gain V4. La lecture d'`apport_des_cartes` vient du test, plus de la moyenne.
+- **Score logarithmique** en regard du Brier (`log`, `log_sans_cartes`, `log_infini`, colonnes CSV).
+- **A priori publiés** : part de la référence dans f, part de p₀ dans p, intervalle de la loi de f ; k et
+  k₀ décrits comme pseudo-observations.
+- **Intervalle** : « approximatif » remplacé par ce qui est exact (quantiles de la loi Beta a posteriori)
+  et ce qui ne l'est pas (vraisemblance pondérée, conditionnement à k, p₀ et aux cas).
+- **Épreuve** : une révision (même épisode, événement, échéance) garde source, critère, seuil et objet.
+- **`classe_source`** (contemporain, historiographie, mémoire) requis pour un cas réel actif et un dossier.
+- **`duree_caracteristique_jours`** facultatif au dossier : sous la moitié de la fenêtre
+  (`ratio_duree_fenetre`) avec une temporalité générique, refus sans justification.
+- **κ** : `kappa_min` 0,67 et `kappa_rapportable` 0,80, réservés, sourcés ; forme des désaccords.
+- **Documentation** : taux constant déclaré et distingué de l'hystérésis ; Beta-binomial ; échangeabilité
+  et ce que teste vraiment le placebo ; `p_sans_cartes` = f ; contenu prédictif incrémental (Granger) ;
+  cohérence ; puissance des jalons recalculée (`feuille-de-route.md` §1).
+- **Corrigé dans la note** : nombre d'apparitions non atteignables ; puissance de κ (formule d'une
+  proportion au lieu de celle de κ) ; colonne 2,5 points de la table V4 ; « le modèle nie la mémoire » ;
+  « le placebo teste l'échangeabilité » ; contrôle d'épreuve par événement ; « intervalle exact »,
+  « dix fois plus de confiance », critère « l'intervalle de f contient 0 », « borne du TCL ».
 
 ## 0.7.4 — 2026-10-29 · version de preuve : quatre décisions d'auteur
 

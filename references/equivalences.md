@@ -1,6 +1,6 @@
 # Alphabet situationnel — Équivalents par strate (index, couche 1)
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Les équivalents locaux des 16 cartes sont rangés **par strate**, un fichier par strate :
 > `equivalences/strate-01.md` à `equivalences/strate-13.md`. Raison : la procédure va des faits vers les
@@ -37,7 +37,7 @@ pas ce nom local entre guillemets « … ».
 | **Vide** | rien de convaincant trouvé ; l'ancrage passe par le noyau seul | ancrage f ; aucun emprunt |
 | **Hors domaine** | la carte ne s'applique pas aux objets de la strate ; décision d'auteur, motif en colonne Référence | aucun ancrage ; aucun emprunt |
 
-**État courant** (recalculé par `audit`) : 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine. Les 117
+**État courant** (recalculé par `audit`) : 0 Attesté, 13 Documenté, 181 Proposé, 14 Vide, 0 Hors domaine. Les 117
 anciennes cases Documentées sans référence vérifiée ont été rétrogradées en 0.4.0. Leurs références manquantes sont
 conservées comme dette documentaire, jamais comme preuve. Une promotion demande de lire une source
 qui soutient la traduction exacte et ses marqueurs. Prioriser quelques événements dans une strate ;
@@ -55,7 +55,7 @@ un concept mentionné dans une bibliographie générale ne justifie pas toutes s
 | 4 Relations | 0 | 16 | 0 | 0 |
 | 5 Organisations | 0 | 16 | 0 | 0 |
 | 6 Économie | 0 | 16 | 0 | 0 |
-| 7 Géopolitique | 13 | 2 | 1 | 0 |
+| 7 Géopolitique | 13 | 1 | 2 | 0 |
 | 8 Droit | 0 | 15 | 1 | 0 |
 | 9 Culture | 0 | 16 | 0 | 0 |
 | 10 Technique | 0 | 16 | 0 | 0 |
@@ -63,8 +63,8 @@ un concept mentionné dans une bibliographie générale ne justifie pas toutes s
 | 12 Histoire longue | 0 | 15 | 1 | 0 |
 | 13 Politique intérieure | 0 | 16 | 0 | 0 |
 
-Les 13 cases Vides (carte : strates) : RÉCIPROCITÉ (1, 3, 11) ; RÉCURSIVITÉ (1, 2, 11) ; COMMUNAUTÉ (1, 3) ; ÉMERGENCE (3) ; RÉSONANCE (7, 8, 12) ; HIÉRARCHIE (11). Huit sur treize portent sur
-RÉCIPROCITÉ, RÉCURSIVITÉ et COMMUNAUTÉ, cartes qui supposent des agents, et sept sur treize sont dans les
+Les 14 cases Vides (carte : strates) : RÉCIPROCITÉ (1, 3, 11) ; RÉCURSIVITÉ (1, 2, 11) ; COMMUNAUTÉ (1, 3) ; ÉMERGENCE (3) ; RÉSONANCE (7, 8, 12) ; HIÉRARCHIE (11) ; CROISSANCE (7). CROISSANCE@7 a été rétrogradée en 0.7.7 : les textes lus ne soutiennent pas la carte. Huit sur quatorze portent sur
+RÉCIPROCITÉ, RÉCURSIVITÉ et COMMUNAUTÉ, cartes qui supposent des agents, et sept sur quatorze sont dans les
 strates sans agents (1, 2, 11). RÉSONANCE est Vide dans trois strates sociales (7, 8, 12) : la
 synchronisation par couplage est peut-être rare hors du vivant, de la psyché et de l'économie. Question posée (`CHANGELOG.md`) : ces cartes sont-elles universelles,
 ou universelles aux seuls systèmes à agents ?
@@ -77,6 +77,13 @@ rouvre que sur une source nouvelle. Ce critère est symétrique d'A2 (trois occu
 carte) : on ne déclare pas l'échec d'une carte sur moins de preuves qu'il n'en faut pour en ajouter une.
 Il ne conduit pas à Hors domaine pour les cartes à agents (décision 1b) ; pour les autres, Hors domaine
 reste une décision d'auteur motivée. Une case Vide sans mention a zéro recherche documentée.
+
+**Une case Proposé ne se « clôt » pas (0.7.6).** Il n'y a pas d'état « Proposé clos » : il compterait comme
+traitée une correspondance qu'aucun texte lu ne soutient. Deux situations, deux suites. Un candidat existe
+mais n'est pas lu (texte fermé) : la case reste Proposé, non traitée, jusqu'à lecture. Les textes lus ne
+soutiennent pas la carte : la case **devient Vide**, ses lectures comptées comme recherches
+(`recherches : N — …`), puis close à trois. CROISSANCE@7 est dans ce second cas (Choucri 2017 et Altman
+2017 lus, carte non soutenue) : rétrogradation à faire par l'auteur, avec la troisième recherche.
 
 **Décision 1b (27 octobre 2026) : les cartes à agents sont universelles.** La question ouverte ci-dessus
 est tranchée : leurs cases Vides sont des lacunes de recherche, à combler. Le tableau suivant

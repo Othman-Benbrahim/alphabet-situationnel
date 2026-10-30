@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -21,7 +21,7 @@
 | 4 | Bibliothèque de fréquences externes | Claude cherche, auteur vérifie | une référence vérifiée par type d'événement prévu dans la strate pilote ; sources : `sources-france.md` | mesuré (`bilan --references`) |
 | 5 | Base réelle et second codeur | auteur, second codeur | 3 cas homologues (ρ1), puis 20 cas double-codés et 20 % (sortie du mode solo) | mesuré (`bilan`) |
 | 6 | Code différé | Claude | déclenché par les données, voir §7 | déclaré (§9) |
-| — | Test à l'aveugle | auteur | 50 épisodes comparables et gain mesuré (jalon V4) | mesuré (`bilan --journal`) |
+| — | Test à l'aveugle | auteur | V4 : gain absolu de 2,5 points testé, épisodes ≥ max(50, effectif requis par σ̂(d)) | mesuré (`bilan --journal`) |
 
 **Versions à venir** (apports théoriques, `apports-theoriques.md` §4 ; chaque bloc attend sa condition) :
 
@@ -29,6 +29,9 @@
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.7 (faite) | Paramétrer avant de mesurer | seuil d'ancrage dédoublé ; V4 absolu, testé, effectif calculé avec plancher ; questions discriminantes et double rapport V4 ; seuil de niveau séparé (valeur inchangée) ; règles figées ; strate 7 à 14/16 ; probabilités identiques à la 0.7.6 | — |
+| 0.7.6 (faite) | Éprouver les paramètres | `sonde` (arêtes, intensités, inerties) contre la référence « cas seuls » ; couverture des arêtes ; Kish ; sondes d'atténuation ; circularité signalée ; `signe_suffisant` ; critère du premier cas ; probabilités identiques à la 0.7.5 | — |
+| 0.7.5 (faite) | Confronter et tester | matrice confrontée aux observations (`confronter`) ; tests exacts du signe et de Wilcoxon, σ(d), score logarithmique ; poids des deux a priori et intervalle de f publiés ; épreuve commune des révisions ; `classe_source` ; κ 0,67 / 0,80 ; puissance des jalons ; probabilités identiques à la 0.7.4 | — |
 | 0.7.4 (faite) | Version de preuve | décisions 1 à 4 du 2026-10-29 ; probabilités identiques à la 0.7.3 | — |
 | 0.7.3 (faite) | Contrôler la lecture qui produit le chiffre | dossier de lecture scellé avant `calculer` ; bande de classe ; fragilité de niveau ; sources du calcul et propagation inter-strates affichées | — |
 | 0.7.2 (faite) | Éprouver les étapes | questions avec résolution et justification par branche (« non A » ne vaut pas « B ») ; passage qui soutient chaque F ; banc d'essai des modifications (`validation.md` §9) | — |
@@ -45,6 +48,51 @@
 | 3 | `calculer` rend `p_placebo`, `graine_placebo` et `apport_homologie` ; exigés au journal comme `p_sans_cartes` | appliquée (0.7.4), placebo moyenné sur 200 tirages, graine dérivée de la question |
 | 4 | Le dossier consigne ses requêtes A7 par carte et par famille ; une famille ou une paire de candidates sans discrimination manquante → dossier incomplet, lecture Spéculative | appliquée (0.7.4) |
 | 5 | Principe retenu : la qualité de l'ancrage atténue l'inférence (λ_eff = 1 + (λ − 1)·w, w = 1 pour F, 0,5 pour f) ; d'abord comme variante de la bande de sensibilité, sans effet sur p ; promotion au défaut en version mineure dédiée, à ≥ 20 cas, quand l'effet se distingue de la sélection des homologues | à faire, version séparée de la 0.7.4 |
+
+**Décisions ouvertes par la note du 2026-10-30 (0.7.5)**, aucune prise :
+
+| Décision | Effet | Coût |
+|---|---|---|
+| **Appliquée (0.7.7)** : seuil dédoublé, `n_min_publication` 1, `n_min_ancrage` 20 (= k₀). Proposition d'origine : porter `n_min_frequence` de 10 à 19 ou 40, ou le dédoubler : un seuil bas pour publier, un seuil haut (données au moins deux fois plus lourdes que l'a priori, n ≥ 40) pour « ancré » et ρ3 | « ancré » signifie que les données dominent | **ne change aucun p** (correction : la 0.7.5 écrivait « change des p ») ; retire le comparateur de V4 (`frequence_de_base`) et ρ3 aux questions sous le seuil ; `p_sans_cartes` reste toujours publié |
+| Atténuer λ par `corroboration` et `passage` plutôt que par F/f (variante de la décision 5) | la fiabilité du signal pèse sur l'inférence, sans colinéarité avec la sélection H1/H1.5 | **sondes écrites (0.7.6)**, hors du p publié : `effet_attenuation.force` toujours, `corroboration_passage` avec un dossier ; promotion au défaut d'une seule des deux, à l'étape 5, sur mesure |
+| Loi de persistance à taux variable (Weibull discrète) | la dépendance à l'âge entre dans le calcul | version dédiée, quand `confronter` sur cas réels montre un effet |
+| Protocole d'« idéologie sémiotique » au second codeur : chaque codeur déclare, avant tout codage, ce qui fait un signe suffisant (déclaration, exécution, trace) ; κ intra et inter-déclaration | explique ou non les désaccords systématiques | **champ écrit (0.7.6)**, `signe_suffisant` daté avant `codage.debut` ; rempli à l'étape 5 seulement |
+| Contrôle de circularité de la garantie (nom de la carte dans `garantie.mecanisme`) | attrape « c'est un seuil parce qu'il y a hystérésis » | **signalement (0.7.6)** dans le dossier, jamais un refus ; faux signalements à mesurer sur cas réels avant d'en faire une règle |
+
+**Décisions du 2026-10-30 pour la 0.7.7** (fiche « paramétrer avant de mesurer ») :
+
+| # | Décision | Vérification | État |
+|---|---|---|---|
+| 1 | Dédoubler le seuil d'ancrage : publication 1, ancrage 20 | p inchangé (vérifié) ; ρ3 plus rare, comparateur plus fréquent | appliquée |
+| 2 | V4 en gain absolu (2,5 points), testé (signe) | cohérente ; plus exigeante que 10 % sur les événements rares (écrit) | appliquée |
+| 3 | `v4_n` calculé par σ̂(d) | corrigée : la formule seule permettait de déclarer V4 sur trois épisodes au σ̂ sous-estimé ; plancher de 50 conservé, cible = max(50, requis) | appliquée, avec plancher |
+| 4 | Niveau d'homologie choisi à 2 cas (`c_min_niveau`), ρ à 3 | **incohérente avec la vérification du lot** : change un calcul de démonstration (52,0 % → 51,7 %, ρ1 → ρ4), alors que la fiche l'annonçait sans effet | seuil séparé, valeur 3 (statu quo) ; passage à 2 réservé à une version dédiée |
+| 5 | Âge mesuré dans `confronter` | existait depuis 0.7.5 ; ajout des intervalles de Wilson et du critère figé | appliquée |
+| 6 | `discriminant` (δ = 0,02 en points de probabilité, non « de Brier ») et double rapport V4 | cohérente ; calculé avant l'issue, jamais filtre | appliquée |
+| — | CROISSANCE@7 → Vide | deux lectures déjà faites (Choucri, Altman) | appliquée : 181 Proposé, 14 Vide |
+| — | PÉRIODICITÉ@7 : garder « Cycles électoraux », chercher un texte ouvert | la définition admet le forçage par calendrier ; la piste Modelski (0.7.6) relève de la strate 12 | appliquée (note) |
+| — | RÉSONANCE@7 : troisième recherche, clore | faite sur résumés consultés le 30 oct. 2026 (Granovetter 1978, Kuran 1991), pas de mémoire | appliquée : close, non concluant |
+
+**Règles figées avant les données** (ce qui se décide après la mesure est une rationalisation) :
+
+| Sujet | Règle |
+|---|---|
+| Atténuation de λ | sur ≥ 20 cas double-codés, promouvoir au défaut **une seule** variante (force, ou corroboration et passage) : celle dont le différentiel de Brier contre le p par défaut est négatif et significatif au test du signe à 5 % sur les mêmes épisodes ; si les deux, la plus grande ; si aucune, aucune. (La fiche disait « dont l'effet dépasse celui du placebo » : les deux effets ne mesurent pas la même chose ; reformulé.) |
+| Loi à taux variable | ouvrir Weibull si, en cas réels actifs, l'écart de maintien âge ≥ 1 − âge 0 atteint deux écarts-types, avec au moins 30 occasions de chaque côté (`weibull_occasions_min`) ; `confronter` l'affiche |
+| Circularité en refus | passer du signalement au refus si, sur au moins 20 fiches réelles relues, moins de 10 % des signalements sont des faux positifs (garantie qui nomme la carte sans être circulaire) |
+
+**Puissance des jalons (0.7.5).** Aucun effectif de la feuille de route n'était justifié par un calcul.
+Calculs indicatifs, approximation normale (unilatéral 5 %, puissance 80 % pour κ ; bilatéral 5 %,
+puissance 80 % pour V4) :
+
+| Jalon | Effectif fixé | Ce qu'il permet |
+|---|---|---|
+| A4 · accord κ par carte | 20 cas | erreur-type de κ (Cohen 1960) ≈ √(pₒ(1 − pₒ)/n) / (1 − pₑ). Avec pₑ = 0,5, distinguer κ = 0,80 de 0,60 demande environ **83 unités codées**, 0,75 de 0,60 environ 156 ; avec pₑ = 0,3, 55 et 102. L'unité est la décision codée (carte × strate × état), pas le cas : 20 cas peuvent ou non suffire selon le nombre de décisions par cas, à compter au premier double codage |
+| ρ0 · 30 cas distincts | 30 | compte les cas, pas l'effectif pondéré : sur la démonstration, 10 cas valent 4,8 observations effectives. La règle « n > 30 » n'est pas une borne du théorème central limite, et ρ0 ne repose pas sur une approximation normale ; le seuil est une convention, déclarée comme telle |
+| V4 · 50 épisodes, gain de 10 % (jusqu'en 0.7.6 ; règle calculée depuis 0.7.7) | 50 | sur un Brier de référence de 0,25, 10 % font 2,5 points ; n ≈ (2,80 σ(d) / 0,025)² : 32 épisodes si σ(d) = 0,05, 126 si σ(d) = 0,10, 503 si σ(d) = 0,20. **50 épisodes ne suffisent que si σ(d) ≲ 0,063**, valeur inconnue : `scorer` la publie dès les premiers épisodes résolus |
+
+Ces chiffres ne changent aucun seuil : ils disent ce qu'un seuil atteint permettra de conclure. Un κ de
+0,70 sur un petit effectif ne prouve pas le franchissement de 0,67 ; il se publie avec son intervalle.
 
 Le test à l'aveugle peut commencer dès la fin de l'étape 2. Avant les étapes 3 et 4, il mesure la
 lecture structurelle, pas la calibration : sans équivalent sourcé ni fréquence externe, toute
@@ -102,6 +150,31 @@ questions éligibles au test à l'aveugle (V4), ce qu'aucun rejeu ne peut être.
 3. Si Claude propose le codage : `codage.recodage`, puis relecture et `codage.recodage_confirme`.
 4. Sceller votre jugement (`sceller-jugement`), puis calculer et journaliser 2 à 5 prévisions.
 5. À l'échéance : coder l'issue, `statut_donnees: actif`, `valider`, `scorer`, `bilan`.
+
+**Choisir le premier cas (0.7.6).** Un cas apprend quelque chose au protocole si le dispositif peut y
+produire une prévision distincte de ses comparateurs. Conditions, vérifiables avant de journaliser :
+(1) strate 7, où 13 équivalents sont Documentés ; (2) au moins une **apparition**, seul type où la
+matrice agit (une persistance ne teste que l'inertie) ; (3) carte visée Documentée, pour une
+résolution sur un marqueur vérifié ; (4) sources publiques, datées, disponibles à la date
+d'information ; (5) issue attendue dans la fenêtre (trois mois), pour un cas prospectif. Un état où une
+arête mène à la cible teste l'apport des cartes ; un état sans arête teste que l'absence d'arête prédit
+l'absence d'événement : bon second cas. **Ne pas trier sur l'informativité calculée** : choisir les
+questions où p s'écarte de `p_sans_cartes` et de `p_placebo` flatterait le modèle. Une question où les
+trois coïncident se journalise quand même et se lit « ne teste que l'inertie » (`difficulte`). On choisit
+un cas où l'on peut **savoir** si les cartes marchent, pas un cas où elles marchent.
+
+**Étape 3 avant l'étape 2.** Les trois cases restantes de la strate 7 ne demandent aucun cas réel :
+RÉSONANCE, une troisième recherche documentée la clôt ; CROISSANCE, rétrogradation en Vide puis
+recherches (`equivalences.md`, « Une case Proposé ne se clôt pas ») ; PÉRIODICITÉ, lecture d'un texte.
+Mise à jour 0.7.7 : RÉSONANCE close (trois recherches), CROISSANCE rétrogradée en Vide (deux recherches,
+une troisième la clôt), PÉRIODICITÉ conserve « Cycles électoraux » — un forçage par calendrier entre
+dans la définition — et attend un texte ouvert qui établisse la répétition ; les cycles longs de
+Modelski et Thompson, rythme d'environ un siècle, relèvent de la strate 12 et sont écartés pour la 7.
+Strate 7 : 14 cases traitées sur 16. Candidats d'origine, **non lus** : pour CROISSANCE, la course aux armements de Richardson
+**ne convient pas** — son taux dépend du niveau adverse, son terme propre est un amortissement, et le
+modèle n'a pas de capacité limite : c'est une escalade réciproque, pas une croissance auto-entretenue
+bornée ; pour RÉSONANCE, les modèles à seuil (Granovetter, Kuran) décrivent des cascades, pas un couplage
+d'oscillateurs : une recherche qui le constate est une troisième recherche valable.
 
 Les épisodes déjà cités dans le skill (France, Ukraine, Yémen, Alberta, sénatoriales, présidentielle
 brésilienne, ouragan Polo) ont servi à corriger le moteur : ce sont des tests de régression, plus des
@@ -208,7 +281,7 @@ Chaque élément attend une condition de données ; le coder avant serait coder 
 ## 8. Test à l'aveugle
 
 Protocole : `validation.md` §8. Il peut commencer dès que l'étape 2 est terminée ; il ne mesure la
-calibration qu'après les étapes 3 et 4. Jalon interne : 50 épisodes comparables et 10 % de gain sur le
+calibration qu'après les étapes 3 et 4. Jalon interne (0.7.7) : gain absolu de 2,5 points testé, sur au moins 50 épisodes et l'effectif requis par σ̂(d), contre le
 comparateur, à titre de jalon et non de preuve.
 
 ---
@@ -248,7 +321,11 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-27 | — | Cinq apports triés (0.7.2) : sémantique inquisitive, VECTOR, Shao, Hao Zhang, Alex Zhang ; questions résolubles, `passage`, banc d'essai ; le fichier *Intuition Machine* reversé était déjà trié (0.6.7) |
 | 2026-10-29 | — | Audit d'ingénierie traité (0.7.3) : correctif reçu repris et corrigé (six défauts) ; décisions laissées à l'auteur : atténuation λ par F/f, datation du partage, plancher de recherche A7, placebo d'homologie, dossier exigé pour V4 |
 | 2026-10-29 | 1 | Cinq arbitrages tranchés par l'auteur ; décisions 1 à 4 appliquées en 0.7.4 (version de preuve), décision 5 réservée à une version dédiée |
-| 2026-10-29 | 0 | À faire : installer la 0.7.4 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-30 | — | Note « ce qu'il manque » triée (0.7.5) : douze points vérifiés, sept corrigés avant intégration (`apports-theoriques.md` §11) |
+| 2026-10-30 | — | Apport « capacité et généralisation » et réponses à la feuille de route triés (0.7.6, `apports-theoriques.md` §12) ; une erreur de la feuille de route corrigée (`n_min_frequence` ne change pas p) |
+| 2026-10-30 | 1 | Décisions 0.7.7 vérifiées : 1, 2, 5, 6 appliquées ; 3 avec plancher ; 4 séparée de la version (change un p) ; strate 7 : RÉSONANCE close, CROISSANCE Vide |
+| 2026-10-30 | 3 | Strate 7 : 14 cases traitées sur 16 (13 Documentées, RÉSONANCE close) ; restent CROISSANCE (une recherche) et PÉRIODICITÉ (un texte) |
+| 2026-10-30 | 0 | À faire : installer la 0.7.7 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 

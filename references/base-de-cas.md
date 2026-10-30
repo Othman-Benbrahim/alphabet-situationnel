@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -52,6 +52,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
           "fait": "Fait fictif n° 1 remplissant un marqueur local de POLARITÉ (strate 7)",
           "source": "Source fictive n° 1 ; source fictive n° 1 bis, indépendante de la première (exemple construit)",
           "corroboration": "independantes",
+          "classe_source": "contemporain",
           "passage": [
             {"localisation": "source fictive n° 1, § 3", "relation": "soutient"},
             {"localisation": "source fictive n° 1 bis, p. 2", "extrait": "extrait court, fictif", "relation": "soutient"}
@@ -186,6 +187,7 @@ Exemple entièrement fictif, au schéma courant (JSONL : une ligne par cas) :
 | `passage` | requis pour F d'un cas réel **actif** (0.7.2) ; contrôlé s'il est fourni ailleurs : objet ou liste `{localisation, relation, extrait?}`. `localisation` dit où le fait se lit (page, section, paragraphe, horodatage) ; `relation` = `soutient`, `partiel`, `contredit` ou `insuffisant` ; `extrait` facultatif, 300 caractères au plus. F exige un passage qui **soutient** le fait tel qu'il est écrit (« peut être activé » ne soutient pas « a été activé ») ; un soutien partiel donne f ; une pièce qui contredit va en contre-observation (A7), une pièce qui ne permet pas de conclure n'ancre rien ; `corroboration: "independantes"` exige deux passages qui soutiennent. Aucun effet sur le calcul (contrôle affirmation–passage, `protocole.md` A6) |
 | `corroboration` | requis pour F d'un cas réel **actif** (une proposition le reçoit à son activation) : `"independantes"` si le fait repose sur au moins deux sources indépendantes, nommées dans `source` et séparées par « ; » ; `"unique"` sinon, admis seulement pour une source primaire (texte officiel, donnée publiée) et signalé dans « À vérifier auprès de vous » ; un fait repris d'un seul relais secondaire s'ancre en f (0.7.1). Aucun effet sur le calcul (qualité de l'information, 0.6.6) |
 | `source_url`, `date_consultation` | facultatifs (0.7.1) : adresse http(s) de la source et date de consultation (AAAA-MM-JJ), contrôlées si présentes ; recommandés pour tout cas réel, ils permettent à un tiers de relire la source |
+| `classe_source` | requis pour tout mot documenté d'un cas réel **actif** et d'un dossier de lecture (0.7.5) : `contemporain` (source produite au moment des faits), `historiographie` (analyse postérieure), `memoire` (témoignage, récit rétrospectif). Une base codée après coup peut encoder la reconstruction des récits (Bartlett 1932) et la sélection de ce que les sources rapportent (Weidmann 2016) plutôt que les situations ; le champ permettra de comparer les taux de transition par classe. Aucun effet sur le calcul |
 | `test` | requis pour F de cas réel : `pistolet` ou `double` (fait suffisant) ; facultatif pour f (`paille`, `cerceau`, aussi admis) ; tests de process tracing, `protocole.md` A6 (0.7.0) |
 | `a6` | requis pour F : chaque voisine de `cartes.md`, verdict `→` ou `+`, justification non vide ; contrôle complet sur cas réel, cas fictif exempté |
 | `retraits` | exactement les mots disparus, chacun avec fait et source |
@@ -201,6 +203,7 @@ nom libre. Les fiches fictives et les archives gardent la forme courte (chaîne)
 | `statut_donnees` | actif, proposition (exige `motif_proposition` et `sources_verifiees: false`) ou archive_a_revoir (exige `motif_archive`) ; seuls les cas actifs entrent dans les calculs |
 | `usage` | partage par empreinte ; les cas test ne contribuent jamais aux estimations |
 | `usage_fige_le` | requis pour toute fiche hors archive (0.7.4) : date à laquelle le partage a été fixé, recopiée de la sortie de `partager`, qui l'inscrit au registre `partage.jsonl` (fichier de l'utilisateur, jamais réécrit) ; un partage non daté rend la fiche non valide. `valider --registre partage.jsonl` recoupe chaque cas réel avec le registre, qui fait foi |
+| `codeurs[].signe_suffisant`, `declare_le` | facultatifs (0.7.6), à remplir au second codeur (étape 5) : ce que le codeur tient, **avant tout codage**, pour un signe suffisant d'une carte (`declaration`, `execution` ou `trace`), et la date de cette déclaration, ≤ `codage.debut`. Auto-déclaration, jamais attribution ; elle permettra de comparer l'accord entre codeurs de même déclaration et de déclarations différentes |
 | `codage.debut` | requis pour un cas réel (0.7.4) : date du début du codage ; `usage_fige_le` ≤ `codage.debut` (B5 : partage fixé avant codage). Le partage n'a pas à précéder le premier état : un cas historique a des états anciens et un partage récent |
 
 Deux états consécutifs sont espacés d'une fenêtre **calendaire exacte**. Les mois finissant plus tôt
@@ -261,7 +264,7 @@ le même ensemble scientifique, même si les identifiants doivent être revus av
 | Date d'issue ou disponibilité après la prévision | transition exclue, y compris de la fréquence de base |
 | Plusieurs transitions d'un cas | poids total ≤1 avant décroissance temporelle |
 | Double codage | ≥20 cas et ≥20 % dans la strate pour sortir du mode solo ; ne prouve pas κ |
-| Accord par carte | mesurer κ et examiner les désaccords ; seuil de travail 0,6 |
+| Accord par carte | mesurer κ et examiner la **forme** des désaccords, pas seulement leur ampleur (Reidsma et Carletta 2008) ; repères `kappa_min` 0,67 (conclusions provisoires) et `kappa_rapportable` 0,80 (Krippendorff, cité par Carletta 1996), avec l'intervalle de κ, jamais le seul point |
 | Cas futurs, test, archives | exclus des estimations |
 | Cas fictifs | démonstration explicite seulement, jamais validation prospective |
 | Référence documentaire absente | équivalent Proposé, confiance f au maximum |

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -25,7 +25,18 @@
 | Fréquence de base | proportion des transitions où l'événement s'est produit, quel que soit l'état de départ ; « concurrent paresseux » du score | T2, V1 |
 | Homologie (H1, H1.5, H2, H3) | similarité des cartes (y compris faibles), exacte ou pondérée ; H1 interdit aux états vides | `graphe.md` §3 |
 | Inertie | probabilité a priori qu'une carte reste ancrée au pas suivant | `dynamiques.md` |
-| Intervalle | intervalle bêta conditionnel approximatif à 80 %, sans incertitude totale de codage/modèle | T3 |
+| Intervalle | quantiles 10–90 % de la loi Beta a posteriori dont p est la moyenne (Beta-binomial), exacts pour une vraisemblance pondérée, conditionnels à k, p₀ et aux cas ; sans incertitude de codage/modèle | `graphe.md` §4 |
+| Pseudo-observations | unité de k (2, a priori p₀ face aux homologues) et de k₀ (20, référence face aux cas de la strate) : l'a priori pèse autant que ce nombre de cas | `graphe.md` §2.2 et §4 |
+| Échangeabilité | « événements équivalents » de de Finetti : les cas d'une classe sont interchangeables ; le placebo teste que la classe se distingue du reste de la strate | `graphe.md` §3.3 |
+| Confrontation | `moteur.py confronter` : apparitions observées classées selon leur atteignabilité par la matrice ; maintien selon l'âge | `graphe.md` §2.4 |
+| Différentiel de perte | d = perte du moteur − perte de la référence, moyenné par épisode ; publié avec σ(d), l'autocorrélation d'ordre 1 et les tests exacts du signe et de Wilcoxon (Diebold et Mariano 1995) | `validation.md` §5 |
+| Question discriminante | question dont p s'écarte, avant l'issue, d'au moins 2 points de probabilité de p_sans_cartes ou de p_placebo ; V4 est publié aussi sur elles seules | `validation.md` §5 |
+| Seuils d'ancrage | `n_min_publication` (f publié comme comparateur) et `n_min_ancrage` (f « ancré », accès à ρ3), dédoublés en 0.7.7 | `graphe.md` §2.2 |
+| Sonde | `moteur.py sonde` : le calcul refait avec des arêtes tirées au hasard, des intensités ou des inerties permutées ; la matrice réelle est située parmi ces tirages, contre la référence « cas seuls, sans multiplicateurs » | `graphe.md` §3.4 |
+| Taille effective (Kish) | (Σw)² / Σw² sur les poids par cas : nombre de cas équivalents à poids égaux | `graphe.md` §3.2 |
+| Couverture des arêtes | nombre d'arêtes ayant au moins une (dix) occasion d'être éprouvées : source présente, cible absente | `graphe.md` §3.4 |
+| Signe suffisant | déclaration préalable d'un codeur : déclaration, exécution ou trace ; datée avant le codage | `base-de-cas.md` §2 |
+| Classe de source | contemporain, historiographie ou mémoire : d'où vient un fait d'ancrage | `base-de-cas.md` §2 |
 | Liaison | relation qualifiée entre deux mots d'un même état | G3 |
 | Marqueur | fait type qui ancre une carte : abstrait (noyau) ou local (équivalent) | `cartes.md`, `equivalences/` |
 | Mode solo | moins de 20 % ou moins de 20 cas double-codés dans la strate : ρ0 inaccessible | A4 |

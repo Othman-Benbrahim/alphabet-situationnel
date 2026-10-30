@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -312,3 +312,147 @@ inspirés.
   structure observée. Aucun de ces travaux ne justifie les 16 cartes, les 13 strates, la matrice ou
   les multiplicateurs.
 - **Usage individuel ou clinique** des trajectoires de pensée (VECTOR) : hors périmètre (`constitution.md` §6).
+
+---
+
+## 11. « Ce qu'il manque à l'Alphabet situationnel » (0.7.5)
+
+Note versée par l'auteur le 30 octobre 2026, rédigée sur la 0.7.4 : de Finetti (1937), David et
+Michaud (1989), Goldfarb et Pardoux (2011), Vidal (2004), Diebold et Mariano (1995), Gneiting et Raftery
+(2007), Carletta (1996), Reidsma et Carletta (2008), Gruber (1995), Gómez-Pérez et al. (2004), Bartlett
+(1932), Weidmann. Chaque chiffre a été **recalculé** sur le dépôt avant intégration. La note est
+juste sur l'essentiel — la matrice n'était jamais confrontée aux observations, les écarts de score
+n'étaient jamais testés, les jalons n'avaient pas de calcul de puissance — et se trompe sur sept points,
+dont trois de conception.
+
+### 11.1 Vérifié et retenu
+
+| Point | Vérification | Contrôle ajouté | Où |
+|---|---|---|---|
+| Matrice jamais confrontée aux observations (§2.1) | exact ; mesure **corrigée** (11.2) | `confronter` : chaque apparition classée par la règle du moteur | `graphe.md` §2.4, `SKILL.md` |
+| Écarts de score publiés sans test (§2.10) | exact : `apport_cartes` concluait sur une moyenne. Table du test du signe exacte (0,101 ; 0,033 ; 0,008 ; 0,001) | différentiel par épisode, σ(d), autocorrélation d'ordre 1, tests exacts du signe et de Wilcoxon ; lecture tirée du test | `validation.md` §5 |
+| Résidus non testés (§2.8) | exact ; fondu dans le point précédent, comme la note le propose | autocorrélation des d d'épisodes, descriptive | idem |
+| Précision de f (§2.6) | chiffres exacts (6,9 points, 138 %, 60 % de zéro succès sur 10) ; critère proposé corrigé (11.2) | intervalle de la loi de f, part de la référence, « ancré » qualifié | `graphe.md` §2.2 |
+| Poids des deux a priori (§2.5) | exact (k₀ = 20, k = 2 sont des pseudo-observations) ; lecture corrigée (11.2) | deux poids dans la trace | `graphe.md` §4 |
+| Seuil κ sans source (§2.3) | citations conformes ; repères d'α repris pour κ, déclaré | `kappa_min` 0,67, `kappa_rapportable` 0,80, réservés ; forme des désaccords | A4, `base-de-cas.md` §6 |
+| Puissance des jalons (§2.9) | direction juste, chiffres **faux** (11.2) | table de puissance recalculée | `feuille-de-route.md` §1 |
+| Classe de source (§2.4) | pertinent ; réalisable à coût nul tant qu'aucun cas n'est actif | `classe_source` requis pour un cas réel actif et un dossier | `base-de-cas.md` §2 |
+| Fenêtre sans lien à la durée (§2.2) | chiffres exacts (96,75 / 86,62 / 65,00 / 42,25 %) ; option A retenue, option B refusée (elle mêlerait la question au modèle) | `duree_caracteristique_jours` sourcée, refus avec temporalité générique sous la moitié de la fenêtre | `graphe.md` §2.4 |
+| Intervalle dit « approximatif » (§4.1) | la forme Beta-binomiale est exacte ; « intervalle exact » est **trop fort** (11.2) | libellé corrigé dans le moteur, `graphe.md`, `SKILL.md`, glossaire | `graphe.md` §4 |
+| Taux constant (§2.7) | table d'âge reproduite (80/68, 45/40, 12/10) ; interprétation corrigée (11.2) | hypothèse déclarée ; mesure par `confronter` | `graphe.md` §2.4 |
+| `p_sans_cartes` = f (§4.5) | vérifié à l'égalité exacte | identité écrite, décomposition p − f | `graphe.md` §3.3 |
+| Score logarithmique (§4.3) | pertes vérifiées (0,9025 / 3,00 ; 0,9801 / 4,61 ; 0,998 / 6,91) | `log`, `log_sans_cartes`, `log_infini` | `validation.md` §5 |
+| Cohérence au sens de de Finetti (§4.6) | exact : partitions sommant à 1 | limite écrite | `SKILL.md` Limites |
+| Épreuve bien déterminée (§3.3) | principe juste, contrôle proposé **faux** (11.2) | une révision garde l'épreuve | `valider_journal` |
+
+### 11.2 Corrigé avant intégration
+
+1. **Mesure de la matrice.** Sur `cas-reels.jsonl`, la note compte 1 apparition non atteignable sur 3
+   (TRACE·MÉMOIRE@5) ; il y en a **2** : CONTRAINTE@8 depuis RÉSEAU@5 n'est atteignable par aucune arête
+   (RÉSEAU n'en a aucune vers CONTRAINTE). Sur la base d'exemple, l'unique cas signalé part de l'état
+   nul, qui n'est pas une divergence de matrice ; une autre apparition n'est atteignable que par une
+   arête inter-strates abaissée. Ces quatre cas sont des archives exclues : la mesure illustre le
+   contrôle, elle ne confronte la matrice à rien.
+2. **Puissance de κ.** La note traite κ comme une proportion (erreur-type √(κ(1 − κ)/n)). L'erreur-type
+   de κ dépend de l'accord attendu par hasard pₑ et vaut environ √(pₒ(1 − pₒ)/n) / (1 − pₑ) (Cohen
+   1960), nettement plus grande : pour distinguer 0,80 de 0,60, environ 83 unités et non 33 (pₑ = 0,5).
+   La conclusion de la note est renforcée, ses chiffres sont faux. Et l'unité est la décision codée,
+   pas le cas.
+3. **Puissance de V4.** La colonne « 2,5 points » de la note est calculée pour 2 points : 49 épisodes
+   pour σ(d) = 0,05 au lieu de 32 (les colonnes 5 et 10 points sont justes). Le seuil de suffisance de
+   50 épisodes est σ(d) ≲ 0,063, non 0,05. L'exemple de modèle informé (Brier 0,0446) n'est pas
+   reproductible : calibré sur une fréquence de 5 %, il donne 0,0465.
+4. **Taux constant et hystérésis.** La note écrit que le modèle « nie la mémoire » de SEUIL et de
+   TRACE·MÉMOIRE. C'est confondre la dépendance au chemin de la **situation** — portée par l'état, son
+   inertie et ses arêtes — avec la dépendance à l'**âge** d'un mot, seule absente. Une chaîne de Markov
+   représente l'hystérésis : c'est l'inertie de 0,97.
+5. **Ce que teste le placebo.** La note en fait le test de l'échangeabilité de la classe. Il teste
+   l'inverse : que la classe **diffère** du reste de la strate. Un apport nul est ce que prédirait une
+   strate entièrement échangeable ; l'échangeabilité interne à la classe reste postulée (`graphe.md`
+   §3.3).
+6. **Épreuve commune.** Imposer le même critère à toutes les lignes d'un même `evenement` refuserait
+   SEUIL@7 sur deux objets différents. Le phénomène est déjà fixé par le marqueur local, contrôlé ;
+   l'épreuve (source, critère, seuil, objet) est propre à une question. Le contrôle retenu : une
+   révision — même épisode, même événement, même échéance — garde son épreuve.
+7. **Lectures trop fortes.** « Intervalle exact » : exact pour une vraisemblance pondérée, approché pour
+   ce qu'il vise. « Dix fois plus de confiance dans le défaut que dans les homologues » : k₀ et k
+   portent sur deux quantités différentes. « Refuser “ancré” tant que l'intervalle de f contient 0 » :
+   l'intervalle d'une loi Beta lissée ne contient jamais 0. « 30 est la borne du théorème central
+   limite » : c'est une règle d'usage, et ρ0 ne repose sur aucune approximation normale. Le dépôt ne
+   citait ni CAMEO ni Weidmann, contrairement à ce que dit la note ; ρ4 est calculé. La perte
+   quadratique comme critère de la prévision est développée surtout dans des textes postérieurs de de
+   Finetti (années 1960 et 1970) ; le texte de 1937 fonde la cohérence sur le pari.
+
+### 11.3 Ce qui attend, et ce qui est refusé
+
+**Attend** (`feuille-de-route.md` §1) : seuil d'ancrage, atténuation par corroboration et passage,
+loi de Weibull, idéologie sémiotique à l'étape 5, contrôle de circularité de la garantie, test de
+représentativité (sans population de référence, il reste vide), évaluation des 208 cases contre les
+critères de Gruber (clarté, cohérence, extensibilité, biais d'encodage minimal, engagement ontologique
+minimal). La distinction vérification / validation de Gómez-Pérez est celle que le dépôt écrit déjà
+(« l'audit vérifie la forme, pas la vérité ») ; elle est désormais attribuée. Que les trois arêtes fortes
+soient « dérivables des définitions » n'est pas établi et n'est pas repris.
+
+**Refusé**, avec la note elle-même : statistique de Diebold-Mariano asymptotique comme premier outil,
+appareil ARIMA, indices de prix, lois de distribution, tests de comparaison de moyennes, p-value comme
+critère de décision, ontologie greimassienne, dix-septième carte, mode d'abduction, aspectualité à la
+place de `temporalite`. Renommer le champ `frequence_de_base` casserait le schéma du journal : le champ
+garde son nom, `graphe.md` §2.2 dit ce qu'il est (une moyenne a posteriori, non une fréquence observée).
+
+---
+
+## 12. « Capacité et généralisation » et « Réponses à la feuille de route » (0.7.6)
+
+Deux notes versées par l'auteur le 30 octobre 2026. La première lit Dreyfus et al. (2008), *Apprentissage
+statistique*, ch. 1 et 2, pour la méthodologie d'évaluation seulement ; la seconde répond aux décisions
+ouvertes de `feuille-de-route.md` §1. Chiffres recalculés avant intégration.
+
+### 12.1 Vérifié et retenu
+
+| Point | Vérification | Ajout | Où |
+|---|---|---|---|
+| Variable sonde sur les paramètres | reproduite : matrice réelle au 99ᵉ centile des arêtes aléatoires (la note : 97ᵉ, autres tirages), au 83ᵉ des intensités permutées (la note : 71ᵉ) ; inerties sans effet sur une apparition à un pas | `moteur.py sonde`, avec la référence « cas seuls » qui manquait | `graphe.md` §3.4 |
+| `n_min_frequence` ne change pas p | exact : p = 22,04 % de n_min = 3 à 76 ; la feuille de route 0.7.5 se trompait | ligne corrigée ; effet réel écrit (comparateur V4, ρ3) | `feuille-de-route.md` §1 |
+| Concentration des poids (Kish) | exact : 9,34 pour 10 cas, cas le plus lourd 15,5 % | `n_eff_kish`, `part_cas_le_plus_lourd` dans la trace | `graphe.md` §3.2 |
+| Variante corroboration / passage avant la décision 5 | orthogonale à F/f, sans effet sur p | sondes `effet_attenuation` (force ; corroboration et passage avec un dossier) | `feuille-de-route.md` §1 |
+| Circularité de la garantie : signaler, ne pas refuser | juste : faux signalements inconnus | signalement dans le dossier | idem |
+| Champ d'idéologie écrit avant l'étape 5 | juste : une déclaration rétrospective ne prouve rien | `signe_suffisant`, `declare_le` ≤ `codage.debut` | `base-de-cas.md` §2 |
+| Critère du premier cas | juste, et la mise en garde contre le tri sur l'informativité aussi | critère écrit | `feuille-de-route.md` §4 |
+| Étape 3 possible avant l'étape 2 | exact ; RÉSONANCE@7 a 2 recherches sur 3 | écrit | idem |
+| Capacité relative aux exemples | juste dans sa direction | mesure arête par arête (`couverture_aretes`), P8 complété | `graphe.md` §3.4 |
+
+### 12.2 Corrigé
+
+1. **Ce que reproduit le hasard.** La note conclut que « 68 % de l'apport revendiqué est reproduit par une
+   matrice aléatoire », artefact de la densité du graphe. Sa médiane aléatoire (18,87 %) est **exactement**
+   le p obtenu sans aucun multiplicateur : ce que le hasard « reproduit » est la révision par les cas,
+   présente quelle que soit la matrice. Avec la bonne référence, une matrice aléatoire médiane apporte
+   +0,0 point, la vraie +3,2. La densité explique qu'un tirage sur trois environ déclenche un multiplicateur,
+   pas que l'apport soit un artefact.
+2. **Parcimonie.** La note lit la règle de niveau comme « le niveau qui offre le plus de cas, donc le plus
+   complexe ». C'est l'inverse : la règle retient le niveau le plus **spécifique** (H1, le plus complexe)
+   dès 3 cas, et ne regroupe qu'en dessous ; la parcimonie de Dreyfus et al. favoriserait le regroupement,
+   et elle suppose des scores de validation qui n'existent pas. L'« option 2 » de la note est la règle
+   actuelle. Le choix est écrit comme compromis biais-variance (`graphe.md` §3.2).
+3. **« Proposé clos ».** Refusé : il compterait comme traitée une correspondance qu'aucun texte ne
+   soutient. La règle existante suffit si elle est appliquée : non soutenu à la lecture → Vide, puis clos.
+4. **Richardson pour CROISSANCE.** Ne convient pas : taux fonction du niveau adverse, terme propre
+   d'amortissement, pas de capacité limite. **Modelski et Thompson pour PÉRIODICITÉ** : à vérifier contre
+   la règle de la strate 12. **« `p_sans_cartes` n'est publié que si la question est ancrée »** : faux ; il
+   l'est toujours ; c'est `frequence_de_base`, comparateur de V4, qui dépend de l'ancrage.
+5. **Comptes.** 121 paramètres « libres » mêle paramètres de modèle et seuils d'affichage ou de
+   validation ; « de l'ordre de 120 cas pour 121 paramètres » n'est pas une règle, et la dimension de
+   Vapnik-Chervonenkis n'est pas le nombre de paramètres en général. Les 28 cas d'exemple sont fictifs :
+   le rapport utile est zéro. La mesure qui convient est la couverture des arêtes.
+6. **Validation croisée.** Le partage apprentissage / test du dépôt ne sert pas à sélectionner un modèle
+   (rien n'est ajusté) ; l'épreuve de généralisation est le journal prospectif. La validation croisée est
+   différée, avec la réserve de la note sur les cas dépendants.
+
+### 12.3 Refusé ou différé
+
+Réseaux, SVM, cartes topologiques, régularisation, arrêt anticipé, bornes numériques de
+Vapnik-Chervonenkis : refusés avec la note. Weibull : différé, le diagnostic d'âge existe depuis 0.7.5
+(`confronter`). Seuil d'ancrage dédoublé, rétrogradation de CROISSANCE@7, troisième recherche de
+RÉSONANCE@7, lecture d'un texte pour PÉRIODICITÉ@7 : décisions et travaux de l'auteur
+(`feuille-de-route.md` §1 et §4).
+

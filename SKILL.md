@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.4'
+  version: '0.7.7'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.4. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.7.7. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -80,6 +80,8 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… valider B.jsonl [--registre partage.jsonl]` | validation commune aux fiches et au calcul ; avec le registre, recoupe la date de partage de chaque cas réel |
 | `… dossier --fichier D.json` | dossier de lecture d'un **calcul** : mêmes contrôles qu'une fiche (A1, A3, A6, A7, test, garantie, option, corroboration, passage, questions), rendus **avant** le chiffre ; rend un sceau. Format complet : `assets/dossier.exemple.json` |
 | `… partager C-0042-S07 [--registre partage.jsonl]` | partage par empreinte, fixé avant codage : inscrit id, usage et date au registre (jamais réécrit) ; recopier `usage_fige_le` dans la fiche |
+| `… confronter B.jsonl [--json]` | matrice contre observations : chaque apparition codée classée selon la règle du moteur (atteignable, arête inter-strates abaissée, **non atteignable**, depuis l'état nul) ; maintien selon l'âge. Une divergence va au journal des lacunes ; aucun chiffre ne change |
+| `… sonde --etat "…" --evenement "…" --tirage aretes\|intensites\|inerties [--base B --demo]` | variable sonde sur les paramètres : même calcul avec une matrice altérée au hasard, contre la référence « cas seuls, sans multiplicateurs » ; centile de la matrice réelle (`graphe.md` §3.4) |
 | `… bilan [--references R.json] [--journal J.jsonl]` | position mesurée sur la feuille de route |
 | `… equivalences --carte SEUIL [--json]` | les 13 équivalents d'une carte (statut, marqueur local) : le marqueur à recopier dans la résolution, **avant** tout calcul (étape 6) |
 | `… scorer J.jsonl --csv` | une ligne par question résolue (Brier, comparateurs, difficulté), séparateur « ; », pour un tableur |
@@ -226,9 +228,12 @@ signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une c
 `assets/rabbits.jsonl` ; 4. `moteur.py valider` ; une fiche refusée se corrige ou s'archive avec motif.
 
 **SCORER** : 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
-3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement ;
+3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement, chacun
+avec son différentiel par épisode, σ(d) et les tests exacts du signe et de Wilcoxon : un écart moyen non
+distinguable de zéro se dit tel ; score logarithmique en regard du Brier ;
 exclusions (rejeux, fictifs, sans preuve) nommées ; 4. `bilan --journal J.jsonl` pour la position sur le
-jalon V4. Aucun score ne se commente comme validation de l'alphabet tant que V4 n'est pas atteint.
+jalon V4 (gain absolu testé, effectif cible calculé, second rapport sur les questions discriminantes :
+`validation.md` §5). Aucun score ne se commente comme validation de l'alphabet tant que V4 n'est pas atteint.
 
 ## Sous contrainte de contexte
 
@@ -258,14 +263,22 @@ et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les q
   sortie se lit « si le motif observé se répète, alors… ».
 - L'alphabet décrit des structures, pas des issues nominatives : qui gagne, quel nom, quel effectif
   exact relèvent du jugement, journalisé à part (`origine: jugement`).
-- Treize équivalents ont une référence lue, tous en strate 7 : 0 Attesté, 13 Documenté, 182 Proposé,
-  13 Vide, 0 Hors domaine. En 0.4.0, les 117 anciens
+- Treize équivalents ont une référence lue, tous en strate 7 : 0 Attesté, 13 Documenté, 181 Proposé,
+  14 Vide, 0 Hors domaine. En 0.4.0, les 117 anciens
   Documentés avaient été rétrogradés. Aucun cas réel actif : les quatre premiers, codés avant les règles
   courantes, sont archivés (décision d'auteur, 0.6.8) ; le premier cas actif sera codé sous la version
   courante, de préférence avant son issue (`feuille-de-route.md`, étape 2).
 - Multiplicateurs et inerties non calibrés ; aucune performance prospective démontrée.
-- Intervalles conditionnels approximatifs ; incertitudes de codage/modèle non intégrées ; pas
-  d'intervalle joint pour les composés et les horizons multiples.
+- Intervalle : quantiles exacts de la loi Beta a posteriori, sur une vraisemblance pondérée et
+  conditionnellement à k (pseudo-observations), p₀ et au choix des cas ; incertitudes de codage/modèle
+  non intégrées ; pas d'intervalle joint pour les composés et les horizons multiples (`graphe.md` §4).
+- Paramètres postulés, aucun ajusté : sans cas réel actif, aucune arête n'est éprouvée et la valeur de
+  la matrice est non estimable (`graphe.md` §3.4) ; `sonde` la compare seulement au hasard.
+- Chaîne de Markov d'ordre 1 à taux constant : la persistance d'un mot ne dépend pas de son âge
+  (`graphe.md` §2.4) ; mesuré par `confronter`, non modélisé.
+- Cohérence au sens de de Finetti (pas de perte sûre) contrôlée seulement sur les partitions déclarées :
+  le skill n'a pas de sémantique logique des événements et ne voit pas une incohérence entre questions
+  imbriquées.
 - Un seul changement par pas en trajectoire ; ni simultanéité ni distribution de trajectoires calibrée.
 - L'accord κ et la vérification scientifique des sources/résolutions restent humains.
 - La strate 12 est un registre de longue durée, pas un domaine (décision d'auteur, `strates.md`) : un

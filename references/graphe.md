@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -67,7 +67,15 @@ Le moteur contrôle les champs et dates ; l'existence et la pertinence de la sou
 Base disponible : chaque cas se partage un poids total ≤1 entre ses transitions éligibles, puis
 pondération par l'âge. f = (succès pondérés + k₀ × référence) / (poids total + k₀).
 Référence : externe si fournie ; sinon défaut de 5 % sur 3 mois pour une apparition ou inertie pour
-une persistance. Sans source externe, l'ancrage demande un effectif pondéré ≥ n_min (10).
+une persistance. Sans source externe, f est publié comme comparateur dès un effectif pondéré
+≥ `n_min_publication` (1), et dit **ancré** — accès à ρ3 — à partir de `n_min_ancrage` (20, soit k₀ :
+les données pèsent au moins autant que la référence) ; 0.7.7 a dédoublé l'ancien seuil unique (10).
+**Ce qu'est f (0.7.5).** f n'est pas une fréquence observée : c'est la moyenne a posteriori d'une loi
+Beta(k₀·réf, k₀·(1 − réf)) révisée par les observations pondérées ; **k₀ = 20 est un nombre de
+pseudo-observations** de la référence. Publié ne veut pas dire précis : à n = 10, un écart-type de proportion vaut √(0,05 × 0,95 / 10) ≈ 6,9
+points pour un taux de 5 %, et la référence pèse encore 20 / 30 = 67 % de f ; `calculer` affiche donc
+l'intervalle à 80 % de cette loi et la part de la référence. Aucun de ces seuils ne change p (f est
+calculé avant eux) ; ils décident de ce qui est publié comme comparateur et de ρ.
 Les dates d'issue **et de disponibilité des preuves** sont antérieures ou égales à la date d'information.
 
 ### 2.3 Combinaison
@@ -141,6 +149,23 @@ observe les états aux bornes ; il ne détecte pas un changement transitoire à 
 La fréquence de base est propagée avec **la même formule** ; si une composante de référence manque,
 le comparateur est non évaluable. Le niveau ρ hérite des composantes réellement utilisées.
 Aucun intervalle multi-pas : propager seulement les bornes d'une composante ignorerait les autres.
+**Hypothèse de taux constant (0.7.5).** Le modèle est une chaîne de Markov d'ordre 1 sur l'état codé,
+à taux constant : l'inertie est ramenée à la fenêtre par inertie^(durée / 91,3125 j), et la persistance
+continue vaut r^h (loi géométrique, analogue discret de l'exponentielle). La probabilité qu'un mot
+disparaisse ne dépend donc pas du nombre de pas où il est déjà présent. Ce n'est **pas** une négation de
+l'hystérésis de SEUIL ni de la dépendance au chemin de TRACE·MÉMOIRE : celles-ci portent sur la
+*situation* et sont portées par l'état lui-même (une inertie de 0,97, les arêtes qui suivent SEUIL, une
+carte TRACE·MÉMOIRE qui inscrit le passé dans l'état). Ce qui n'est pas modélisé, c'est la dépendance
+à l'**âge** du mot (un SEUIL franchi depuis un an tient-il mieux qu'un SEUIL franchi hier ?). Elle se
+mesure par `moteur.py confronter` (maintien selon l'âge) ; une loi à taux variable (Weibull discrète,
+forme c ≠ 1) attend des cas réels pour estimer c. Sur la base d'exemple, fictive : 85 % de maintien à
+l'âge 0, 88 % à l'âge 1 ou plus, écart de 2,7 points pour un écart détectable d'environ 17 points :
+le test ne tranche rien, et la base fictive ne renseigne que sur sa fabrication.
+**La fenêtre** est le levier le plus fort de ce calcul (ÉMERGENCE@11 persiste : 97 % sur une semaine,
+65 % sur trois mois, 42 % sur six). Ce n'est pas une variante de modèle mais la question posée ; elle
+reste hors des bandes. Ce qui la relie à la durée du phénomène est `temporalite`, et, depuis 0.7.5,
+`duree_caracteristique_jours` dans le dossier de lecture : une durée sourcée inférieure à la moitié de
+la fenêtre (`ratio_duree_fenetre`) avec une temporalité générique est refusée sans justification.
 Composés : un pas seulement, sinon erreur explicite.
 
 ---
@@ -173,14 +198,85 @@ fixer la forme. H3 seulement sans homologue local. Deux ensembles de mots forts 
 Cette similarité ne code pas l'identité des objets, les positions ou les liaisons ; l'utilisateur doit
 examiner la pertinence des cas retenus. Les transitions, dates, issues et poids figurent dans le JSON.
 
+**Deux seuils (0.7.7).** Le niveau retenu atteint `c_min_niveau` cas distincts ; ρ1 en exige
+`c_min_rho1`. Les deux valent 3 : la séparation est structurelle, sans effet. Porter `c_min_niveau` à 2
+(décision 4 de l'auteur) change un calcul de démonstration (SEUIL@7 à trois pas : 52,0 % → 51,7 %, ρ1 →
+ρ4) : c'est une version dédiée, séparée de toute version qui ne change aucun p.
+**Ce que cette règle arbitre (0.7.6).** H1 est le niveau le plus *spécifique* : il conditionne sur le plus
+d'informations (mêmes cartes, mêmes forces), donc le modèle le plus complexe, biais faible et variance
+forte ; H1.5, H2, H3 regroupent davantage, biais plus fort et variance plus faible. La règle retient le
+plus spécifique dès qu'il atteint un plancher de variance (`c_min_rho1`, 3 cas), et ne regroupe qu'en
+dessous. La règle de parcimonie de la sélection de modèles (« à scores de validation comparables, le
+modèle le moins complexe », Dreyfus et al. 2008) suppose des scores de validation, qui n'existent pas
+encore ; appliquée ici, elle favoriserait le regroupement, pas H1. Le choix est donc déclaré comme un
+compromis biais-variance à plancher fixe ; son coût est publié (`fragilite_niveau`, §2.3) et il sera
+arbitré par les scores, pas par la doctrine. **Concentration** : `n_eff_kish` = (Σw)² / Σw², les w étant
+les poids par cas, et la part du cas le plus lourd disent si c_A cas pèsent comme c_A cas (Kish 1965) ;
+sur la démonstration, 9,3 pour 10 cas, le plus lourd à 16 %.
+
+### 3.3 Ce que postule l'homologie, et ce que teste le placebo (0.7.5)
+
+L'estimateur ne dépend que de (n_E, n_A), jamais de l'identité des cas retenus : les transitions d'une
+classe d'homologues sont traitées comme **échangeables** (« événements équivalents », de Finetti 1937).
+L'axiome a deux moitiés. **Dans** la classe, les cas sont interchangeables ; le calcul le suppose, rien
+ne le teste. **Entre** la classe et le reste de la strate, ils ne le sont pas : sinon choisir des
+homologues n'apporterait rien. Le placebo (0.7.4) teste **cette seconde moitié** : il tire autant de
+cas au hasard dans la strate et la fenêtre ; si `apport_homologie` ≈ 0, la strate entière se comporte
+comme une seule classe échangeable pour cet événement, et l'homologie n'est pas pertinente ; s'il
+s'écarte nettement de la plage des tirages, la classe est une sous-population distincte. Le théorème
+de représentation de de Finetti suppose une suite infinie échangeable *a priori* ; la classe est finie,
+petite et choisie après observation : il donne la **forme** Beta-binomiale de l'estimateur (§4), pas
+sa validité, qui reste une hypothèse empirique.
+
+**Décomposition.** p − p_sans_cartes = (p − p_placebo) + (p_placebo − p_sans_cartes) : la première part
+mesure le choix des homologues, la seconde les multiplicateurs et les cas de la strate pris au hasard.
+`p_sans_cartes` vaut **exactement f** : sans cartes, LR = 1 donc p₀ = f, et aucun homologue n'est retenu,
+donc P = k·f / k = f. Le comparateur est une ablation stricte des deux couches à la fois. Il peut donc
+être battu dans les deux sens : des homologues défavorables tirent p sous f. C'est un test de
+**contenu prédictif incrémental**, de la famille de la causalité au sens de Granger (1969), que la
+littérature propose elle-même d'appeler « prédictabilité » : ni série temporelle, ni décalages, ni
+régression emboîtée ici, seulement la même question posée avec et sans les cartes. Barreau A.
+
+### 3.4 Capacité et sonde des paramètres (0.7.6)
+
+**Capacité.** Le moteur porte 66 intensités d'arêtes, 16 inerties, 3 multiplicateurs et 4 propagations
+inter-strates, plus une trentaine de réglages : aucun n'a été ajusté sur des données, tous sont postulés.
+La généralisation d'un modèle dépend du rapport entre le nombre d'exemples et ce qu'il faut estimer ;
+le compte global ne la mesure pas ici, car chaque arête ne s'éprouve que sur les transitions où sa source
+est présente et sa cible absente. `confronter` compte ces occasions : sur la base d'exemple, fictive,
+36 arêtes sur 66 en ont au moins une, 19 au moins dix ; sur des cas réels actifs, **zéro**. Tant que c'est
+le cas, la valeur de la matrice n'est pas seulement non présumée (P8) : elle est **non estimable**, arête
+par arête. Une apparition à un pas n'utilise pas l'inertie de sa cible ; les paramètres actifs dépendent
+de la question.
+
+**Sonde** (`moteur.py sonde`, « variable sonde » de Dreyfus et al. 2008). Le même calcul avec une
+matrice altérée au hasard : 66 arêtes tirées parmi les 240 paires possibles (`aretes`), étiquettes F/M/f
+permutées (`intensites`), inerties permutées (`inerties`). La référence décisive est **p sans
+multiplicateurs, cas gardés** : elle sépare la révision par les cas de l'apport de la matrice. Sur la
+démonstration (SEUIL@7, état canonique, 200 tirages) : f 12 %, cas seuls 19 %, matrice réelle 22 %. La
+révision par les cas apporte +6,8 points, la matrice +3,2 ; une matrice aléatoire médiane apporte
++0,0 (62 % des tirages ne déclenchent aucun multiplicateur), et la vraie se place au 99ᵉ centile ; des
+intensités permutées la placent au 83ᵉ centile, sans la départager du hasard. Un seul événement, une
+base fictive : la sonde décrit la mécanique, pas la valeur. Elle est le seul test des paramètres
+exécutable avant le premier cas réel.
+
 ---
 
 ## 4. Révision (T3)
 
-P = (n_E + k × p₀)/(n_A + k), k=2. La loi bêta de paramètres n_E+k p₀ et n_A−n_E+k(1−p₀)
-fournit des quantiles 10–90 % seulement si les deux paramètres sont positifs et n_A>0.
-Intervalle **conditionnel approximatif** : ni le codage, ni les λ, ni le choix de modèle n'y sont
-incertains. Le nombre de cas n'est pas une preuve de calibration. Sans cas ou loi dégénérée : null.
+P = (n_E + k × p₀)/(n_A + k), k = 2 : la moyenne a posteriori d'un modèle **Beta-binomial**, d'a priori
+Beta(k·p₀, k·(1 − p₀)) ; **k est un nombre de pseudo-observations** (l'a priori p₀ vaut deux cas). La
+loi bêta de paramètres n_E+k p₀ et n_A−n_E+k(1−p₀) fournit des quantiles 10–90 % seulement si les deux
+paramètres sont positifs et n_A>0. **Ce qui est exact, ce qui ne l'est pas (0.7.5).** Les quantiles sont
+calculés exactement ; mais la vraisemblance est **pondérée** (décroissance d'âge, un cas pèse au plus
+une observation), si bien que n_A et n_E sont des effectifs fractionnaires et les transitions d'un cas
+ne sont pas des épreuves indépendantes : l'intervalle est exact pour ce pseudo-modèle, approché pour la
+probabilité qu'il vise. Il est conditionnel à k, à p₀ et au choix des cas ; ni le codage, ni les λ, ni
+le choix de modèle n'y sont incertains (bandes de sensibilité, §2.3). Rapport des deux a priori : k₀ = 20
+pseudo-observations pour f contre la strate (§2.2), k = 2 pour p₀ contre les homologues ; ils ne portent
+pas sur la même quantité, et le rapport 10× n'est pas « dix fois plus de confiance dans le défaut que
+dans les homologues ». `calculer` publie les deux poids (« part de l'a priori dans f », « part de p₀
+dans p »). Le nombre de cas n'est pas une preuve de calibration. Sans cas ou loi dégénérée : null.
 Les seuils ρ sont définis par T3 ; double codage insuffisant, absence de cas sans événement et
 non-stationnarité empêchent ρ0. Les sources de référence et les cas sont versionnés.
 

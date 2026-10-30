@@ -1,6 +1,6 @@
 # Alphabet situationnel — Constitution
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Les neuf principes priment sur toutes les règles de `protocole.md`. Une règle qui en contredit un
 > est nulle et doit être corrigée, pas appliquée.
@@ -49,7 +49,8 @@ une issue normale, pas un échec.
 
 **P8 · Couverture non présumée.** L'alphabet ne prétend pas couvrir toutes les structures. Le
 caractère holistique de l'outil est un résultat à mesurer strate par strate, jamais un point de
-départ.
+départ. Tant qu'aucun cas réel actif n'éprouve une arête, sa valeur est non estimable, pas seulement non
+présumée (`graphe.md` §3.4).
 
 **P9 · Séparation des registres.** La sortie analytique porte les chiffres. La sortie symbolique n'en
 porte aucun et renvoie à l'analytique. Les deux ne fusionnent jamais.

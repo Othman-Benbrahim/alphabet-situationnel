@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.4 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.7 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -326,6 +326,22 @@ def controle_source(k, item):
     return err
 
 
+CLASSES_SOURCE = ('contemporain', 'historiographie', 'memoire')
+
+
+def controle_classe_source(k, item, requis):
+    """0.7.5. Une base codée après coup peut encoder l'historiographie plutôt que les situations : un récit
+    rétrospectif reconstruit selon des schémas (Bartlett 1932) et la couverture des sources varie avec ce
+    qu'elles rapportent (biais de signalement, Weidmann 2016). `classe_source` dit d'où vient le fait :
+    `contemporain` (produit au moment des faits), `historiographie` (analyse postérieure), `memoire`
+    (témoignage ou récit rétrospectif). Requis pour tout mot documenté d'un cas réel actif ; il permettra
+    de comparer les taux de transition par classe. Aucun effet sur le calcul."""
+    v=item.get('classe_source')
+    if v is None:
+        return [f'{k} : classe_source requise pour un cas réel actif ({", ".join(CLASSES_SOURCE)})'] if requis else []
+    return [] if v in CLASSES_SOURCE else [f'{k} : classe_source = {", ".join(CLASSES_SOURCE)}']
+
+
 def controle_corroboration(k, item):
     """0.6.6. Contrôle de la qualité de l'information (CIA, *Tradecraft Primer* ; Mulligan 2026 sur les
     sources fabriquées par IA générative). Un mot F de cas réel **actif** déclare si son fait repose sur
@@ -519,6 +535,9 @@ def issue_evenement(typ, cible, a, b):
 
 
 
+ATTENUATION = None   # {CARTE@strate: w}, posé seulement le temps d'une sonde (sensibilite)
+
+
 def sources_de(etat, cible, liaisons, bouge, manque):
     c, s = cible.split("@")
     s = int(s)
@@ -537,6 +556,9 @@ def sources_de(etat, cible, liaisons, bouge, manque):
                 I, note = DEGRADE[I], "autre strate, abaissée d'un cran"
         if I:
             lam = P["lambda"][I] * (P["multiplicateur_bouge"] if cle(m) in bouge else 1)
+            if ATTENUATION is not None:
+                # 0.7.6 : sonde d'atténuation (décision 5, réservée) : λ_eff = 1 + (λ − 1)·w, hors du p publié.
+                lam = 1 + (lam - 1) * ATTENUATION.get(cle(m), 1.0)
             src.append({"mot": cle(m), "intensite": I, "lambda": lam, "note": note})
     if cible in manque:
         src.append({"mot": "position manque", "intensite": "M", "lambda": P["lambda"]["M"], "note": "G4"})
@@ -849,6 +871,14 @@ def valider_base(base, registre=None):
         for x in coders:
             exiger((isinstance(x,str) and x.strip()) or (isinstance(x,dict) and isinstance(x.get('id'),str) and x['id'].strip()
                    and x.get('role') in ('humain','modele')), f'{cid} : codeur = identifiant, ou {{id, role: humain|modele}}')
+        for x in coders:
+            # 0.7.6 : déclaration préalable de ce qui fait un signe suffisant (étape 5). Facultative,
+            # auto-déclarée, datée avant le début du codage ; une déclaration rétrospective ne prouve rien.
+            if isinstance(x,dict) and x.get('signe_suffisant') is not None:
+                exiger(x['signe_suffisant'] in ('declaration','execution','trace'),f'{cid} : signe_suffisant = declaration, execution ou trace')
+                date_iso(x.get('declare_le'))
+                deb_=coding.get('debut')
+                exiger(deb_ is None or jour(x['declare_le'])<=jour(deb_),f'{cid} : signe_suffisant déclaré après le début du codage : une déclaration rétrospective ne prouve rien')
         ids_=ids_codeurs(c)
         exiger(len(set(ids_))==len(ids_), f'{cid} : codeurs distincts requis')
         for flag in ('independants','au_moins_un_humain'):
@@ -910,7 +940,8 @@ def valider_base(base, registre=None):
                 for field in ('fait','source','contre_observation','objet'):
                     texte_requis(item.get(field), f'{cid}.{k}.{field}')
                 pr=None if prev is None or k not in forces(prev) else (forces(prev)[k], origine_f.get(k))
-                errs=controle_a7(k,item,pr)+controle_source(k,item); exiger(not errs, f'{cid} : '+' ; '.join(errs))
+                errs=controle_a7(k,item,pr)+controle_source(k,item)+controle_classe_source(k,item,not c['fictif'] and c.get('statut_donnees')=='actif')
+                exiger(not errs, f'{cid} : '+' ; '.join(errs))
                 if fm[k]=='F':
                     # A6 : F qualifie la lecture (fait précis, voisines tranchées), pas la bibliographie (A3).
                     texte_requis(item.get('a6'), f'{cid}.{k}.a6')
@@ -1034,6 +1065,21 @@ def _plat_mots(s):
     return ''.join(ch for ch in s if unicodedata.category(ch)!='Mn').upper().replace('·',' ')
 
 
+def signalements_circularite(mots):
+    """0.7.6. Une garantie circulaire reformule la carte au lieu de nommer un mécanisme (« c'est un seuil
+    parce qu'il y a hystérésis »). Signalée — jamais refusée : nommer la carte n'est pas forcément
+    circulaire, et le taux de faux signalements n'est pas connu (à éprouver sur cas réels)."""
+    out=[]
+    for item in mots or []:
+        if not isinstance(item,dict) or not isinstance(item.get('garantie'),dict):continue
+        mec=str(item['garantie'].get('mecanisme',''));ab=str(item.get('carte',''))
+        if ab not in NOMS:continue
+        noms=set(re.findall(r'[A-Z0-9]+',_plat_mots(NOMS[ab])));mots_m=set(re.findall(r'[A-Z0-9]+',_plat_mots(mec)))
+        if noms & mots_m:
+            out.append(f"{NOMS[ab]}@{item.get('strate')} : la garantie nomme la carte qu’elle fonde (« {mec[:50]} ») ; nommer le mécanisme dans la langue de la strate")
+    return out
+
+
 DOSSIER_ID='C-0001-S07'
 TEMPORALITES=('generique','programmee','duree_de_vie')
 
@@ -1087,6 +1133,17 @@ def dossier_valider(d):
             exiger(x.get('temporalite') in TEMPORALITES,
                    'dossier.evenements.temporalite : '+', '.join(TEMPORALITES)+' (mêmes valeurs que calculer --temporalite)')
             texte_requis(x.get('resolution'),'dossier.evenements.resolution')
+            # 0.7.5 : la fenêtre est le levier le plus fort du calcul (inertie^(durée/91,3 j)) ; rien ne la
+            # reliait à la durée du phénomène. Facultatif : une durée en jours, vérifiable contre une source.
+            dc=x.get('duree_caracteristique_jours')
+            if dc is not None:
+                exiger(type(dc) in (int,float) and math.isfinite(dc) and dc>0,'dossier.evenements.duree_caracteristique_jours : nombre de jours > 0')
+                texte_requis(x.get('source_duree'),'dossier.evenements.source_duree (d’où vient cette durée)')
+                if x['temporalite']=='generique' and dc<P['ratio_duree_fenetre']*duree_jours(e['fenetre']):
+                    texte_requis(x.get('justification_temporalite'),
+                        f'dossier.evenements : durée caractéristique {dc:g} j, moins de {P["ratio_duree_fenetre"]:g} × la fenêtre '
+                        f'({duree_jours(e["fenetre"]):g} j) avec temporalite « generique » : déclarer duree_de_vie, ou justifier '
+                        '(justification_temporalite) ; l’inertie générique suppose un phénomène qui dure au moins la fenêtre')
     d1=fin_fenetre(e['date'],e['fenetre']).isoformat()
     etat_issue=etat.replace(f"[{e['date']} |",f"[{d1} |",1)
     fiche={'id':DOSSIER_ID,'version_regles':P['version'],'titre':'Dossier de lecture (PRÉVOIR)',
@@ -1114,14 +1171,101 @@ def dossier_valider(d):
         if isinstance(item,dict) and item.get('intensite')=='F':
             k=cle_valide(f"{item.get('carte')}@{item.get('strate')}")
             errs+=controle_corroboration(k,item)+controle_passage(k,item,'F',True)
+        if isinstance(item,dict):
+            errs+=controle_classe_source(cle_valide(f"{item.get('carte')}@{item.get('strate')}"),item,True)
     exiger(not errs,'dossier refusé — '+' ; '.join(errs))
     errs,manques=controle_recherches(d.get('recherches'),set(fm),keys)
     exiger(not errs,'dossier refusé — '+' ; '.join(errs))
+    manques+=signalements_circularite(mots)
     return {'conforme':True,'complet':not manques,'manques':manques,'etat':etat,'mots':len(mots),'candidats':keys,'contre_candidate':contre,
             'disponible_le':d.get('disponible_le') or e['date'],
             'evenements':evs or [],'sceau':empreinte(d),
             'instruction':'Publier ce sceau avant de lancer le calcul, puis lancer « calculer --dossier ». '
                           'Il fige la lecture et les événements, pas le jugement (voir sceller-jugement).'}
+
+
+def wilson(k,n):
+    """Intervalle de Wilson à 95 % d'une proportion k/n (Wilson 1927), sans valeurs hors [0, 1]."""
+    if not n:return None
+    z=1.959964;p_=k/n;c=(p_+z*z/(2*n))/(1+z*z/n);h=z*math.sqrt(p_*(1-p_)/n+z*z/(4*n*n))/(1+z*z/n)
+    return [max(0.,c-h),min(1.,c+h)]
+
+
+def confronter(base):
+    """0.7.5. Confrontation de la matrice aux observations (P8 : la couverture n'est pas présumée). Pour
+    chaque transition codée, chaque **apparition** observée est classée selon la règle même du moteur
+    (`sources_de`, avec les liaisons et la position *manque* de l'état de départ) : atteignable dans la
+    strate, par une propagation documentée, par un transfert ancré, seulement par une arête inter-strates
+    abaissée d'un cran, ou **non atteignable**. Un départ depuis l'état nul est compté à part : le moteur
+    n'en dit rien par construction. Deuxième mesure : maintien d'un mot au pas suivant selon le nombre de
+    pas où il était déjà présent (âge), pour éprouver l'hypothèse de taux constant (graphe.md §2.4).
+    Lit la base, ne calcule aucune probabilité. Les transitions d'un même cas ne sont pas indépendantes,
+    et une base fictive ne renseigne que sur sa propre fabrication."""
+    classes=('meme_strate','propagation_documentee','transfert_ancre','position_manque','inter_strates_abaissee','non_atteignable','etat_nul')
+    compte={k:0 for k in classes};divergences=[];age=defaultdict(lambda:[0,0]);occ=defaultdict(lambda:[0,0])
+    for c in base:
+        if not isinstance(c,dict) or not isinstance(c.get('sequence'),list) or not isinstance(c.get('issue'),dict):continue
+        seq=c['sequence']+[c['issue']]
+        presence=defaultdict(int)
+        for xa,xb in zip(seq,seq[1:]):
+            a,b=lire_etat(xa['etat']),lire_etat(xb['etat'])
+            fa,fb=forces(a),forces(b)
+            try:links=lire_liaisons(xa.get('liaisons') or [],a)
+            except ValueError:links=[]
+            pos=xa.get('positions') or {}
+            manque={cle_valide(pos['manque'])} if isinstance(pos,dict) and pos.get('manque') else set()
+            for k in fa:
+                age[min(presence[k],2)][0]+=1;age[min(presence[k],2)][1]+=k in fb
+            # 0.7.6 : occasions d'éprouver chaque arête de la même strate (source présente, cible absente).
+            for k in fa:
+                ab,st_=k.split('@')
+                for cb in P['matrice'].get(ab,{}):
+                    t_=f'{cb}@{st_}'
+                    if t_ not in fa:occ[(ab,cb)][0]+=1;occ[(ab,cb)][1]+=t_ in fb
+            presence=defaultdict(int,{k:presence[k]+1 for k in fa})
+            for x in sorted(set(fb)-set(fa)):
+                if not fa:
+                    cl='etat_nul';src=[]
+                else:
+                    src,_=sources_de(a,x,links,(),manque)
+                    notes={y['note'] for y in src}
+                    cl=('meme_strate' if 'même strate' in notes else 'propagation_documentee' if 'autre strate, propagation documentée' in notes
+                        else 'transfert_ancre' if 'autre strate, transfert ancré' in notes else 'position_manque' if 'G4' in notes
+                        else 'inter_strates_abaissee' if "autre strate, abaissée d'un cran" in notes else 'non_atteignable')
+                compte[cl]+=1
+                if cl in ('non_atteignable','etat_nul','inter_strates_abaissee'):
+                    divergences.append({'cas':c.get('id'),'statut':c.get('statut_donnees'),'fictif':c.get('fictif'),'date':b['date'],
+                                        'apparition':x,'depuis':sorted(fa),'classe':cl})
+    motifs=defaultdict(int)
+    for d in divergences:
+        if d['classe']=='non_atteignable':motifs[(' + '.join(k.split('@')[0] for k in d['depuis']),d['apparition'].split('@')[0])]+=1
+    n0,m0=age[0];n1=age[1][0]+age[2][0];m1=age[1][1]+age[2][1]
+    test=None
+    if n0 and n1:
+        p0_,p1_=m0/n0,m1/n1;se=math.sqrt(p0_*(1-p0_)/n0+p1_*(1-p1_)/n1)
+        reelle=bool(base) and all(isinstance(c,dict) and not c.get('fictif') and c.get('statut_donnees')=='actif' for c in base)
+        zz=None if se==0 else (p1_-p0_)/se
+        # 0.7.7 (règle figée avant les données) : la loi à taux variable s'ouvre si l'écart âge ≥ 1 − âge 0
+        # dépasse deux écarts-types, sur au moins weibull_occasions_min occasions de chaque côté, en cas réels actifs.
+        crit={'regle':f"|z| ≥ 2, ≥ {P['weibull_occasions_min']} occasions à l’âge 0 et à l’âge ≥ 1, cas réels actifs seulement",
+              'applicable':reelle and n0>=P['weibull_occasions_min'] and n1>=P['weibull_occasions_min'],
+              'atteint':reelle and n0>=P['weibull_occasions_min'] and n1>=P['weibull_occasions_min'] and zz is not None and abs(zz)>=2}
+        test={'maintien_age_0':p0_,'maintien_age_1_et_plus':p1_,'ecart':p1_-p0_,'ecart_type':se,'critere_weibull':crit,
+              'z':zz,'ecart_detectable_80':2.80*se,
+              'lecture':'écart à comparer à l’écart détectable : un écart non significatif sur un petit effectif ne confirme pas le taux constant'}
+    tot=sum(compte.values())
+    na=sum(len(v) for v in P['matrice'].values())
+    couverture={'aretes':na,'avec_une_occasion':sum(1 for v in occ.values() if v[0]>=1),
+                'avec_dix_occasions':sum(1 for v in occ.values() if v[0]>=10),
+                'lecture':'une arête sans occasion observée n’est ni confirmée ni réfutée : elle n’est pas estimable'}
+    return {'apparitions':tot,'couverture_aretes':couverture,'classes':compte,'part_non_atteignable':compte['non_atteignable']/tot if tot else None,
+            'motifs_non_atteignables':[{'depuis':k[0],'apparition':NOMS[k[1]],'occurrences':v} for k,v in sorted(motifs.items(),key=lambda t:-t[1])],
+            'divergences':divergences,
+            'age':{str(k) if k<2 else '2+':{'occasions':v[0],'maintiens':v[1],'taux':v[1]/v[0] if v[0] else None,'intervalle_95':wilson(v[1],v[0])} for k,v in sorted(age.items())},
+            'test_age':test,
+            'limites':['Les transitions d’un même cas ne sont pas indépendantes : effectifs et écarts-types sont optimistes.',
+                       'Une base fictive ne renseigne que sur sa fabrication ; seuls des cas réels actifs confrontent la matrice au monde.',
+                       'Une apparition non atteignable est une divergence à examiner (journal des lacunes, A2), pas une réfutation à elle seule.']}
 
 
 def valider(chemin, registre=None):
@@ -1213,7 +1357,11 @@ def apriori(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_mat
     default=a_l_echelle(P['f_defaut'],fen) if typ=='apparait' else (inert if typ=='persiste' else 1-inert)
     ref=default if external is None else external
     f,cnt,neff=frequence_de_base(base,typ,cible,fen,asof,ref)
-    anchored=external is not None or neff>=P['n_min_frequence']
+    # 0.7.7 (décision 1) : deux seuils, deux sens. f est publié comme comparateur dès n_min_publication
+    # observation pondérée (avec son intervalle et la part de l'a priori) ; il n'est dit « ancré » — accès à
+    # ρ3 — que si les données pèsent au moins autant que l'a priori : neff ≥ n_min_ancrage (= k₀). Aucun p ne change.
+    publie=external is not None or neff>=P['n_min_publication']
+    anchored=external is not None or neff>=P['n_min_ancrage']
     src,removed=sources_de(etat,cible,liaisons,bouge,manque) if typ=='apparait' and not sans_cartes else ([],[])
     lr=math.prod(x['lambda'] for x in src)
     capped=lr>P['plafond_LR'];lr=min(lr,P['plafond_LR'])
@@ -1223,14 +1371,26 @@ def apriori(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_mat
     # persistance d'inertie (99,5 % sur 7 jours) à 95 % sans toucher son complément (somme 96,2 %), et
     # 7 pas quotidiens plafonnés donnaient 0,95⁷ ≈ 70 % au lieu de la persistance sur 7 jours.
     if 0<p<1 and p>f: p=min(p,max(f,P['plafond_p0']))
-    return {'p0':proba(p),'f_base':f if anchored else None,'reference_interne':f,'ancrage':anchored,
+    # 0.7.5 : f est la moyenne a posteriori d'une loi Beta(k₀·réf, k₀·(1−réf)) révisée par neff observations
+    # pondérées (k₀ = pseudo-observations de l'a priori) ; on publie son poids et l'intervalle de cette loi.
+    tot=neff+P['k0_frequence']
+    itv_f=quantiles_beta(f*tot,(1-f)*tot) if 0<f<1 else None
+    return {'p0':proba(p),'f_base':f if publie else None,'reference_interne':f,'ancrage':anchored,'publie':publie,
+            'reference_a_priori':ref,'poids_a_priori_f':P['k0_frequence']/tot,'intervalle_f':itv_f,
             'reference_externe':external,'source_externe':source_ext,'cas_reference':cnt,'effectif_reference':neff,'LR':lr,'LR_plafonne':capped,
             'sources':src,'ecartees':removed,'inertie':inert}
 
 
 def intervalle_beta(nE,nA,p0):
+    # Quantiles de la loi Beta(nE + k·p₀, nA − nE + k·(1−p₀)) : la loi a posteriori dont p est la moyenne.
     a=nE+P['k']*p0;b=nA-nE+P['k']*(1-p0)
     if nA<=0 or a<=0 or b<=0: return None
+    q=(1-P['intervalle'])/2
+    return [proba(beta_quantile(a,b,q)),proba(beta_quantile(a,b,1-q))]
+
+
+def quantiles_beta(a,b):
+    if a<=0 or b<=0:return None
     q=(1-P['intervalle'])/2
     return [proba(beta_quantile(a,b,q)),proba(beta_quantile(a,b,1-q))]
 
@@ -1303,7 +1463,9 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
     # Niveau le plus strict qui atteint c_min_rho1 cas distincts ; sinon le plus strict non vide.
     # Raison : H1 ⊆ H1.5, donc « le niveau qui offre le plus de cas » ne retenait jamais H1 sous 30 cas
     # et échangeait la comparabilité contre l'effectif sans le dire.
-    h=next((h for h in levels if counts[h]>=P['c_min_rho1']),None)
+    # 0.7.7 : choix du niveau séparé de sa sanction ρ (c_min_rho1). c_min_niveau vaut 3, le statu quo :
+    # le porter à 2 (décision 4) change un p de démonstration, donc une version dédiée.
+    h=next((h for h in levels if counts[h]>=P['c_min_niveau']),None)
     if h is None: h=next((h for h in levels if counts[h]>0),'H1')
     hom=[] if sans_cartes else levels[h]; borrowed=False
     if not hom and not sans_cartes and sourcekeys:
@@ -1324,6 +1486,12 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
     samples=ponderer(hom,asof,borrowed)
     nA=sum(x['poids'] for x in samples);nE=sum(x['poids']*x['issue'] for x in samples);cA=len({x['id'] for x in samples})
     prob=(nE+P['k']*ap['p0'])/(nA+P['k'])
+    # 0.7.6 : concentration des poids par cas (taille effective de Kish, (Σw)²/Σw²) : dit si c_A cas pèsent
+    # comme c_A cas ou si quelques-uns font le calcul.
+    wc=defaultdict(float)
+    for x in samples:wc[x['id']]+=x['poids']
+    kish=None if not wc else sum(wc.values())**2/sum(v*v for v in wc.values())
+    part_max=None if not wc else max(wc.values())/sum(wc.values())
     # 0.7.3 — le choix du niveau d'homologie (H1 → H1.5 → H2) est discret et se décide sur un compte
     # (c_min_rho1). Deux lectures également conformes peuvent donc différer d'un cran sans que rien ne
     # le signale. On rend p pour chaque niveau non vide : la fragilité de niveau devient visible.
@@ -1351,14 +1519,18 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
                      f'({detail}) ; le seuil c_min_rho1 décide seul du niveau.')
     return {'evenement':cible+' '+typ,'p':proba(prob),'intervalle':intervalle_beta(nE,nA,ap['p0']),
             'rho':rho,'homologie':h if hom else None,'nb_cas_par_niveau':counts,'c_A':cA,'n_A':nA,'n_E':nE,
-            'niveaux':niveaux,'fragilite_niveau':fragilite,
+            'niveaux':niveaux,'fragilite_niveau':fragilite,'poids_a_priori_p':P['k']/(nA+P['k']),
+            'n_eff_kish':kish,'part_cas_le_plus_lourd':part_max,
             'placebo':placebo_homologie(base,typ,cible,etat,asof,cA,ap['p0'],graine_placebo(etat,typ,cible,asof)) if placebo and not sans_cartes and not borrowed else None,
             'a_priori':ap,'comparateur':ap['f_base'],'transitions':samples,'drapeaux':flags,
-            'incertitude':'intervalle conditionnel approximatif : un cas pèse au plus une observation ; incertitude de codage et de modèle non intégrée',
+            'incertitude':'intervalle de crédibilité à 80 % de la loi Beta a posteriori dont p est la moyenne (Beta-binomial) : '
+                           'quantiles calculés exactement, mais sur une vraisemblance pondérée (décroissance, un cas pèse au plus une observation) '
+                           'et conditionnellement à k (pseudo-observations de p₀), à p₀ et au choix des cas ; incertitude de codage et de modèle '
+                           'non intégrée (bandes de sensibilité)',
             'barreau':barreau_de(ap['sources'],cible)}
 
 
-def sensibilite(etat,typ,cible,base,opts,h,semantique):
+def sensibilite(etat,typ,cible,base,opts,h,semantique,pieces=None):
     """0.6.0. Sous-spécification : une centaine de paramètres pour quelques cas, donc une infinité de
     jeux compatibles. On relance le même calcul sous des variantes plausibles des hypothèses non
     calibrées et l'on rend la bande obtenue. Elle mesure l'incertitude de modèle, que l'intervalle bêta
@@ -1410,6 +1582,18 @@ def sensibilite(etat,typ,cible,base,opts,h,semantique):
                 'mots':[{'c':m['c'],'s':m['s'],'i':'f','q':m['q']} for m in etat['mots']]}
         P.update(copy.deepcopy(sauve))
         rf=horizon_result(faible,typ,cible,base,opts,h,semantique)
+        # 0.7.6 : décision 5 en variante, hors bande. Atténuation par la force (w = 1 F, 0,5 f) et, si un
+        # dossier fournit les pièces, par la fiabilité du signal (corroboration et passage), orthogonale à F/f.
+        global ATTENUATION
+        attenuations={}
+        try:
+            ATTENUATION={cle(m):(1.0 if m['i']=='F' else P['attenuation_w_f']) for m in etat['mots']}
+            attenuations['force']=horizon_result(etat,typ,cible,base,opts,h,semantique)['p']-reference
+            if pieces:
+                ATTENUATION={k:(1.0 if v['corroboration']=='independantes' and v['passage']=='soutient' else P['attenuation_w_f'])
+                             for k,v in pieces.items()}
+                attenuations['corroboration_passage']=horizon_result(etat,typ,cible,base,opts,h,semantique)['p']-reference
+        finally:ATTENUATION=None
         sortie.append({'variante':'forces d’ancrage abaissées d’un cran (F → f)','groupe':'lecture',
                        'p':rf['p'],'c_A':rf.get('c_A'),'homologie':rf.get('homologie'),'frappee':True})
     finally:
@@ -1431,7 +1615,7 @@ def sensibilite(etat,typ,cible,base,opts,h,semantique):
                       'instable':len(signatures)>1,
                       'niveaux':sorted({str(x['homologie']) for x in sortie if x['groupe']=='classe'}),
                       'effectifs':sorted({x['c_A'] for x in sortie if x['groupe']=='classe' if x['c_A'] is not None})},
-            'effet_force':rf['p']-reference,
+            'effet_force':rf['p']-reference,'effet_attenuation':attenuations,
             'bande_large':max(ps)-min(ps)>P['largeur_max_affichage'],
             'saturee':any(abs(p-P['plafond_p0'])<1e-12 for p in ps)}
     # Deux bandes qui traversent le seuil ne se lisent pas de la même façon : on nomme celle qui décide.
@@ -1439,6 +1623,60 @@ def sensibilite(etat,typ,cible,base,opts,h,semantique):
                              'hypothèses de modèle' if retour['modele']['traverse_seuil'] else None)
     return retour
 
+
+
+def sonde_matrice(etat,typ,cible,base,opts,h,semantique,tirage,n=None):
+    """0.7.6. Variable sonde (Dreyfus et al. 2008, ch. 1) appliquée aux paramètres : le même calcul avec
+    une matrice altérée au hasard. `aretes` : 66 paires (source, cible) tirées parmi les 240 possibles,
+    intensités conservées ; `intensites` : étiquettes F/M/f permutées sur les arêtes réelles ; `inerties` :
+    inerties permutées entre cartes. Le calcul de référence **sans multiplicateurs, homologues gardés**
+    (`p_sans_multiplicateurs`) sépare ce qui vient de la matrice de ce qui vient de la révision par les cas :
+    sans lui, l'apport d'une matrice aléatoire paraît grand alors qu'il vient des cas. Graine dérivée de
+    la question ; tirages ordonnés par SHA-256. Lit, ne modifie rien."""
+    import copy
+    exiger(tirage in ('aretes','intensites','inerties'),'sonde : --tirage aretes, intensites ou inerties')
+    n=n or P['placebo_tirages'];graine=graine_placebo(etat,typ,cible,opts.get('asof') or etat['date'])
+    sauve={k:copy.deepcopy(P[k]) for k in ('matrice','inertie','lambda')}
+    h_=lambda *x:hashlib.sha256(':'.join(map(str,(graine,)+x)).encode()).hexdigest()
+    aretes=[(a,b,i) for a,row in sauve['matrice'].items() for b,i in row.items()]
+    paires=[(a,b) for a in NOMS for b in NOMS if a!=b];ps=[]
+    try:
+        reel=horizon_result(etat,typ,cible,base,opts,h,semantique)['p']
+        P['lambda']={k:1.0 for k in sauve['lambda']}
+        sans_mult=horizon_result(etat,typ,cible,base,opts,h,semantique)['p']
+        P.update(copy.deepcopy(sauve))
+        sans_cartes=horizon_result(etat,typ,cible,base,dict(opts,sans_cartes=True),h,semantique)['p']
+        for r in range(n):
+            P.update(copy.deepcopy(sauve))
+            if tirage=='aretes':
+                choix=sorted(paires,key=lambda q:h_('a',r,*q))[:len(aretes)]
+                its=sorted((x[2] for x in aretes),key=lambda i_,c=iter(range(10**6)):h_('i',r,next(c)))
+                m_={a:{} for a in NOMS}
+                for (a,b),i in zip(choix,its):m_[a][b]=i
+                P['matrice']=m_
+            elif tirage=='intensites':
+                its=[x[2] for x in sorted(aretes,key=lambda x:h_('p',r,x[0],x[1]))]
+                m_={a:{} for a in NOMS}
+                for (a,b,_),i in zip(aretes,its):m_[a][b]=i
+                P['matrice']=m_
+            else:
+                ks=sorted(NOMS);vs=[sauve['inertie'][k] for k in sorted(ks,key=lambda k:h_('n',r,k))]
+                P['inertie']=dict(zip(ks,vs))
+            ps.append(horizon_result(etat,typ,cible,base,opts,h,semantique)['p'])
+    finally:
+        P.update(sauve)
+    ps.sort();q=lambda u:ps[min(len(ps)-1,int(u*len(ps)))]
+    sous=sum(x<reel-1e-12 for x in ps);egaux=sum(abs(x-reel)<=1e-12 for x in ps)
+    med=q(.5);apm=reel-sans_mult
+    return {'tirage':tirage,'tirages':n,'graine':graine,'p_reel':reel,'p_sans_multiplicateurs':sans_mult,'p_sans_cartes':sans_cartes,
+            'p_sonde_mediane':med,'p_sonde_90':[q(.05),q(.95)],'centile_reel':(sous+egaux/2)/n,
+            'part_sans_effet':sum(abs(x-sans_mult)<=1e-12 for x in ps)/n,
+            'apport_matrice_reel':apm,'apport_matrice_sonde_median':med-sans_mult,
+            'apport_cas':sans_mult-sans_cartes,
+            'lecture':('les inerties n’entrent pas dans ce calcul (apparition à un pas : la persistance de la cible n’est pas utilisée)'
+                       if tirage=='inerties' and all(abs(x-reel)<=1e-12 for x in ps) else
+                       f"matrice réelle au {round(100*(sous+egaux/2)/n)}ᵉ centile des sondes ; la matrice ajoute {apm*100:+.1f} points aux cas, "
+                       f"une sonde médiane {(med-sans_mult)*100:+.1f}").replace('.',',')}
 
 
 def cumul(a,r,h,q0=0):
@@ -1745,6 +1983,20 @@ def valider_journal(data):
             for k in ('source','date','empreinte_prevision'):texte_requis(proof.get(k),f'{ident}.preuve_prepublication.{k}')
             exiger(proof['empreinte_prevision']==empreinte_prevision(x), f'{ident} : preuve rattachée à une autre version de la prévision')
             exiger(jour(x['date'])<=jour(proof['date'])<jour(x['echeance']),f'{ident} : prépublication hors délai')
+    # 0.7.5 (de Finetti 1937 : une probabilité porte sur une « épreuve bien déterminée »). Deux lignes qui
+    # posent la même question — même épisode, même événement, même échéance : une révision — portent la
+    # même épreuve : même source, critère, seuil et objet. Sinon la révision change la question et le
+    # Brier moyenne deux épreuves sous une étiquette. Le document reçu proposait d'imposer le même critère
+    # à toutes les lignes d'un même événement : ce serait refuser SEUIL@7 sur deux objets différents.
+    epreuves={}
+    for ident,x in prev.items():
+        if not isinstance(x.get('resolution'),dict):continue
+        k_=(x.get('episode_id'),' '.join(str(x.get('evenement','')).split()),x.get('echeance'))
+        e_=tuple(' '.join(str(x['resolution'].get(c,'')).split()) for c in ('source','critere','seuil','objet'))
+        if k_ in epreuves:
+            exiger(epreuves[k_][1]==e_,f'{ident} : même question que {epreuves[k_][0]} (épisode, événement, échéance) avec une autre épreuve '
+                   '(source, critère, seuil ou objet) ; une révision garde l’épreuve, sinon c’est une autre question : changer l’échéance ou l’épisode')
+        else:epreuves[k_]=(ident,e_)
     for ident,s in scores.items():
         exiger(ident in prev,f'score orphelin : {ident}')
         exiger(jour(s['date'])>=jour(prev[ident]['echeance']),f'{ident} : score avant échéance')
@@ -1762,14 +2014,111 @@ def valider_journal(data):
     return prev,scores,partitions
 
 
+def perte_log(items,champ,scores):
+    """0.7.5. Score logarithmique (perte −ln de la probabilité donnée à l'issue réalisée), en regard du
+    Brier : strictement propre lui aussi, plus sévère sur les erreurs confiantes, non borné (une
+    probabilité 0 ou 1 démentie vaut l'infini, rendu null avec le drapeau `log_infini`)."""
+    if any(x.get(champ) is None for x in items):return None
+    t=0.
+    for x in items:
+        o=scores[x['id']]['issue'];q=x[champ] if o==1 else 1-x[champ]
+        if len(items)>1 and o==0:continue           # partition : seule l'issue réalisée compte
+        if q<=0:return float('inf')
+        t-=math.log(q)
+    return t
+
+
+def discriminant(items):
+    """0.7.7 (décision 6). Une question est discriminante si, **avant l'issue**, p s'écarte d'au moins δ
+    (points de probabilité) de p_sans_cartes ou de p_placebo : sinon elle ne peut rien départager entre
+    l'alphabet et ses comparateurs. Calculé depuis le journal, non déclaré ; ne dépend pas de l'issue."""
+    d=P['delta_discriminant']
+    if any(x.get('probabilite') is None for x in items):return None
+    refs=[(x['probabilite'],x.get(k)) for x in items for k in ('p_sans_cartes','p_placebo') if x.get(k) is not None]
+    if not refs:return None
+    return any(abs(a-b)>=d-1e-12 for a,b in refs)
+
+
+def pertes_log(items,scores):
+    l1,l2=perte_log(items,'probabilite',scores),perte_log(items,'p_sans_cartes',scores)
+    inf=lambda v:v is not None and not math.isfinite(v)
+    return {'log':None if inf(l1) else l1,'log_sans_cartes':None if inf(l2) else l2,'log_infini':inf(l1) or inf(l2)}
+
+
+def test_signe(d):
+    """Test exact du signe (Diebold et Mariano 1995, test de complément à petit effectif) sur des
+    différentiels de perte d = perte(A) − perte(B), nuls exclus. H0 : médiane nulle. `p_amelioration` :
+    P(au moins autant de d < 0 sous H0), unilatéral en faveur de A."""
+    v=[x for x in d if abs(x)>1e-12];n=len(v);neg=sum(x<0 for x in v)
+    if not n:return None
+    up=lambda k:sum(math.comb(n,i) for i in range(k,n+1))/2**n
+    return {'n':n,'ameliorations':neg,'degradations':n-neg,'nuls':len(d)-n,'p_amelioration':up(neg),
+            'p_bilateral':min(1.,2*min(up(neg),up(n-neg)))}
+
+
+def test_wilcoxon(d):
+    """Test exact des rangs signés de Wilcoxon (même source), loi exacte conditionnelle aux rangs moyens
+    en cas d'égalité, par programmation dynamique sur les rangs doublés (entiers). `p_amelioration` :
+    P(W⁺ ≤ observé sous H0), W⁺ = somme des rangs des d > 0 (dégradations)."""
+    v=[x for x in d if abs(x)>1e-12];n=len(v)
+    if not n:return None
+    o=sorted(range(n),key=lambda i:abs(v[i]));rang=[0]*n;i=0
+    while i<n:
+        j=i
+        while j+1<n and abs(abs(v[o[j+1]])-abs(v[o[i]]))<1e-12:j+=1
+        for t in range(i,j+1):rang[o[t]]=i+j+2          # rang moyen × 2
+        i=j+1
+    tot=sum(rang);dist=defaultdict(int);dist[0]=1
+    for r in rang:
+        nd=defaultdict(int)
+        for k_,c_ in dist.items():nd[k_]+=c_;nd[k_+r]+=c_
+        dist=nd
+    w=sum(rang[i] for i in range(n) if v[i]>0);N=2**n
+    return {'n':n,'W_plus':w/2,'p_amelioration':sum(c_ for k_,c_ in dist.items() if k_<=w)/N,
+            'p_bilateral':min(1.,2*min(sum(c_ for k_,c_ in dist.items() if k_<=w),sum(c_ for k_,c_ in dist.items() if k_>=w))/N)}
+
+
+def differentiel(units,champ):
+    """0.7.5. Différentiel de perte par épisode (d̄ de Diebold-Mariano : le numérateur ; on publie aussi sa
+    dispersion et les tests exacts). Les questions liées d'un épisode sont moyennées : un épisode, une
+    observation. L'autocorrélation d'ordre 1 des d d'épisodes rangés par date est descriptive : elle dit
+    si des périodes se trompent ensemble, ce que le regroupement par épisode ne voit pas."""
+    ep=defaultdict(list)
+    for x in units:
+        if x[champ] is not None:ep[x['episode_id']].append(x)
+    if not ep:return None
+    serie=sorted(((min(u['date'] for u in v),k,sum(u['brier']-u[champ] for u in v)/len(v)) for k,v in ep.items()))
+    d=[t[2] for t in serie];n=len(d);m_=sum(d)/n
+    sd=math.sqrt(sum((x-m_)**2 for x in d)/(n-1)) if n>1 else None
+    den=sum((x-m_)**2 for x in d)
+    r1=sum((d[i]-m_)*(d[i+1]-m_) for i in range(n-1))/den if n>2 and den>0 else None
+    return {'episodes':n,'d_moyen':m_,'sigma_d':sd,'erreur_type':None if sd is None else sd/math.sqrt(n),
+            'autocorrelation_1':r1,'test_signe':test_signe(d),'test_wilcoxon':test_wilcoxon(d)}
+
+
+def lecture_test(dm,nom):
+    if dm is None or dm['test_signe'] is None:return f'{nom} : aucun épisode où les deux pertes diffèrent'
+    p_=dm['test_wilcoxon']['p_amelioration'];q_=1-dm['test_signe']['p_amelioration'] if dm['test_signe'] else None
+    sens='amélioration' if dm['d_moyen']<0 else 'dégradation' if dm['d_moyen']>0 else 'aucun écart moyen'
+    return (f"{nom} : {sens} moyenne de {abs(dm['d_moyen']):.4f} sur {dm['episodes']} épisode(s) ; test du signe p = "
+            f"{dm['test_signe']['p_bilateral']:.3f}, Wilcoxon p = {dm['test_wilcoxon']['p_bilateral']:.3f} (bilatéraux, exacts) — "
+            +('non distinguable de zéro à cet effectif' if dm['test_wilcoxon']['p_bilateral']>=.05 else 'distinct de zéro au seuil de 5 %, sous réserve d’indépendance des épisodes'))
+
+
 def apport_cartes(units):
     """Brier avec cartes moins Brier sans cartes, sur les questions qui portent p_sans_cartes.
-    Négatif : les cartes améliorent le score ; nul : le score ne vient que de l'inertie."""
+    0.7.5 : la moyenne seule annonçait « les cartes améliorent le score ». Une moyenne n'est pas un test :
+    différentiel par épisode, dispersion et tests exacts du signe et de Wilcoxon (`differentiel`)."""
     v=[x for x in units if x['brier_sans_cartes'] is not None]
     if not v:return None
     d=sum(x['brier']-x['brier_sans_cartes'] for x in v)/len(v)
+    lg=[x for x in v if x.get('log') is not None and x.get('log_sans_cartes') is not None]
+    dm=differentiel(v,'brier_sans_cartes')
     return {'questions':len(v),'brier_avec':sum(x['brier'] for x in v)/len(v),'brier_sans':sum(x['brier_sans_cartes'] for x in v)/len(v),
-            'difference':d,'lecture':'les cartes améliorent le score' if d<0 else 'les cartes dégradent le score' if d>0 else 'score dû à l’inertie seule'}
+            'difference':d,'par_episode':dm,
+            'log_avec':sum(x['log'] for x in lg)/len(lg) if lg else None,'log_sans':sum(x['log_sans_cartes'] for x in lg)/len(lg) if lg else None,
+            'log_infini':sum(1 for x in v if x.get('log_infini')),
+            'lecture':lecture_test(dm,'cartes contre inertie') if abs(d)>1e-12 else 'score dû à l’inertie seule : les cartes ne déplacent pas p'}
 
 
 def jugements(units):
@@ -1788,10 +2137,11 @@ def moteur_contre_jugement(units):
     v=[x for x in units if x['brier_jugement'] is not None]
     if not v:return None
     n=len(v);bj=sum(x['brier_jugement'] for x in v)/n;bm=sum(x['brier'] for x in v)/n
+    dm=differentiel(v,'brier_jugement')
     return {'questions':n,'brier_jugement':bj,'brier_moteur':bm,
             'degradations':sum(x['brier']>x['brier_jugement'] for x in v),
-            'ameliorations':sum(x['brier']<x['brier_jugement'] for x in v),
-            'lecture':'le moteur améliore le jugement' if bm<bj else 'le moteur dégrade le jugement' if bm>bj else 'aucun apport mesuré'}
+            'ameliorations':sum(x['brier']<x['brier_jugement'] for x in v),'par_episode':dm,
+            'lecture':lecture_test(dm,'moteur contre jugement') if bm!=bj else 'aucun apport mesuré'}
 
 
 def difficulte(units):
@@ -1824,6 +2174,29 @@ def murphy(paires):
     return {'questions':n,'brier':bs,'fiabilite':rel,'resolution':res,'incertitude':unc,'variance_intra_classe':bs-(rel-res+unc),
             'lecture':('indicatif : moins de 50 questions, chaque classe compte trop peu de cas' if n<50 else
                        'fiabilité 0 = calibré ; résolution haute = discrimine ; incertitude = difficulté de l’ensemble posé')}
+
+
+def v4_statut(dm):
+    """0.7.7 (décisions 2 et 3). V4 se juge sur le différentiel **absolu** par épisode d̄ = Brier − Brier
+    de référence : atteint si d̄ ≤ −v4_gain_abs, si le test exact (v4_test) rejette « aucune amélioration »
+    au seuil v4_alpha, et si l'effectif atteint **à la fois** le plancher v4_n et l'effectif requis par la
+    dispersion observée, n = ⌈((z₁₋α/₂ + z_puissance) · σ̂(d) / v4_gain_abs)²⌉. Le plancher empêche qu'un σ̂
+    sous-estimé sur trois épisodes déclare le jalon atteint ; la cible se révise à chaque `scorer`."""
+    from statistics import NormalDist
+    z=NormalDist().inv_cdf(1-P['v4_alpha']/2)+NormalDist().inv_cdf(P['v4_puissance'])
+    regle=(f"d̄ ≤ −{P['v4_gain_abs']} ; test {P['v4_test']} p < {P['v4_alpha']} ; épisodes ≥ max({P['v4_n']}, "
+           f"⌈({z:.2f}·σ̂/{P['v4_gain_abs']})²⌉)")
+    if dm is None:return {'statut':'non encore évalué','episodes':0,'effectif_requis':None,'regle':regle}
+    sd=dm.get('sigma_d');req=None if sd is None else math.ceil((z*sd/P['v4_gain_abs'])**2)
+    t=dm['test_signe' if P['v4_test']=='signe' else 'test_wilcoxon']
+    p_=None if t is None else t['p_amelioration']
+    cible=None if req is None else max(P['v4_n'],req)
+    ic=None if dm.get('erreur_type') is None else [dm['d_moyen']-1.96*dm['erreur_type'],dm['d_moyen']+1.96*dm['erreur_type']]
+    if cible is None or dm['episodes']<cible:st='non encore évalué'
+    elif dm['d_moyen']<=-P['v4_gain_abs'] and p_ is not None and p_<P['v4_alpha']:st='jalon interne atteint — validation externe non établie'
+    else:st='jalon interne non atteint'
+    return {'statut':st,'episodes':dm['episodes'],'effectif_requis':req,'effectif_cible':cible,'d_moyen':dm['d_moyen'],
+            'intervalle_95_approche':ic,'p_test':p_,'sigma_d':sd,'regle':regle}
 
 
 def dossier_publie(x):
@@ -1870,7 +2243,10 @@ def score_result(data):
         verified=verified and all(dossier_publie(x) for x in items if origine=='moteur' and jour(x['date'])>=jour(P['v4_dossier_depuis']))
         excluded=origine=='jugement' or any(x['rejeu'] or x['fictif'] for x in items) or not verified
         units.append({'ids':[x['id'] for x in items],'episode_id':items[0]['episode_id'],'origine':origine,'rejeu':any(x['rejeu'] for x in items),
+                      'date':min(x['date'] for x in items),
                       'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_jugement':bj,
+                      **pertes_log(items,scores),
+                      'discriminant':None if origine=='jugement' else discriminant(items),
                       'difficulte':None if ref is None else .5-abs(ref-.5),'reference_difficulte':ref,
                       'hors_V4':excluded,'partition':bool(items[0].get('partition')),
                       'rho':'jugement' if origine=='jugement' else max(x['rho'] for x in items),
@@ -1884,7 +2260,16 @@ def score_result(data):
     b=sum(sum(x['brier'] for x in v)/len(v) for v in episodes.values())/len(episodes) if episodes else None
     bb=sum(sum(x['brier_base'] for x in v)/len(v) for v in episodes.values())/len(episodes) if episodes else None
     gain=1-b/bb if bb is not None and bb>0 else None
-    status='non encore évalué' if len(episodes)<P['v4_n'] else 'jalon interne atteint — validation externe non établie' if gain is not None and gain>=P['v4_gain'] else 'jalon interne non atteint'
+    # 0.7.5 : le gain est un « skill score » (Gneiting et Raftery 2007, §2.3) ; il s'accompagne du
+    # différentiel par épisode contre la référence et de ses tests exacts.
+    dv4=differentiel([dict(x,brier_base=x['brier_base']) for x in eligible if x['brier_base'] is not None],'brier_base')
+    v4=v4_statut(dv4)
+    status=v4['statut']
+    # 0.7.7 (décision 6) : second rapport sur les seules questions discriminantes, jamais un filtre du premier.
+    disc=[x for x in eligible if x.get('discriminant')]
+    dv4d=differentiel([x for x in disc if x['brier_base'] is not None],'brier_base')
+    v4_discriminant={'questions':len(disc),'part_des_eligibles':len(disc)/len(eligible) if eligible else None,
+                     'differentiel':dv4d,**{k:v for k,v in v4_statut(dv4d).items() if k!='regle'}}
     by={}
     for field in ('rho','strate'):
         groups=defaultdict(list)
@@ -1911,15 +2296,16 @@ def score_result(data):
             'moteur_contre_jugement':moteur_contre_jugement([x for x in units if x['origine']=='moteur']),
             'difficulte':difficulte(units),'questions_hors_V4':len(units)-len(eligible),
             'sans_score':missing,'non_resolues':unresolved,'episodes_comparables':len(episodes),'brier_par_episode':b,
-            'brier_base_par_episode':bb,'gain':gain,'statut':status,'par_groupe':by,'calibration':calibration,
+            'brier_base_par_episode':bb,'gain':gain,'gain_par_episode':dv4,'v4':v4,'v4_discriminant':v4_discriminant,'statut':status,'par_groupe':by,'calibration':calibration,
             'decomposition_murphy':decomposition,'details':units,
             'limites':['Prépublication déclarée : authenticité à vérifier humainement.',
-                       '50 épisodes et 10 % de gain constituent un jalon interne, pas une preuve statistique.',
+                       '50 épisodes et 10 % de gain constituent un jalon interne, pas une preuve statistique : lire avec gain_par_episode (tests exacts, sigma_d).',
+                       'Un skill score (gain) n’est pas une règle propre en général : le Brier l’est, le rapport de deux Brier non (Gneiting et Raftery 2007).',
                        'p(1-p) décrit la confiance annoncée ; une valeur faible ne démontre pas que le test est inutile.']}
 
 
 COLONNES_CSV=('ids','episode_id','origine','rho','strate','partition','hors_V4','brier','brier_base','brier_sans_cartes',
-              'brier_jugement','difficulte','reference_difficulte','incertitude_annoncee')
+              'brier_jugement','log','log_sans_cartes','difficulte','reference_difficulte','incertitude_annoncee')
 
 
 def scorer(path, csv_=False):
@@ -1963,7 +2349,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -2103,7 +2489,11 @@ def bilan(base_chemin=None, refs_chemin=None, journal_chemin=None):
     if not act:out.append('Étape 5 · base réelle : aucun cas actif')
     if journal_chemin:
         r=score_result(charger(journal_chemin))
-        out.append(f"Test à l'aveugle · {r['questions_eligibles']} questions éligibles V4 · {r['episodes_comparables']}/{P['v4_n']} épisodes comparables · {r['statut']}")
+        v_=r['v4'];cib=v_.get('effectif_cible')
+        out.append(f"Test à l'aveugle · {r['questions_eligibles']} questions éligibles V4 · {r['episodes_comparables']} épisodes comparables, cible "
+                   +(f"{cib} (plancher {P['v4_n']}, requis par σ̂ {v_['effectif_requis']})" if cib else f"≥ {P['v4_n']}, σ̂(d) encore inconnu")
+                   +f" · {r['statut']} · règle : {v_['regle']}"
+                   +(f" · discriminantes : {r['v4_discriminant']['questions']}" if r.get('v4_discriminant') else ''))
         mj=r['moteur_contre_jugement'];df=r['difficulte']
         if mj:out.append(f"Mesure · moteur contre jugement scellé : {mj['questions']} questions · {mj['ameliorations']} améliorations · {mj['degradations']} dégradations · {mj['lecture']}")
         if df:out.append(f"Mesure · questions à référence extrême : {df['part_extremes']:.0%} · {df['lecture']}")
@@ -2126,7 +2516,7 @@ def schema_documente():
 
 
 # Paramètres déclarés mais lus par aucun calcul, à dessein (protocole.md A4 pour kappa_min).
-PARAMETRES_RESERVES = {'kappa_min'}
+PARAMETRES_RESERVES = {'kappa_min','kappa_rapportable'}
 
 
 def erreurs_parametres(params=None):
@@ -2178,14 +2568,15 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.4','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.7','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
-    for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain','alerte_R2','ecart_niveaux_max'):
+    for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
         exiger(type(P[k]) in (int,float) and math.isfinite(P[k]) and P[k]>0,f'paramètre positif : {k}')
     date_iso(P['v4_dossier_depuis'])
-    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_frequence','c_min_rho1','placebo_tirages'):
+    exiger(P['v4_test'] in ('signe','wilcoxon'),'v4_test : signe ou wilcoxon')
+    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_publication','n_min_ancrage','c_min_rho1','c_min_niveau','placebo_tirages','weibull_occasions_min'):
         exiger(type(P[k]) is int and P[k]>0,f'paramètre entier positif : {k}')
     for ab,p in P['inertie'].items():exiger(ab in NOMS and 0<proba(p)<1,'inertie invalide')
     exiger(set(P['inertie'])==set(NOMS),'inerties incomplètes')
@@ -2381,7 +2772,7 @@ def afficher(result,as_json=False):
             # 0.7.3. Sans ancrage, f est surtout le défaut (5 % à trois mois) lissé : l'écart mesure la
             # distance au défaut, pas l'apport des cartes. L'annoncer comme un apport était un contresens.
             print(f"Sans cartes (inertie et fréquences seules) : {pct(result['p_sans_cartes'])} — écart de {d:+.1f} points "
-                  "non interprétable : l’a priori n’est pas ancré (effectif pondéré sous n_min), "
+                  "non interprétable : l’a priori n’est pas ancré (effectif pondéré sous n_min_ancrage), "
                   "l’écart mesure la distance au défaut, pas ce que les cartes ajoutent")
         else:
             print(f"Sans cartes (inertie et fréquences seules) : {pct(result['p_sans_cartes'])} — "
@@ -2429,14 +2820,27 @@ def afficher(result,as_json=False):
             print("Force d’ancrage : aucun effet numérique ici (les multiplicateurs viennent de la matrice, pas du degré de preuve ; "
                   "F/f ne pèse que sur la sélection des homologues"
                   +(", nulle sans base)." if not result.get('c_A') else ", sans effet sur les cas retenus ici)."))
-        elif sb.get('effet_force') is not None:
+        at_=sb.get('effet_attenuation') or {}
+        if at_:
+            print('Atténuation de λ (décision 5, variante non appliquée à p) : '+' · '.join(
+                f"{'par la force F/f' if k=='force' else 'par corroboration et passage'} {v*100:+.1f} points".replace('.',',') for k,v in at_.items()))
+        if sb.get('effet_force') is not None and abs(sb['effet_force'])>=1e-12:
             print(f"Force d’ancrage : toutes les forces abaissées à f, p varie de {sb['effet_force']*100:+.1f} points "
                   "(par la seule sélection des homologues)".replace('.',','))
     if 'a_priori' in result:
         ap=result['a_priori']
         part=P['k0_frequence']/(ap['effectif_reference']+P['k0_frequence'])
         print(f"Trace : multiplicateur {ap['LR']:.2f} · homologie {result['homologie'] or '—'} · c_A {result['c_A']} · "
-              f"n_A {result['n_A']:.1f} · n_E {result['n_E']:.1f} · part de l’a priori dans f {round(part*100)} %")
+              f"n_A {result['n_A']:.1f} · n_E {result['n_E']:.1f} · part de l’a priori dans f {round(part*100)} %"
+              +(f" · part de p₀ dans p {round(result['poids_a_priori_p']*100)} %" if result.get('poids_a_priori_p') is not None else '')
+              +(f" · taille effective (Kish) {result['n_eff_kish']:.1f} pour {result['c_A']} cas, cas le plus lourd {round(result['part_cas_le_plus_lourd']*100)} %"
+                if result.get('n_eff_kish') else ''))
+        itf=ap.get('intervalle_f')
+        if 'reference_a_priori' in ap:
+            print(f"A priori : f {pct(ap['reference_interne'])}"+(f" [{pct(itf[0],False)}–{pct(itf[1])}]" if itf else '')
+                  +f" sur {ap['effectif_reference']:.1f} observations pondérées + {P['k0_frequence']} pseudo-observations de la référence "
+                  +f"{pct(ap['reference_a_priori'])} ; p₀ révisé par {result['n_A']:.1f} observations + {P['k']:g} pseudo-observations"
+                  +(" — « ancré » signifie données au moins aussi lourdes que l’a priori (n_min_ancrage), pas fréquence précise" if ap.get('ancrage') and ap.get('reference_externe') is None else ''))
     ml=result.get('marqueur_local')
     if ml:print(f"Résolution (S1) : la source doit mesurer le marqueur local « {ml['marqueur']} » ({ml['equivalent']}, {ml['statut']}) ; sinon reformuler l'événement")
     ds=result.get('dossier')
@@ -2459,10 +2863,11 @@ def main():
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
     p.add_argument('--registre',default='partage.jsonl');p.add_argument('--date')
     subs.add_parser('manifeste')
+    cf=subs.add_parser('confronter');cf.add_argument('fichier');cf.add_argument('--json',action='store_true')
     ds=subs.add_parser('dossier');ds.add_argument('--fichier',required=True);ds.add_argument('--json',action='store_true')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
-    for name in ('calculer','trajectoires'):
+    for name in ('calculer','trajectoires','sonde'):
         c=subs.add_parser(name);c.add_argument('--base');c.add_argument('--etat',required=True)
         c.add_argument('--date-information');c.add_argument('--liaison',action='append',default=[])
         c.add_argument('--bouge',action='append',default=[]);c.add_argument('--manque',action='append',default=[])
@@ -2473,7 +2878,9 @@ def main():
         c.add_argument('--json',action='store_true');c.add_argument('--demo',action='store_true')
         c.add_argument('--sans-cartes',action='store_true')
         c.add_argument('--temporalite',choices=TEMPORALITES,default=None)
-        if name=='calculer':c.add_argument('--evenement',required=True);c.add_argument('--dossier')
+        if name in ('calculer','sonde'):c.add_argument('--evenement',required=True)
+        if name=='calculer':c.add_argument('--dossier')
+        if name=='sonde':c.add_argument('--tirage',choices=('aretes','intensites','inerties'),default='aretes');c.add_argument('--tirages',type=int)
     a=parser.parse_args()
     if a.cmd=='audit':audit();return
     if a.cmd=='autotest':autotest();return
@@ -2488,6 +2895,24 @@ def main():
               'dossier INCOMPLET — statut de lecture Spéculatif ; à reporter dans « À vérifier » :\n  - '+'\n  - '.join(dr['manques'])))
         print(f"sceau : {dr['sceau']}")
         print(dr['instruction'])
+        return
+    if a.cmd=='confronter':
+        r=confronter(charger(a.fichier))
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        c_=r['classes'];print(f"{r['apparitions']} apparition(s) observée(s) : {c_['meme_strate']} atteignable(s) dans la strate, "
+              f"{c_['propagation_documentee']} par propagation documentée, {c_['transfert_ancre']} par transfert ancré, {c_['position_manque']} par position manque, "
+              f"{c_['inter_strates_abaissee']} seulement par une arête inter-strates abaissée, {c_['non_atteignable']} NON ATTEIGNABLE(S), {c_['etat_nul']} depuis l’état nul")
+        for d_ in r['divergences']:
+            print(f"  {d_['cas']} {d_['date']} : {d_['apparition']} depuis {' + '.join(d_['depuis']) or '∅'} — {d_['classe']}"+(' (fictif)' if d_['fictif'] else '')+(f" ({d_['statut']})" if d_['statut']!='actif' else ''))
+        cv=r['couverture_aretes'];print(f"Arêtes de la matrice éprouvées : {cv['avec_une_occasion']}/{cv['aretes']} au moins une fois, {cv['avec_dix_occasions']}/{cv['aretes']} au moins dix fois")
+        print('Maintien selon l’âge (pas déjà présents) : '+' · '.join(f"{k} : {v['maintiens']}/{v['occasions']}"
+              +(f" [{v['intervalle_95'][0]*100:.0f}–{v['intervalle_95'][1]*100:.0f} %]" if v['intervalle_95'] else '') for k,v in r['age'].items()))
+        t_=r['test_age']
+        if t_:
+            print(f"Écart âge ≥ 1 − âge 0 : {t_['ecart']*100:+.1f} points (écart-type {t_['ecart_type']*100:.1f} ; détectable à 80 % : {t_['ecart_detectable_80']*100:.0f} points)")
+            cw=t_['critere_weibull'];print('Critère d’ouverture d’une loi à taux variable ('+cw['regle']+') : '
+                  +('atteint' if cw['atteint'] else 'non atteint' if cw['applicable'] else 'non applicable (base fictive, archivée ou trop petite)'))
+        for l_ in r['limites']:print('! '+l_)
         return
     if a.cmd=='bilan':print(bilan(a.base,a.references,a.journal));return
     if a.cmd=='manifeste':
@@ -2571,6 +2996,21 @@ def main():
         exiger(all(x in forces(etat) for x in bouge) and all(x not in forces(etat) for x in manque),'positions incompatibles avec l’état')
     exiger(all(x.isdigit() and 1<=int(x)<=NS for x in a.ctr_materielle),'strate de contrainte matérielle invalide')
     opts=dict(liaisons=links,bouge=bouge,manque=manque,refs=refs,ctr_materielle=a.ctr_materielle,asof=asof,sans_cartes=a.sans_cartes)
+    if a.cmd=='sonde':
+        cible,typ=evenement_lire(a.evenement)
+        exiger(typ in ('apparait','persiste','disparait'),'sonde : événement simple seulement')
+        sem=a.semantique or ('continue' if typ=='persiste' else 'au-moins-une-fois' if typ=='disparait' else 'presence')
+        r=sonde_matrice(etat,typ,cible,active,dict(opts,sans_cartes=False),a.pas,sem,a.tirage,a.tirages)
+        r['contexte']=metadata(base,asof,a.demo)
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        print(f"Sonde « {a.tirage} » · {r['tirages']} tirages · graine {r['graine']} · {cible} {typ}")
+        print(f"p réel {pct(r['p_reel'])} · sans multiplicateurs (cas gardés) {pct(r['p_sans_multiplicateurs'])} · sans cartes {pct(r['p_sans_cartes'])}")
+        print(f"p sonde : médiane {pct(r['p_sonde_mediane'])}, 90 % des tirages {pct(r['p_sonde_90'][0],False)}–{pct(r['p_sonde_90'][1])} ; "
+              f"{round(100*r['part_sans_effet'])} % des tirages sans aucun multiplicateur")
+        print(r['lecture']+f" ; révision par les cas : {r['apport_cas']*100:+.1f} points".replace('.',','))
+        print('! Base fictive : la sonde décrit la mécanique du calcul, pas la valeur de la matrice. Un seul événement, un seul état.' if a.demo else
+              '! Un seul événement, un seul état : répéter sur plusieurs cibles avant toute conclusion sur la matrice.')
+        return
     if a.cmd=='trajectoires':
         # 0.6.11 : l'option était acceptée et sans effet. Les trajectoires reposent sur les taux génériques
         # de toutes les cartes à la fois ; une échéance programmée ou une durée de vie propre ne s'y déclare pas.
@@ -2626,7 +3066,14 @@ def main():
                 # Sans lui, un bon Brier peut ne venir que du statu quo (exemple 11).
                 nu=horizon_result(etat,typ,cible,active,dict(opts,sans_cartes=True),a.pas,sem)
                 result['p_sans_cartes']=nu['p'];result['apport_cartes']=result['p']-nu['p']
-                result['sensibilite']=sensibilite(etat,typ,cible,active,opts,a.pas,sem)
+                pieces=None
+                if dossier:
+                    pieces={}
+                    for it_ in dd.get('mots') or []:
+                        ps_=it_.get('passage');ps_=ps_ if isinstance(ps_,list) else [ps_] if ps_ else []
+                        pieces[cle_valide(f"{it_.get('carte')}@{it_.get('strate')}")]={'corroboration':it_.get('corroboration'),
+                            'passage':'soutient' if any(isinstance(x,dict) and x.get('relation')=='soutient' for x in ps_) else 'partiel'}
+                result['sensibilite']=sensibilite(etat,typ,cible,active,opts,a.pas,sem,pieces)
         result['echeance']=end;result['journal']=a.journal;result['etat']=a.etat
         if dossier and not dossier['complet']:
             result.setdefault('drapeaux',[]).append('Dossier incomplet (plancher A7) : '+' ; '.join(dossier['manques'][:4])
@@ -2666,7 +3113,7 @@ def autotest():
             dt=fin_fenetre(f'{year}-01-01','3 mois',j).isoformat() if j else f'{year}-01-01'
             states.append({'date':dt,'disponible_le':dt,'etat':f'[{dt} | 3 mois] POLARITÉ@7[f]',
                            'mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'deux camps observés',
-                                    'source':'source de test fictive','contre_observation':'médiation observée, marginale','portee':'marginale','objet':'conflit-test'}] if not j else None,
+                                    'source':'source de test fictive','contre_observation':'médiation observée, marginale','portee':'marginale','objet':'conflit-test','classe_source':'contemporain'}] if not j else None,
                            'retraits':[],'liaisons':[],'positions':None})
         states[0]['questions']=[{'question':'Une médiation impose-t-elle une règle commune ?','si_oui':'CTR@7','si_non':'POL@7',
                                  'resolution':'texte de la médiation publié au registre (fictif)',
@@ -3114,7 +3561,7 @@ def autotest():
                'contre_candidate':'CTR@7',
                'mots':[{'carte':'POL','strate':7,'intensite':'F','fait':'deux camps se définissent l’un par l’autre',
                         'source':'source A ; source B','objet':'relation A-B','contre_observation':'médiation acceptée, marginale',
-                        'portee':'marginale','test':'pistolet','corroboration':'independantes',
+                        'portee':'marginale','test':'pistolet','corroboration':'independantes','classe_source':'contemporain',
                         'passage':[{'localisation':'p. 3','relation':'soutient'},{'localisation':'p. 4','relation':'soutient'}],
                         'garantie':{'mecanisme':'x','attendu':'y','contredirait':'z'},'option':{'acteur':'A','avant':'a','apres':'b'}}]}
             with self.assertRaises(ValueError) as cm:dossier_valider(d)
@@ -3122,7 +3569,7 @@ def autotest():
         def test_dossier_rejette_contre_candidate_hors_liste(self):
             d={'etat':'[2026-01-01 | 3 mois] POLARITÉ@7[f] + CONTRAINTE@7[f]','candidats':['POL@7','CTR@7'],
                'contre_candidate':'SEU@7','mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'f','source':'s',
-                                                   'objet':'o','contre_observation':'c','portee':'marginale'}]}
+                                                   'objet':'o','contre_observation':'c','portee':'marginale','classe_source':'contemporain'}]}
             with self.assertRaises(ValueError):dossier_valider(d)
         def test_dossier_sceau_stable(self):
             d={'etat':'[2026-01-01 | 3 mois] POLARITÉ@7[f] + CONTRAINTE@7[f]','candidats':['POL@7','CTR@7'],
@@ -3132,9 +3579,9 @@ def autotest():
                              'justification':{'oui':'une règle commune retire une option aux deux camps',
                                               'non':'sans règle, chaque camp reste seul à se définir'}}],
                'mots':[{'carte':'POL','strate':7,'intensite':'f','fait':'f','source':'s','objet':'o',
-                        'contre_observation':'c','portee':'marginale'},
+                        'contre_observation':'c','portee':'marginale','classe_source':'contemporain'},
                        {'carte':'CTR','strate':7,'intensite':'f','fait':'f','source':'s','objet':'o',
-                        'contre_observation':'c','portee':'marginale'}]}
+                        'contre_observation':'c','portee':'marginale','classe_source':'contemporain'}]}
             a=dossier_valider(d);b=dossier_valider(copy.deepcopy(d))
             self.assertEqual(a['sceau'],b['sceau']);self.assertEqual(len(a['sceau']),64)
             d['contre_candidate']='POL@7'
@@ -3261,6 +3708,117 @@ def autotest():
                 d=self._dossier();d['recherches'].append(bad)
                 with self.assertRaises(ValueError):dossier_valider(d)
             d=self._dossier();d.pop('recherches');self.assertFalse(dossier_valider(d)['complet'])
+        def test_confronter(self):
+            # 0.7.5 : matrice confrontée aux observations, classée par la règle du moteur.
+            r=confronter(charger(RACINE/'assets/cas-reels.jsonl'))
+            self.assertEqual((r['apparitions'],r['classes']['non_atteignable'],r['classes']['meme_strate']),(3,2,1))
+            self.assertEqual({d['apparition'] for d in r['divergences']},{'CTR@8','TRC@5'})
+            r=confronter(charger(RACINE/'assets/base-de-cas.exemple.jsonl'))
+            self.assertEqual((r['apparitions'],r['classes']['etat_nul'],r['classes']['inter_strates_abaissee'],r['classes']['non_atteignable']),(22,1,1,0))
+            self.assertEqual((r['age']['0']['occasions'],r['age']['0']['maintiens']),(80,68))
+            c=fake_case(count=1);c['issue']['etat']=c['issue']['etat'].replace('POLARITÉ@7[f]','POLARITÉ@7[f] + PÉRIODICITÉ@7[f]')
+            self.assertGreaterEqual(confronter([c])['apparitions'],1)
+        def test_tests_exacts(self):
+            self.assertAlmostEqual(test_signe([-1]*32+[1]*18)['p_amelioration'],0.0325,places=4)
+            self.assertEqual(test_signe([0,0])['n'] if test_signe([0,0]) else 0,0)            # nuls exclus
+            w=test_wilcoxon([-.1,-.2,-.3,-.4,.05]);self.assertEqual(w['W_plus'],1);self.assertAlmostEqual(w['p_amelioration'],2/32)
+            self.assertAlmostEqual(test_wilcoxon([-1,-1,1,-2])['p_amelioration'],.25)        # rangs moyens
+            # apport des cartes : la lecture vient du test, pas de la moyenne seule
+            ps=[forecast(f'P-{i}',episode_id=f'e{i}',version_regles='0.5.0',p_sans_cartes=.5,probabilite=.4 if i%2 else .6) for i in range(6)]
+            r=score_result(ps+[score(f'P-{i}',0) for i in range(6)])
+            a_=r['apport_des_cartes'];self.assertEqual(a_['par_episode']['episodes'],6)
+            self.assertIn('non distinguable',a_['lecture'])
+            self.assertIsNotNone(a_['log_avec'])
+        def test_meme_epreuve(self):
+            # 0.7.5 : une révision (même épisode, événement, échéance) garde l'épreuve.
+            a_=forecast('P-1');b_=forecast('P-2',probabilite=.3)
+            self.assertTrue(valider_journal([a_,b_]))
+            b_['resolution']=dict(b_['resolution'],critere='rupture exécutée')
+            with self.assertRaises(ValueError):valider_journal([a_,b_])
+            b_['episode_id']='episode-B';self.assertTrue(valider_journal([a_,b_]))       # autre objet : autre épreuve admise
+        def test_priors_publies(self):
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            r=calculer(e,'apparait','SEU@7',charger(RACINE/'assets/base-de-cas.exemple.jsonl'),asof='2026-09-20')
+            ap=r['a_priori'];self.assertAlmostEqual(ap['poids_a_priori_f'],P['k0_frequence']/(ap['effectif_reference']+P['k0_frequence']))
+            self.assertAlmostEqual(r['poids_a_priori_p'],P['k']/(r['n_A']+P['k']))
+            lo,hi=ap['intervalle_f'];self.assertTrue(lo<ap['reference_interne']<hi)
+            self.assertEqual(calculer(e,'apparait','SEU@7',[],sans_cartes=True)['p'],calculer(e,'apparait','SEU@7',[])['a_priori']['reference_interne'])  # p_sans_cartes = f
+        def test_classe_source_duree(self):
+            c=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)');c['sequence'][0]['mots'][0].pop('classe_source')
+            with self.assertRaises(ValueError):valider_base([c])
+            c['sequence'][0]['mots'][0]['classe_source']='rumeur'
+            with self.assertRaises(ValueError):valider_base([c])
+            d=self._dossier();d['evenements'][0].update(duree_caracteristique_jours=5,source_duree='OMM')
+            with self.assertRaises(ValueError):dossier_valider(d)            # 5 j contre une fenêtre de 3 mois, générique
+            d['evenements'][0]['justification_temporalite']='question sur la récurrence, pas sur un épisode';self.assertTrue(dossier_valider(d)['conforme'])
+            d=self._dossier();d['evenements'][0].update(duree_caracteristique_jours=200,source_duree='série publiée');self.assertTrue(dossier_valider(d)['conforme'])
+        def test_sonde(self):
+            # 0.7.6 : variable sonde sur les paramètres ; référence sans multiplicateurs, cas gardés.
+            base=base_active(charger(RACINE/'assets/base-de-cas.exemple.jsonl'),'2026-09-20',True)
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]');avant=json.dumps(P,sort_keys=True)
+            r=sonde_matrice(e,'apparait','SEU@7',base,{'asof':'2026-09-20'},1,'presence','aretes',40)
+            self.assertEqual(json.dumps(P,sort_keys=True),avant)                  # paramètres restaurés
+            self.assertEqual(r,sonde_matrice(e,'apparait','SEU@7',base,{'asof':'2026-09-20'},1,'presence','aretes',40))   # reproductible
+            self.assertAlmostEqual(r['p_reel'],calculer(e,'apparait','SEU@7',base,asof='2026-09-20')['p'])
+            self.assertAlmostEqual(r['apport_cas']+r['apport_matrice_reel'],r['p_reel']-r['p_sans_cartes'])
+            self.assertTrue(0<=r['centile_reel']<=1)
+            ri=sonde_matrice(e,'apparait','SEU@7',base,{'asof':'2026-09-20'},1,'presence','inerties',10)
+            self.assertEqual(ri['p_sonde_90'][0],ri['p_sonde_90'][1])           # inerties hors d'une apparition à un pas
+            rp=sonde_matrice(e,'apparait','SEU@7',base,{'asof':'2026-09-20'},3,'presence','inerties',10)
+            self.assertLess(rp['p_sonde_90'][0],rp['p_sonde_90'][1])            # mais dans la chaîne à plusieurs pas
+        def test_kish_attenuation(self):
+            base=base_active(charger(RACINE/'assets/base-de-cas.exemple.jsonl'),'2026-09-20',True)
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[f]')
+            r=calculer(e,'apparait','SEU@7',base,asof='2026-09-20')
+            self.assertTrue(0<r['n_eff_kish']<=r['c_A']+1e-9);self.assertTrue(0<r['part_cas_le_plus_lourd']<=1)
+            sb=sensibilite(e,'apparait','SEU@7',base,{'asof':'2026-09-20'},1,'presence',
+                           {'POL@7':{'corroboration':'unique','passage':'soutient'}})
+            self.assertLess(sb['effet_attenuation']['force'],0)                  # f atténue l'arête de CTR@6
+            self.assertIn('corroboration_passage',sb['effet_attenuation'])
+            self.assertIsNone(globals().get('ATTENUATION'))                     # crochet retiré après la sonde
+            self.assertEqual(r['p'],calculer(e,'apparait','SEU@7',base,asof='2026-09-20')['p'])
+        def test_circularite_ideologie(self):
+            d=self._dossier();d['mots'][0]['garantie']['mecanisme']='c’est une polarité parce que deux camps'
+            r=dossier_valider(d);self.assertTrue(any('nomme la carte' in m for m in r['manques']));self.assertFalse(r['complet'])
+            self.assertFalse(any('nomme la carte' in m for m in dossier_valider(self._dossier())['manques']))
+            c=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)')
+            c['codage']['codeurs'][0].update(signe_suffisant='execution',declare_le='2025-12-31');self.assertEqual(valider_base([c])['actifs'],1)
+            c['codage']['codeurs'][0]['declare_le']='2026-02-01'
+            with self.assertRaises(ValueError):valider_base([c])            # déclaration rétrospective
+            c['codage']['codeurs'][0].update(signe_suffisant='intuition',declare_le='2025-12-31')
+            with self.assertRaises(ValueError):valider_base([c])
+            cv=confronter(charger(RACINE/'assets/base-de-cas.exemple.jsonl'))['couverture_aretes']
+            self.assertEqual(cv['aretes'],66);self.assertLessEqual(cv['avec_dix_occasions'],cv['avec_une_occasion'])
+        def test_ancrage_dedouble(self):
+            # 0.7.7 (décision 1) : publication et ancrage séparés ; p inchangé.
+            base=base_active(charger(RACINE/'assets/base-de-cas.exemple.jsonl'),'2026-09-20',True)
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            r=calculer(e,'apparait','SEU@7',base,asof='2026-09-20');ap=r['a_priori']
+            self.assertTrue(P['n_min_publication']<=ap['effectif_reference']<P['n_min_ancrage'])
+            self.assertTrue(ap['publie']);self.assertFalse(ap['ancrage']);self.assertIsNotNone(r['comparateur'])
+            old=P['n_min_ancrage'];P['n_min_ancrage']=1
+            try:self.assertEqual(calculer(e,'apparait','SEU@7',base,asof='2026-09-20')['p'],r['p'])
+            finally:P['n_min_ancrage']=old
+            self.assertIsNone(calculer(e,'apparait','SEU@7',[])['comparateur'])               # base vide : rien à publier
+        def test_v4_statut(self):
+            # 0.7.7 (décisions 2 et 3) : gain absolu, test exact, effectif = max(plancher, requis par σ̂).
+            dm=lambda n,dbar,sd,neg:{'episodes':n,'d_moyen':dbar,'sigma_d':sd,'erreur_type':sd/math.sqrt(n),
+                                      'test_signe':test_signe([-1]*neg+[1]*(n-neg)),'test_wilcoxon':test_wilcoxon([-1]*neg+[1]*(n-neg))}
+            self.assertEqual(v4_statut(dm(3,-.05,.001,3))['statut'],'non encore évalué')         # σ̂ minuscule : le plancher tient
+            self.assertTrue(v4_statut(dm(60,-.03,.05,45))['statut'].startswith('jalon interne atteint'))
+            self.assertEqual(v4_statut(dm(60,-.01,.05,45))['statut'],'jalon interne non atteint')   # gain trop petit
+            self.assertEqual(v4_statut(dm(60,-.03,.05,31))['statut'],'jalon interne non atteint')   # test non significatif
+            r=v4_statut(dm(60,-.03,.10,45));self.assertEqual(r['effectif_requis'],126);self.assertEqual(r['statut'],'non encore évalué')
+            self.assertEqual(v4_statut(None)['statut'],'non encore évalué')
+        def test_discriminant_weibull(self):
+            self.assertTrue(discriminant([{'probabilite':.30,'p_sans_cartes':.27,'p_placebo':.295}]))
+            self.assertFalse(discriminant([{'probabilite':.30,'p_sans_cartes':.29,'p_placebo':.305}]))
+            self.assertIsNone(discriminant([{'probabilite':.30}]))
+            ps=[forecast(f'P-{i}',episode_id=f'e{i}',version_regles='0.5.0',p_sans_cartes=.5,probabilite=.4 if i%2 else .49) for i in range(4)]
+            r=score_result(ps+[score(f'P-{i}',0) for i in range(4)]);self.assertIn('v4_discriminant',r);self.assertIn('v4',r)
+            lo,hi=wilson(68,80);self.assertTrue(lo<.85<hi);self.assertIsNone(wilson(0,0))
+            cw=confronter(charger(RACINE/'assets/base-de-cas.exemple.jsonl'))['test_age']['critere_weibull']
+            self.assertFalse(cw['applicable'])                                                  # base fictive : jamais applicable
         def test_barreau_exception(self):
             # 0.6.5 (audit O7) : la mécanique des exceptions n'avait jamais été exercée.
             src=[{'mot':'POL@7'},{'mot':'CTR@6'}]
@@ -3448,8 +4006,9 @@ def autotest():
                 self.assertTrue(erreurs_statuts(mut),f'mutation du nombre {g} non détectée')
             self.assertTrue(erreurs_statuts(sk.replace(m.group(0),'(répartition supprimée)')))
         def test_cloture_vide(self):
-            rv=recherches_vide();self.assertEqual(rv[(carte_id('RÉSONANCE'),7)],2)
-            self.assertEqual(sum(1 for v in rv.values() if v>=P['vide_recherches_cloture']),0)
+            rv=recherches_vide();self.assertEqual(rv[(carte_id('RÉSONANCE'),7)],3)          # close en 0.7.7
+            self.assertEqual(rv[(carte_id('CROISSANCE'),7)],2)                                 # rétrogradée, deux lectures
+            self.assertEqual(sum(1 for v in rv.values() if v>=P['vide_recherches_cloture']),1)
             self.assertEqual(len(rv),sum(1 for v in statuts().values() if v=='Vide'))
         def test_questions(self):
             fm={'POL@7':'F','CTR@7':'f'}

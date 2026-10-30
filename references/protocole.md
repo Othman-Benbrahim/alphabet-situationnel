@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.4
+> Version : 0.7.7
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -88,7 +88,7 @@ et le statut Descriptif. Le plafond ne protégeait rien : si le marqueur local e
 fausse en f comme en F. Le statut reste affiché et rappelé dans « À vérifier auprès de vous ».
 
 Les 117 anciens « Documentés » à référence « à fournir » sont rétrogradés en **Proposé** en 0.4.0.
-Le bilan est 0 Attesté, 13 Documenté, 182 Proposé, 13 Vide, 0 Hors domaine ; les 13 Documentés sont tous en
+Le bilan est 0 Attesté, 13 Documenté, 181 Proposé, 14 Vide, 0 Hors domaine ; les 13 Documentés sont tous en
 strate 7 (géopolitique), strate pilote de l'étape 3 (`feuille-de-route.md` §5.1). Aucun résultat historique n’est réécrit
 pour fabriquer une attestation. Promotion seulement après lecture de la source et recodage ; la
 bibliographie du noyau ne valide pas automatiquement chaque traduction locale. Les cas fictifs peuvent
@@ -98,7 +98,12 @@ stipuler F sans valeur empirique ; leurs chiffres restent réservés au mode `--
 codés indépendamment par deux codeurs distincts, dont au moins un humain. Le moteur contrôle les
 identités déclarées, les attestations d’indépendance et les effectifs ; il ne certifie pas l’indépendance
 réelle et ne calcule pas encore κ ; le seuil `kappa_min` de §H est donc **réservé** : déclaré pour le
-futur calcul, lu par aucun calcul en 0.4.x. Tant que l’accord par carte (κ ≥ 0,6) n’est pas vérifié et archivé,
+futur calcul, lu par aucun calcul en 0.4.x. Repères (0.7.5) : `kappa_min` 0,67, seuil des conclusions provisoires, et `kappa_rapportable` 0,80, seuil d'une
+fiabilité rapportable (Krippendorff 1980, cité par Carletta 1996) ; ces repères valent pour α de
+Krippendorff et sont repris pour κ à titre indicatif. Un κ se publie avec son intervalle, et la **forme**
+des désaccords compte plus que leur ampleur (Reidsma et Carletta 2008) : les désaccords se conservent et
+s'examinent par carte. L'effectif de 20 cas n'est pas justifié par un calcul de puissance
+(`feuille-de-route.md` §1). Tant que l’accord par carte (κ ≥ 0,67) n’est pas vérifié et archivé,
 aucun accord empirique n’est revendiqué. Effectif insuffisant : mode solo, ρ0 inaccessible.
 Une carte dont l’accord est insuffisant revient en Proposé ; rechercher les divergences de définition.
 
@@ -374,7 +379,8 @@ finie entre 0 et 1. Elle est propre à l’événement. La disparition utilise l
 ou le complément d’une référence de persistance, jamais un scalaire ambigu.
 Fréquence de base : moyenne pondérée de transitions éligibles, un cas pesant au plus une unité,
 lissée par k₀ vers la référence externe ou le défaut. Ancrage sans source externe seulement si
-l’effectif **pondéré** atteint n_min. Les fréquences sont calculées après filtrage temporel.
+l’effectif **pondéré** atteint `n_min_ancrage` (20 = k₀ : les données pèsent autant que l'a priori) ;
+f est publié comme comparateur dès `n_min_publication` (1). Les fréquences sont calculées après filtrage temporel.
 Défauts de probabilité et inerties sont ramenés de 3 mois à la fenêtre à taux constant.
 Pour *bouge*, la persistance r devient r^1,5 : accélération du taux de sortie, toujours entre 0 et 1.
 0 et 1 sont traités explicitement ; aucune loi bêta impropre n’est fabriquée. Les multiplicateurs
@@ -505,9 +511,13 @@ l'accord entre codeurs (A4), la composition de la base (B4), les valeurs de §H.
 est datée, motivée par des scores, reportée dans `assets/parametres.json`, et n'est jamais appliquée
 aux prévisions déjà journalisées.
 
-**V4 · Jalon de validation.** Au moins 50 épisodes comparables prospectifs, gain de Brier
-≥10 % contre le comparateur fixé au même horizon : **jalon interne atteint**, jamais certification
-scientifique automatique. Avant : « non encore évalué ». L’indépendance entre épisodes, l’incertitude
+**V4 · Jalon de validation (0.7.7).** Différentiel absolu par épisode d̄ = Brier du moteur − Brier du
+comparateur fixé au même horizon : **jalon interne atteint** si d̄ ≤ −`v4_gain_abs` (2,5 points), si le
+test exact `v4_test` (signe) rejette « aucune amélioration » au seuil `v4_alpha` (5 %), et si le nombre
+d'épisodes comparables prospectifs atteint à la fois le plancher `v4_n` (50) et l'effectif requis par la
+dispersion observée, ⌈((z₁₋α/₂ + z_puissance) · σ̂(d) / v4_gain_abs)²⌉ (puissance `v4_puissance`, 80 %).
+Jamais certification scientifique automatique. Avant : « non encore évalué ». V4 se publie aussi sur les
+seules questions discriminantes (`delta_discriminant`), en second rapport, jamais en filtre. L’indépendance entre épisodes, l’incertitude
 du gain, les effets de sélection et la généralisation doivent être étudiés séparément. Réserver une
 période future à chaque révision ; ne pas optimiser sur le lot servant à proclamer une performance.
 La moyenne p(1−p) décrit la confiance annoncée, pas l’incertitude objective ni l’utilité du test.
@@ -522,7 +532,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.4"` |
+| `version` | `"0.7.7"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |
@@ -573,6 +583,10 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `largeur_max_affichage` | `0.3` |
 | `ecart_niveaux_max` | `0.1` |
 | `placebo_tirages` | `200` |
+| `ratio_duree_fenetre` | `0.5` |
+| `delta_discriminant` | `0.02` |
+| `weibull_occasions_min` | `30` |
+| `attenuation_w_f` | `0.5` |
 | `v4_dossier_depuis` | `"2026-10-29"` |
 | `demi_vie_ans` | `20` |
 | `ratio_non_stationnarite` | `2.0` |
@@ -580,8 +594,12 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `partage_test` | `"01234"` |
 | `double_codage_part` | `0.2` |
 | `double_codage_min_cas` | `20` |
-| `kappa_min` | `0.6` |
-| `v4_gain` | `0.1` |
+| `kappa_min` | `0.67` |
+| `kappa_rapportable` | `0.8` |
+| `v4_gain_abs` | `0.025` |
+| `v4_alpha` | `0.05` |
+| `v4_puissance` | `0.8` |
+| `v4_test` | `"signe"` |
 | `v4_n` | `50` |
 | `matrice.SEU.PER` | `"f"` |
 | `matrice.SEU.TRA` | `"M"` |
@@ -657,8 +675,10 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `faisceau_max` | `300` |
 | `fenetre_reference_jours` | `91.3125` |
 | `k0_frequence` | `20` |
-| `n_min_frequence` | `10` |
+| `n_min_publication` | `1` |
+| `n_min_ancrage` | `20` |
 | `c_min_rho1` | `3` |
+| `c_min_niveau` | `3` |
 | `alerte_R2` | `0.3` |
 | `seuil_decision` | `0.5` |
 | `vide_recherches_cloture` | `3` |

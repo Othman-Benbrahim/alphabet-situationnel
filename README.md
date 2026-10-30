@@ -2,9 +2,9 @@
 
 Auteur : Othman Ben Brahim · Licence : MIT (`LICENSE`)
 
-Version 0.7.4 (numéro de `assets/parametres.json`, vérifié par `audit` dans `SKILL.md`, le README, les
+Version 0.7.7 (numéro de `assets/parametres.json`, vérifié par `audit` dans `SKILL.md`, le README, les
 19 références, les 13 fichiers d'équivalents et le moteur ; le paquet livré se nomme
-`alphabet-situationnel-0.7.4.zip`). **Intégrité du paquet** : `SHA256SUMS` donne l'empreinte de chaque
+`alphabet-situationnel-0.7.7.zip`). **Intégrité du paquet** : `SHA256SUMS` donne l'empreinte de chaque
 fichier livré ; `sha256sum -c SHA256SUMS` ou `moteur.py audit` refusent un fichier modifié, ajouté ou
 retiré. `audit` valide aussi les JSONL livrés (bases, cas archivés, journal d'exemple). Un zip ne
 pouvant contenir sa propre empreinte, son SHA-256 est communiqué à la livraison ; sur GitHub, chaque
@@ -21,7 +21,7 @@ restreint SEUIL@13 et journalise à part les jugements nominatifs, 0.6.0 traduit
 en contrôles (barreau déclaré, garantie et option des ancrages F, jugement scellé avant le moteur,
 bande de sensibilité, questions qui départagent, angles morts ; `references/apports-theoriques.md`),
 0.6.1 inscrit la décision 1b (cartes à agents universelles) et propose 16 références pour la strate 7,
-0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée, 0.6.11 compte les abstentions, 0.6.12 pose la question de la temporalité avant tout calcul, 0.6.13 traite l'audit de la 0.6.12 (contrôles exécutés pour de vrai, Brier des partitions, temporalité tranchée), 0.6.14 l'audit Manus (provenance des prévisions et des codeurs, manifeste, intégration continue), 0.6.15 les corrections documentaires de l'audit Scira ; 0.7.0 ajoute les tests de preuve du process tracing et la décomposition de Murphy, 0.7.1 corrige la sortie sous Windows (cp1252) et ajoute Windows et macOS à la CI, 0.7.2 exige qu'une question dise ce qui y répondrait et ce que chaque réponse établit, qu'un fait F cite le passage qui le soutient, et décrit le banc d'essai de toute modification du skill, 0.7.3 traite l'audit d'ingénierie : dossier de lecture contrôlé avant tout calcul (`moteur.py dossier`, `calculer --dossier`), bande de sensibilité de la classe de référence, fragilité de niveau d'homologie, sources du calcul affichées, 0.7.4 applique quatre décisions d'auteur sans changer aucune probabilité : sceau de dossier exigé pour V4, partage daté au registre, placebo d'homologie, plancher de recherches A7.
+0.6.2 à 0.6.4 en documentent treize, sur textes lus, 0.6.5 traite l'audit de la 0.6.4, 0.6.6 retient deux contrôles des apports CIA et *Spiral Semiosis*, 0.6.7 un contrôle de l'apport *Intuition Machine* (QPT), 0.6.8 archive les quatre premiers cas réels, 0.6.9 corrige le plafond (complémentarité, découpage temporel) et lie le journal au calcul entier, 0.6.10 achève ce lien et ajoute la temporalité déclarée, 0.6.11 compte les abstentions, 0.6.12 pose la question de la temporalité avant tout calcul, 0.6.13 traite l'audit de la 0.6.12 (contrôles exécutés pour de vrai, Brier des partitions, temporalité tranchée), 0.6.14 l'audit Manus (provenance des prévisions et des codeurs, manifeste, intégration continue), 0.6.15 les corrections documentaires de l'audit Scira ; 0.7.0 ajoute les tests de preuve du process tracing et la décomposition de Murphy, 0.7.1 corrige la sortie sous Windows (cp1252) et ajoute Windows et macOS à la CI, 0.7.2 exige qu'une question dise ce qui y répondrait et ce que chaque réponse établit, qu'un fait F cite le passage qui le soutient, et décrit le banc d'essai de toute modification du skill, 0.7.3 traite l'audit d'ingénierie : dossier de lecture contrôlé avant tout calcul (`moteur.py dossier`, `calculer --dossier`), bande de sensibilité de la classe de référence, fragilité de niveau d'homologie, sources du calcul affichées, 0.7.4 applique quatre décisions d'auteur sans changer aucune probabilité : sceau de dossier exigé pour V4, partage daté au registre, placebo d'homologie, plancher de recherches A7, 0.7.5 confronte la matrice aux observations (`moteur.py confronter`), teste les écarts de score (tests exacts du signe et de Wilcoxon) et publie les poids des deux a priori, sans changer aucune probabilité, 0.7.6 ajoute la variable sonde sur les paramètres (`moteur.py sonde`), la couverture des arêtes et la taille effective de Kish, 0.7.7 dédouble le seuil d'ancrage, rend V4 absolu, testé et à effectif calculé, ajoute les questions discriminantes et clôt RÉSONANCE@7.
 Le modèle suit `SKILL.md`. Les anciens faits non revérifiés sont conservés comme archives exclues.
 
 ## Ce que fait l'outil
@@ -39,7 +39,7 @@ SKILL.md                    procédure et chargement par mode
 LICENSE                     licence MIT
 LICENCES-TIERS.md           notice MIT d'EnVrai?, dont sources-france.md reprend des contenus
 README.md                   ce guide
-CHANGELOG.md                historique et révisions 0.4.0–0.7.4
+CHANGELOG.md                historique et révisions 0.4.0–0.7.7
 references/                 19 références (dont feuille-de-route.md, sources-france.md, angles-morts.md et apports-theoriques.md) et 13 fichiers d'équivalents
 scripts/moteur.py           moteur, validateur, scoreur et autotests intégrés
 assets/parametres.json      source structurée exhaustive des paramètres

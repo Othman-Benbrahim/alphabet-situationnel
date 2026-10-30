@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.4
+> Version : 0.7.7
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -221,6 +221,43 @@ Brier obtenu sur des questions jouées d'avance se trahit par une incertitude ba
 nulle ; c'est le complément de la difficulté (§1). Le regroupement par déciles laisse une variance
 intra-classe, rendue à part. Sous 50 questions, la décomposition est indicative.
 
+**Tester un écart, pas seulement le moyenner (0.7.5).** `apport_des_cartes`, `moteur_contre_jugement`
+et le jalon V4 (`gain_par_episode`) rendent le **différentiel de perte par épisode** d = Brier du
+moteur − Brier de la référence (inertie, jugement scellé ou comparateur), sa moyenne (le numérateur de
+la statistique de Diebold et Mariano 1995), son écart-type σ(d), son erreur-type, son autocorrélation
+d'ordre 1 entre épisodes rangés par date, et deux **tests exacts** proposés par les mêmes auteurs pour
+les petits effectifs : le test du signe (les épisodes améliorés sont-ils plus fréquents que les
+dégradés ?) et le test des rangs signés de Wilcoxon (rangs moyens en cas d'égalité, loi exacte). Les
+épisodes où d = 0 sont exclus des tests et comptés. La statistique asymptotique de Diebold-Mariano,
+avec noyau de Newey-West, n'est pas calculée : elle sur-rejette à 20–50 épisodes et exige une fenêtre de
+troncature choisie. L'autocorrélation est descriptive : elle dit si des périodes se trompent ensemble,
+ce que le regroupement par épisode ne corrige pas ; aucune règle ne la seuille. Un écart moyen non
+distinguable de zéro se lit comme tel, quel que soit son signe.
+**Avant le premier cas (0.7.6).** `sonde` est le seul test des paramètres exécutable sans cas réel ; il
+compare la matrice au hasard, pas au monde. Une matrice qui ne se distingue pas d'arêtes tirées au sort,
+sur plusieurs cibles et plusieurs états, n'a pas de contenu structurel propre à défendre ; l'inverse ne
+prouve pas qu'elle est vraie. La validation croisée (k plis, ou un cas laissé de côté) attend une base :
+sur des cas datés et dépendants, elle mesurerait une stabilité interne, pas une généralisation, et le
+journal prospectif reste l'épreuve (V1, V4).
+
+**V4 testé et lu deux fois (0.7.7).** `scorer` rend `v4` : d̄ par épisode et son intervalle à 95 %
+(approximation normale, déclarée), p du test exact, σ̂(d), effectif requis, effectif cible, statut et
+règle appliquée. Le gain relatif (`gain`, skill score) reste publié à titre descriptif ; il ne décide
+plus. Une cible de 2,5 points absolus vaut 10 % d'un Brier de référence de 0,25, mais 25 % d'un Brier de
+0,10 : sur des événements rares, le jalon absolu est plus exigeant que l'ancien. **Discriminante** :
+une question dont p s'écarte d'au moins 2 points de probabilité de p_sans_cartes ou de p_placebo,
+calculé avant l'issue depuis le journal. `v4_discriminant` refait le rapport sur elles seules, avec leur
+part : le premier dit ce que vaut le protocole, le second ce que l'alphabet apporte là où il peut
+s'exprimer ; ne filtrer que le second serait choisir après coup.
+
+**Score logarithmique (0.7.5).** En regard du Brier : `log` et `log_sans_cartes` (perte −ln de la
+probabilité donnée à l'issue réalisée). Tous deux sont strictement propres (Gneiting et Raftery 2007) ;
+le Brier est borné par 1, le logarithmique ne l'est pas et pèse davantage les erreurs confiantes, ce qui
+le rend plus discriminant sur les événements rares et plus fragile sur un petit lot (une seule
+probabilité extrême démentie le domine). Une perte infinie (p = 0 ou 1 démenti) est rendue null et
+comptée (`log_infini`). Le Brier reste le score de V4. **Le gain V4** est un *skill score* : rapport de
+deux Brier, il n'est pas une règle propre en général ; il se lit avec `gain_par_episode`.
+
 Le moteur n'estime pas encore un intervalle de confiance du gain. Ajouter un rééchantillonnage
 **par épisode** dans une étude indépendante, sans mélanger apprentissage et test.
 `scorer` donne `incertitude_annoncee` par question (somme des p(1−p) d'une partition, comparable à son
@@ -289,7 +326,8 @@ d'étendre l'alphabet par méthode plutôt que par intuition ; `audit` contrôle
 7. Ne pas modifier les paris à la lecture de nouvelles informations : toute mise à jour est un
    nouvel id horodaté, rattaché au même épisode ; la prédiction initiale est conservée.
 8. Scorer toutes les échéances, y compris les non-résolues, avec une preuve externe.
-9. Au moins 50 épisodes comparables et 10 % de gain : jalon interne seulement. Étudier l'incertitude
+9. V4 (protocole) : d̄ ≤ −2,5 points, test du signe significatif à 5 %, épisodes ≥ max(50, effectif requis
+   par σ̂(d)) ; publié aussi sur les questions discriminantes : jalon interne seulement. Étudier l'incertitude
    du gain, comparer sans cartes et réserver de nouvelles périodes après toute révision.
 
 Les jeux de démonstration fournis ne remplissent pas ce protocole et restent hors V4.

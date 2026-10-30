@@ -1,5 +1,5 @@
 {
- "version": "0.7.9",
+ "version": "0.7.11",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -71,6 +71,8 @@
  "kappa_rapportable": 0.8,
  "fnr_max": 0.2,
  "accord_min_ancrages": 5,
+ "repetabilite_ecart_min_jours": 30,
+ "jugement_procedure_depuis": "2026-10-31",
  "rejets_tirage": 100,
  "v4_gain_abs": 0.025,
  "v4_alpha": 0.05,

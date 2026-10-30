@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.9
+> Version : 0.7.11
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -29,6 +29,8 @@
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.11 (faite) | Prouver par clôture | `passage` : `absent_de_la_piece` et `non_soutenu` au lieu d'`insuffisant` ; `independance` des sources corroborantes ; couverture remplacée par la mesure de chaque ancrage ; `conservativite` (clôture complète, empreinte) ; barreau A justifié par l'identifiabilité ; clôture identique à la 0.7.9 et à la 0.7.10 | — |
+| 0.7.10 (faite) | Répondre et se mesurer soi-même | support du mécanisme (Toulmin), réfutation qui annule, F n'est pas un modalisateur ; répétabilité (`accord --repetabilite`) ; intérêt et référentiel des références externes ; procédure du jugement ; bras « modèle seul » recommandé ; probabilités identiques à la 0.7.9 | — |
 | 0.7.9 (faite) | Accord et rejets | `accord` : κ, PABAK, accords spécifiques, deux taux de manque, verdict ; audit aveugle des rejets (`rejets`) ; journal des concessions ; probabilités identiques à la 0.7.8 | — |
 | 0.7.8 (faite) | Se comparer à autre chose qu'à soi | comparateur externe aveugle et scellé (`sceller-comparateur`, rapport, `v4_reference`) ; `frequences-externes.md` et refus du gabarit et des classes tautologiques ; `export-codeur` ; probabilités identiques à la 0.7.7 | — |
 | 0.7.7 (faite) | Paramétrer avant de mesurer | seuil d'ancrage dédoublé ; V4 absolu, testé, effectif calculé avec plancher ; questions discriminantes et double rapport V4 ; seuil de niveau séparé (valeur inchangée) ; règles figées ; strate 7 à 14/16 ; probabilités identiques à la 0.7.6 | — |
@@ -332,7 +334,9 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-30 | 3 | Strate 7 : 14 cases traitées sur 16 (13 Documentées, RÉSONANCE close) ; restent CROISSANCE (une recherche) et PÉRIODICITÉ (un texte) |
 | 2026-10-30 | — | Document « mesures à prendre » trié (0.7.8) : comparateur externe, fréquences externes, export du second codeur ; quatre corrections avant intégration |
 | 2026-10-30 | — | Document « accord et rejets » trié (0.7.9) : trois apports retenus, cinq corrections, aucun texte tiers |
-| 2026-10-30 | 0 | À faire : installer la 0.7.9 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-30 | — | Six notes et un audit des rivaux triés (0.7.10, `apports-theoriques.md` §14) : quatre contrôles retenus, deux affirmations des notes réfutées sur le code (homologue unique, pluralité « trois équipes ») |
+| 2026-10-30 | — | Note *open-ontologies* triée (0.7.11, `apports-theoriques.md` §15) : quatre imports retenus, certificats formels refusés ; clôture 0.7.9 → 0.7.11 : 0 conséquence changée sur 2 790 |
+| 2026-10-30 | 0 | À faire : installer la 0.7.11 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) ; mesurer la répétabilité dès les premiers cas codés en solo |
 
 ---
 

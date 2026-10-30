@@ -283,10 +283,51 @@ def controle_garantie(k, item, requis):
     if isinstance(g, dict) and isinstance(g.get('contredirait'), str) and isinstance(item.get('contre_observation'), str):
         if ' '.join(g['contredirait'].lower().split()) == ' '.join(item['contre_observation'].lower().split()):
             err.append(f'{k} : la contre-observation est exactement ce qui contredirait la carte → la carte n\u2019est pas ancrée (A6, A7)')
+    # 0.7.10 (Toulmin, lu par Plantin : une réfutation qui n'annule rien n'est pas une réfutation). Un
+    # « contredirait » identique à l'« attendu » ne peut pas défaire la carte : forme refusée.
+    if isinstance(g, dict) and all(isinstance(g.get(x), str) and g[x].strip() for x in ('attendu', 'contredirait')):
+        if ' '.join(g['attendu'].lower().split()) == ' '.join(g['contredirait'].lower().split()):
+            err.append(f'{k} : garantie.contredirait identique à garantie.attendu → ce qui réfuterait la carte doit pouvoir l\u2019annuler (Toulmin)')
     o = item.get('option')
     if isinstance(o, dict) and isinstance(o.get('avant'), str) and isinstance(o.get('apres'), str):
         if ' '.join(o['avant'].lower().split()) == ' '.join(o['apres'].lower().split()):
             err.append(f'{k} : option identique avant et après → le fait ne change l\u2019espace d\u2019action de personne (pertinence, O1)')
+    return err
+
+
+SUPPORTS = ('texte', 'loi', 'donnee', 'cas')
+
+
+def controle_support(k, item, requis, asof=None):
+    """0.7.10. Support du mécanisme (*backing* de Toulmin 1958, ch. III ; Plantin 2021). Le mécanisme est
+    une loi de passage ; sa justesse reste un jugement, mais il doit dire **sur quoi il repose**, et la
+    régression du support s'arrête dans un texte, une loi, une donnée publiée ou un cas codé — jamais dans
+    un autre argument (`type: argument` est refusé : régression ouverte, le mécanisme est un *rabbit*).
+    Disponible au plus tard à la date d'information (B1). Requis pour un mot F de cas réel codé sous 0.7.10
+    ou après, et pour tout dossier ; contrôlé de la même façon s'il est fourni ailleurs. Le moteur vérifie
+    la présence, le type et la date, pas la pertinence."""
+    g = item.get('garantie')
+    if not isinstance(g, dict): return []
+    s = g.get('support')
+    if s is None:
+        return [f'{k} : garantie.support requis depuis 0.7.10 ({{type: {"|".join(SUPPORTS)}, reference, disponible_le}}) : sur quoi repose le mécanisme'] if requis else []
+    if not isinstance(s, dict): return [f'{k} : garantie.support = objet {{type, reference, disponible_le}}']
+    err = []
+    if s.get('type') == 'argument':
+        err.append(f'{k} : garantie.support de type « argument » refusé : la régression du support s\u2019arrête dans un texte, une loi, une donnée ou un cas, jamais dans un autre argument')
+    elif s.get('type') not in SUPPORTS:
+        err.append(f'{k} : garantie.support.type parmi {", ".join(SUPPORTS)}')
+    if not (isinstance(s.get('reference'), str) and s['reference'].strip()):
+        err.append(f'{k} : garantie.support.reference requise (titre, article, série ou id de cas)')
+    try:
+        d = date_iso(s.get('disponible_le'))
+        if asof is not None and d > date_iso(asof):
+            err.append(f'{k} : garantie.support disponible le {s["disponible_le"]}, après la date d\u2019information {asof} (B1)')
+    except ValueError:
+        err.append(f'{k} : garantie.support.disponible_le = date AAAA-MM-JJ')
+    if isinstance(g.get('mecanisme'), str) and isinstance(s.get('reference'), str) and \
+            ' '.join(g['mecanisme'].lower().split()) == ' '.join(s['reference'].lower().split()):
+        err.append(f'{k} : garantie.support reformule le mécanisme : un support n\u2019est pas la loi qu\u2019il soutient')
     return err
 
 
@@ -342,7 +383,10 @@ def controle_classe_source(k, item, requis):
     return [] if v in CLASSES_SOURCE else [f'{k} : classe_source = {", ".join(CLASSES_SOURCE)}']
 
 
-def controle_corroboration(k, item):
+CRITERES_INDEPENDANCE = ('origine', 'producteur', 'transmission')
+
+
+def controle_corroboration(k, item, independance_requise=False):
     """0.6.6. Contrôle de la qualité de l'information (CIA, *Tradecraft Primer* ; Mulligan 2026 sur les
     sources fabriquées par IA générative). Un mot F de cas réel **actif** déclare si son fait repose sur
     des sources indépendantes ou sur une source unique : `corroboration` = "independantes" (le champ
@@ -355,10 +399,22 @@ def controle_corroboration(k, item):
         return [f'{k} : corroboration = "independantes" ou "unique"']
     if v == 'independantes' and len([x for x in str(item.get('source', '')).split(';') if x.strip()]) < 2:
         return [f'{k} : corroboration "independantes" mais une seule source nommée (séparer les sources par « ; »)']
+    # 0.7.11 (open-ontologies : deux moteurs qui s'accordent sans être indépendants). Deux identifiants
+    # distincts peuvent partager une origine (deux dépêches du même fil, deux articles citant le même
+    # rapport) : leur accord ne protège que des erreurs de transcription. `independance` nomme ce qui rend
+    # les deux pièces indépendantes : origine, producteur ou chaîne de transmission distincts, et pourquoi.
+    ind = item.get('independance')
+    if v == 'independantes' and ind is None:
+        return [f'{k} : corroboration "independantes" sans independance {{critere: {"|".join(CRITERES_INDEPENDANCE)}, motif}} (requis depuis 0.7.11) : ce qui rend les deux pièces indépendantes'] if independance_requise else []
+    if ind is not None:
+        if v != 'independantes':
+            return [f'{k} : independance déclarée pour une source unique']
+        if not isinstance(ind, dict) or ind.get('critere') not in CRITERES_INDEPENDANCE or not (isinstance(ind.get('motif'), str) and ind['motif'].strip()):
+            return [f'{k} : independance = {{critere: {"|".join(CRITERES_INDEPENDANCE)}, motif}} (motif non vide)']
     return []
 
 
-RELATIONS_PASSAGE = ('soutient', 'partiel', 'contredit', 'insuffisant')
+RELATIONS_PASSAGE = ('soutient', 'partiel', 'contredit', 'absent_de_la_piece', 'non_soutenu', 'insuffisant')
 
 
 def controle_passage(k, item, force, requis):
@@ -388,8 +444,17 @@ def controle_passage(k, item, force, requis):
             err.append(f'{k} : passage.extrait = court extrait (300 caractères au plus) ; sinon la seule localisation')
         if r == 'contredit':
             err.append(f'{k} : un passage qui contredit le fait est une contre-observation (A7), pas un ancrage')
+        # 0.7.11 (open-ontologies, décision 0007) : « ne permet pas de conclure » confondait deux diagnostics
+        # aux remèdes opposés. absent_de_la_piece : la pièce lue ne contient pas le fait, une autre pièce le
+        # contiendrait peut-être (fenêtre trop étroite) → élargir la lecture ; le fait n'est pas réfuté.
+        # non_soutenu : la source ne soutient pas le fait (rien ne le contient) → retirer l'ancrage ;
+        # le fait a pu être composé. Aucun des deux n'ancre ; « insuffisant » demande de choisir.
+        elif r == 'absent_de_la_piece':
+            err.append(f'{k} : passage absent de la pièce lue : la fenêtre était trop étroite ; élargir la lecture (autre pièce, autre section) avant d’ancrer — l’absence ici ne réfute pas le fait')
+        elif r == 'non_soutenu':
+            err.append(f'{k} : la source ne soutient pas le fait : retirer l’ancrage ou réécrire le fait ; signaler au journal des lacunes si le fait venait d’un résumé')
         elif r == 'insuffisant':
-            err.append(f'{k} : un passage qui ne permet pas de conclure n’ancre rien : corriger le fait, chercher une autre pièce, ou ne pas ancrer')
+            err.append(f'{k} : « insuffisant » confond deux cas aux remèdes opposés : absent_de_la_piece (élargir la lecture) ou non_soutenu (retirer l’ancrage)')
     if err:
         return err
     soutiens = sum(1 for x in ps if x['relation'] == 'soutient')
@@ -1011,14 +1076,15 @@ def valider_base(base, registre=None):
                     exiger(stat.get((ab,int(s)))!='Vide', f'{cid} : F impossible sur un équivalent Vide {k} (A3)')
                     if not c['fictif']:
                         errs=controle_a6(k,item['a6'])+controle_garantie(k,item,True)+controle_test(k,item,'F',True)
-                        if c.get('statut_donnees')=='actif':errs+=controle_corroboration(k,item)
+                        errs+=controle_support(k,item,version_lue(c['version_regles'],cid+'.version_regles')>=(0,7,10),x['disponible_le'])
+                        if c.get('statut_donnees')=='actif':errs+=controle_corroboration(k,item,version_lue(c['version_regles'],cid+'.version_regles')>=(0,7,11))
                         errs+=controle_passage(k,item,'F',c.get('statut_donnees')=='actif')
                         exiger(not errs, f'{cid} : '+' ; '.join(errs))
                     else:
                         errs=(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'F',False)+controle_passage(k,item,'F',False)
                         exiger(not errs, f'{cid} : '+' ; '.join(errs))
                 elif 'garantie' in item or 'option' in item or 'corroboration' in item or 'test' in item or 'passage' in item:
-                    errs=controle_garantie(k,item,False)+(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'f',False)+controle_passage(k,item,'f',False)
+                    errs=controle_garantie(k,item,False)+controle_support(k,item,False,x['disponible_le'])+(controle_corroboration(k,item) if 'corroboration' in item else [])+controle_test(k,item,'f',False)+controle_passage(k,item,'f',False)
                     exiger(not errs, f'{cid} : '+' ; '.join(errs))
             exiger(expected <= documented, f'{cid} : mots nouveaux ou modifiés non documentés {sorted(expected-documented)}')
             removed=set(forces(prev))-set(fm) if prev else set()
@@ -1172,6 +1238,11 @@ def signalements_circularite(mots):
         noms=set(re.findall(r'[A-Z0-9]+',_plat_mots(NOMS[ab])));mots_m=set(re.findall(r'[A-Z0-9]+',_plat_mots(mec)))
         if noms & mots_m:
             out.append(f"{NOMS[ab]}@{item.get('strate')} : la garantie nomme la carte qu’elle fonde (« {mec[:50]} ») ; nommer le mécanisme dans la langue de la strate")
+        # 0.7.10 : un « contredirait » qui nomme la carte (« si ce n'était pas une polarité ») est une
+        # définition, pas une réfutation : il ne dit pas ce qu'on observerait. Signalé, jamais refusé.
+        ctr=str(item['garantie'].get('contredirait',''))
+        if noms & set(re.findall(r'[A-Z0-9]+',_plat_mots(ctr))):
+            out.append(f"{NOMS[ab]}@{item.get('strate')} : garantie.contredirait nomme la carte (« {ctr[:50]} ») ; dire ce qu’on observerait, pas « si la carte était fausse »")
     return out
 
 
@@ -1265,7 +1336,7 @@ def dossier_valider(d):
     for item in mots:
         if isinstance(item,dict) and item.get('intensite')=='F':
             k=cle_valide(f"{item.get('carte')}@{item.get('strate')}")
-            errs+=controle_corroboration(k,item)+controle_passage(k,item,'F',True)
+            errs+=controle_corroboration(k,item,True)+controle_passage(k,item,'F',True)
         if isinstance(item,dict):
             errs+=controle_classe_source(cle_valide(f"{item.get('carte')}@{item.get('strate')}"),item,True)
     exiger(not errs,'dossier refusé — '+' ; '.join(errs))
@@ -1280,7 +1351,48 @@ def dossier_valider(d):
                           'Il fige la lecture et les événements, pas le jugement (voir sceller-jugement).'}
 
 
-def accord(a,b,c,d):
+def cloture(base):
+    """0.7.11 (open-ontologies : extension conservatrice). « Aucune probabilité ne change » se vérifiait sur
+    des calculs témoins ; une conséquence hors témoin pouvait changer sans être vue. Le vocabulaire est fini :
+    on calcule donc, pour **chaque** état daté de la base (séquences et issues) et **chaque** événement
+    à un pas sur ses strates (16 cartes : apparition si absente, persistance et disparition si présente,
+    cartes Hors domaine exclues), p, l'intervalle, ρ et p sans cartes. Le placebo d'homologie (200
+    tirages par calcul) est hors clôture, et le dit. Un calcul refusé est compté « désarmé » : au-delà de
+    la moitié, la clôture n'établit rien. Empreinte SHA-256 de l'ensemble, comparable d'une version à l'autre."""
+    etats={}
+    for c in base:
+        for x in c['sequence']+[c['issue']]:
+            if isinstance(x,dict) and x.get('etat'):etats.setdefault(x['etat'],None)
+    res={};desarmes=0
+    for st in sorted(etats):
+        e=lire_etat(st);fm=forces(e)
+        for s_ in sorted({m['s'] for m in e['mots']}):
+            for ab in NOMS:
+                k=f'{ab}@{s_}'
+                if hors_domaine(k):continue
+                for typ in (('persiste','disparait') if k in fm else ('apparait',)):
+                    cle_=f'{st} :: {k} {typ}'
+                    try:
+                        r=calculer(e,typ,k,base);r0=calculer(e,typ,k,base,sans_cartes=True)
+                        res[cle_]={'p':r['p'],'intervalle':r['intervalle'],'rho':r['rho'],'p_sans_cartes':r0['p']}
+                    except ValueError as x_:
+                        desarmes+=1;res[cle_]={'desarme':str(x_)[:120]}
+    n=len(res)
+    return {'version':P['version'],'etats':len(etats),'consequences':n,'desarmes':desarmes,
+            'probant':n>0 and desarmes<=n/2,'hors_cloture':['p_placebo (200 tirages par calcul)','horizons de plus d’un pas','composés'],
+            'empreinte':empreinte(res),'resultats':res}
+
+
+def comparer_clotures(a,b):
+    """Conséquences changées entre deux clôtures de la même base (clés communes), et clés propres à l'une."""
+    ra,rb=a['resultats'],b['resultats']
+    changees=sorted(k for k in set(ra)&set(rb) if ra[k]!=rb[k])
+    return {'communes':len(set(ra)&set(rb)),'changees':len(changees),'exemples':changees[:10],
+            'seulement_avant':len(set(ra)-set(rb)),'seulement_apres':len(set(rb)-set(ra)),
+            'conservative':not changees and set(ra)==set(rb)}
+
+
+def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
     """0.7.9. Accord de deux codeurs sur une carte, à partir de la table 2×2 de leurs décisions (a : les deux
     ancrent ; b : le premier seul ; c : le second seul ; d : aucun). κ (Cohen 1960) dépend de la prévalence :
     indéfini si pₑ = 1, effondré quand le code est rare (Feinstein et Cicchetti 1990). PABAK = 2·pₒ − 1
@@ -1291,7 +1403,14 @@ def accord(a,b,c,d):
     prévalence, il est presque toujours voisin de zéro et n'informe pas. Verdict : sans objet si personne
     n'ancre ; non estimable si aucun codeur n'atteint `accord_min_ancrages` ancrages ; sinon PABAK ≥ kappa_min (et
     ≥ kappa_rapportable pour « rapportable ») **et** les deux taux de manque ≤ fnr_max."""
+    # 0.7.10 : même table pour la **répétabilité** (le même codeur, deux passes à l'aveugle sur les mêmes
+    # cas ; « bruit d'occasion »). C'est l'analyse d'accord par attributs de la métrologie (répétabilité
+    # intra-évaluateur contre reproductibilité inter-évaluateurs), pas Gage R&R, réservé aux grandeurs
+    # continues. a : ancré aux deux passes ; b : première seule ; c : seconde seule ; d : aucune. Deux passes
+    # trop rapprochées mesurent la mémoire du premier codage : verdict « non recevable » sous
+    # repetabilite_ecart_min_jours.
     for v in (a,b,c,d):exiger(type(v) is int and v>=0,'accord : a, b, c, d entiers ≥ 0')
+    if repetabilite:exiger(type(ecart_jours) is int and ecart_jours>=0,'accord --repetabilite : --ecart-jours (entier ≥ 0, jours entre les deux passes) requis')
     n=a+b+c+d;exiger(n>0,'accord : table vide')
     po=(a+d)/n;p1=(a+b)/n;p2=(a+c)/n;pe=p1*p2+(1-p1)*(1-p2)
     k=None if abs(1-pe)<1e-12 else (po-pe)/(1-pe)
@@ -1308,6 +1427,12 @@ def accord(a,b,c,d):
         ok=max(x for x,base_ in ((m1,a+b),(m2,a+c)) if x is not None and base_>=P['accord_min_ancrages'])<=P['fnr_max']
         v=('rapportable' if r['pabak']>=P['kappa_rapportable'] else 'provisoire' if r['pabak']>=P['kappa_min'] else 'insuffisant') if ok \
           else f'insuffisant : un codeur manque plus de {round(100*P["fnr_max"])} % des ancrages de l’autre'
+    if repetabilite:
+        r.update(type='repetabilite',ecart_jours=ecart_jours,
+                 lecture='a : ancré aux deux passes ; b : première passe seule ; c : seconde seule ; manque_second et manque_premier se lisent « manque de la seconde / de la première passe »')
+        if ecart_jours<P['repetabilite_ecart_min_jours']:
+            v=f'non recevable : passes séparées de {ecart_jours} j, moins de {P["repetabilite_ecart_min_jours"]} j (la seconde passe mesure la mémoire du premier codage)'
+    else:r['type']='reproductibilite'
     r['verdict']=v
     return r
 
@@ -1513,6 +1638,16 @@ def erreurs_references(refs):
         if GABARIT_SOURCE.lower() in str(r.get('source','')).lower():err.append(f'{event} : source du gabarit, à remplacer par une référence lue')
         cs=mots_de_cartes(r.get('definition',''))
         if cs:err.append(f'{event} : classe tautologique, la définition cite {", ".join(cs)} ; définir la classe dans le vocabulaire de la source')
+        # 0.7.10 (Flyvbjerg 2008, représentation stratégique) : une fréquence fournie par le promoteur de
+        # l'issue est un fait fabriqué, pas une donnée. Et deux taux mesurés depuis des référentiels
+        # différents (décision contre contrat, Love et Ahiaga-Dagbui 2018) ne se comparent pas : le
+        # référentiel se déclare s'il existe. Champs facultatifs, contrôlés s'ils sont présents.
+        it=r.get('interet')
+        if it is not None and it not in ('aucun','declare','promoteur'):err.append(f'{event} : interet parmi aucun, declare, promoteur')
+        if it=='promoteur':err.append(f'{event} : source partie prenante de l’issue (interet « promoteur ») : représentation stratégique, référence refusée')
+        if it=='declare':
+            if not (isinstance(r.get('fourni_par'),str) and r['fourni_par'].strip()):err.append(f'{event} : interet « declare » sans fourni_par (qui fournit le taux, et son intérêt)')
+        if 'referentiel' in r and not (isinstance(r['referentiel'],str) and r['referentiel'].strip()):err.append(f'{event} : referentiel vide (point de mesure du taux : décision, contrat…)')
     return err
 
 
@@ -2006,6 +2141,9 @@ def trajectoires(etat,h,base,opts,strates_sup=()):
 
 # ───────────────────────── journal et score ─────────────────────────
 
+PROCEDURES_JUGEMENT=('seul','compromis','simulation','analogies','autre')
+
+
 def valider_journal(data):
     prev={};scores={};partitions=defaultdict(list)
     for x in data:
@@ -2027,6 +2165,13 @@ def valider_journal(data):
             version_lue(x.get('version_regles'),ident+'.version_regles')
             for field in ('version_regles','question','evenement','episode_id','refutation'):
                 texte_requis(x.get(field),f'{ident}.{field}')
+            # 0.7.10 : « jugement » sous-spécifiait. Le jugement nu est la condition la moins bien mesurée
+            # (Green et Armstrong 2007 ; Green 2005) ; il existe des procédures de référence (modèle de
+            # compromis, Achen 2006 ; simulation à plusieurs passes ; analogies listées avant notation).
+            # Prospectif : requis à compter de jugement_procedure_depuis.
+            pr_=x.get('procedure')
+            if pr_ is not None or jour(x['date'])>=jour(P['jugement_procedure_depuis']):
+                exiger(pr_ in PROCEDURES_JUGEMENT,f'{ident} : procedure parmi {", ".join(PROCEDURES_JUGEMENT)} (requise depuis {P["jugement_procedure_depuis"]})')
             date_iso(x.get('echeance'));exiger(jour(x['date'])<jour(x['echeance']),f'{ident} : prévision datée à échéance ou après')
             proba(x.get('probabilite'),ident+'.probabilite')
             exiger(type(x.get('rejeu')) is bool and type(x.get('fictif')) is bool,f'{ident} : rejeu et fictif explicites requis')
@@ -2371,8 +2516,12 @@ def jugements(units):
     v=[x for x in units if x['origine']=='jugement']
     if not v:return None
     ref=sum(0.25 if not x['partition'] else (1-1/len(x['ids'])) for x in v)/len(v)
+    pp=defaultdict(list)
+    for x in v:pp[x.get('procedure') or 'non declaree'].append(x['brier'])
     return {'questions':len(v),'dont_rejeux':sum(x['rejeu'] for x in v),'brier':sum(x['brier'] for x in v)/len(v),
-            'brier_reponse_indifferente':ref,'incertitude_annoncee':sum(x['incertitude_annoncee'] for x in v)/len(v)}
+            'brier_reponse_indifferente':ref,'incertitude_annoncee':sum(x['incertitude_annoncee'] for x in v)/len(v),
+            # 0.7.10 : par procédure déclarée, descriptif (aucun test : les effectifs seront petits).
+            'par_procedure':{k:{'questions':len(b_),'brier':sum(b_)/len(b_)} for k,b_ in sorted(pp.items())}}
 
 
 def moteur_contre_jugement(units):
@@ -2503,6 +2652,7 @@ def score_result(data):
                       'difficulte':None if ref is None else .5-abs(ref-.5),'reference_difficulte':ref,
                       'hors_V4':excluded,'partition':bool(items[0].get('partition')),
                       'rho':'jugement' if origine=='jugement' else max(x['rho'] for x in items),
+                      'procedure':items[0].get('procedure') if origine=='jugement' else None,
                       'cartes':[] if origine=='jugement' else sorted({x['evenement'].split('@')[0] for x in items}),
                       'strate':'jugement' if origine=='jugement' else items[0]['evenement'].split('@')[1].split()[0] if '@' in items[0]['evenement'] and not items[0].get('partition') else 'partition',
                       'incertitude_annoncee':sum(x['probabilite']*(1-x['probabilite']) for x in items)})
@@ -2611,7 +2761,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -2830,16 +2980,16 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.9','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.11','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
         exiger(type(P[k]) in (int,float) and math.isfinite(P[k]) and P[k]>0,f'paramètre positif : {k}')
-    date_iso(P['v4_dossier_depuis'])
+    date_iso(P['v4_dossier_depuis']);date_iso(P['jugement_procedure_depuis'])
     exiger(P['v4_test'] in ('signe','wilcoxon'),'v4_test : signe ou wilcoxon')
     exiger(P['v4_reference'] in ('inertie','jugement','comparateur_externe'),'v4_reference : inertie, jugement ou comparateur_externe')
-    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_publication','n_min_ancrage','c_min_rho1','c_min_niveau','placebo_tirages','weibull_occasions_min','accord_min_ancrages','rejets_tirage'):
+    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_publication','n_min_ancrage','c_min_rho1','c_min_niveau','placebo_tirages','weibull_occasions_min','accord_min_ancrages','rejets_tirage','repetabilite_ecart_min_jours'):
         exiger(type(P[k]) is int and P[k]>0,f'paramètre entier positif : {k}')
     for ab,p in P['inertie'].items():exiger(ab in NOMS and 0<proba(p)<1,'inertie invalide')
     exiger(set(P['inertie'])==set(NOMS),'inerties incomplètes')
@@ -3132,6 +3282,8 @@ def main():
     sc.add_argument('--vu',action='append',default=[]);sc.add_argument('--contexte',choices=CONTEXTES_COMPARATEUR,required=True)
     ex=subs.add_parser('export-codeur');ex.add_argument('--base',required=True);ex.add_argument('--cas',required=True)
     ac=subs.add_parser('accord');[ac.add_argument(k,type=int,required=True) for k in ('--a','--b','--c','--d')];ac.add_argument('--json',action='store_true')
+    ac.add_argument('--repetabilite',action='store_true');ac.add_argument('--ecart-jours',type=int)
+    cv=subs.add_parser('conservativite');cv.add_argument('--base',required=True);cv.add_argument('--sortie');cv.add_argument('--contre');cv.add_argument('--empreinte')
     rj=subs.add_parser('rejets');rj.add_argument('--dossier',required=True);rj.add_argument('--audit')
     vr_=subs.add_parser('valider-references');vr_.add_argument('fichier')
     cf=subs.add_parser('confronter');cf.add_argument('fichier');cf.add_argument('--json',action='store_true')
@@ -3239,9 +3391,28 @@ def main():
     if a.cmd=='export-codeur':
         cas=next((c for c in charger(a.base) if c.get('id')==a.cas),None);exiger(cas is not None,f'export-codeur : {a.cas} absent de {a.base}')
         print(json.dumps(export_codeur(cas),ensure_ascii=False,indent=2));return
+    if a.cmd=='conservativite':
+        base_=charger(a.base);valider_base(base_);r=cloture(base_)
+        if a.sortie:Path(a.sortie).write_text(json.dumps(r,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+        print(f"clôture {r['version']} : {r['consequences']} conséquences sur {r['etats']} états, {r['desarmes']} désarmées"
+              f"{'' if r['probant'] else ' — plus de la moitié : la clôture n’établit rien'} · empreinte {r['empreinte']}")
+        print('hors clôture : '+' ; '.join(r['hors_cloture']))
+        if a.contre:
+            cmp_=comparer_clotures(lire_json(a.contre,'--contre'),r)
+            print(f"contre {a.contre} : {cmp_['changees']} conséquence(s) changée(s) sur {cmp_['communes']} communes ; "
+                  f"{cmp_['seulement_avant']} seulement avant, {cmp_['seulement_apres']} seulement après · "
+                  +('extension conservatrice' if cmp_['conservative'] else 'NON conservatrice'))
+            for k_ in cmp_['exemples']:print('  changée : '+k_)
+            if not cmp_['conservative']:raise SystemExit(1)
+        if a.empreinte:
+            ok_=a.empreinte.strip().lower()==r['empreinte']
+            print('empreinte attendue : '+('identique' if ok_ else 'DIFFÉRENTE'))
+            if not ok_:raise SystemExit(1)
+        return
     if a.cmd=='accord':
-        r=accord(a.a,a.b,a.c,a.d)
+        r=accord(a.a,a.b,a.c,a.d,a.repetabilite,a.ecart_jours)
         if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        if a.repetabilite:print(f"répétabilité : même codeur, deux passes séparées de {a.ecart_jours} j (manque du second = manque de la seconde passe)")
         f_=lambda v:'indéfini' if v is None else f'{v:.3f}'
         print(f"table a={a.a} b={a.b} c={a.c} d={a.d} · prévalence {r['prevalence']*100:.1f} % · pₒ {r['po']:.3f} · κ {f_(r['kappa'])} · PABAK {r['pabak']:.3f} · "
               f"accord positif {f_(r['accord_positif'])} · manque du second {f_(r['manque_second'])} · manque du premier {f_(r['manque_premier'])}")
@@ -3579,7 +3750,7 @@ def autotest():
             m['intensite']='F';m['a6']='POLARITÉ@7 : CONTRAINTE → (deux camps, pas une règle) ; SEUIL → (aucun passage irréversible)'
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
             with self.assertRaises(ValueError):valider_base([c])            # garantie et option manquantes (0.6.0)
-            m.update(garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},test='pistolet')
+            m.update(garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','support':{'type':'texte','reference':'ouvrage de référence (test)','disponible_le':'2000-01-01'},'attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},test='pistolet')
             with self.assertRaises(ValueError):valider_base([c])            # corroboration manquante (0.6.6)
             m['corroboration']='independantes'
             with self.assertRaises(ValueError):valider_base([c])            # une seule source nommée
@@ -3588,8 +3759,12 @@ def autotest():
             m['passage']={'localisation':'source A, p. 3','relation':'soutient'}
             with self.assertRaises(ValueError):valider_base([c])            # « independantes » : un seul passage qui soutient
             m['passage']=[{'localisation':'source A, p. 3','relation':'soutient'},{'localisation':'source B, § 4','relation':'soutient'}]
+            with self.assertRaises(ValueError):valider_base([c])            # indépendance non nommée (0.7.11)
+            m['independance']={'critere':'producteur','motif':'deux rédactions distinctes, aucune ne cite l’autre'}
             self.assertEqual(valider_base([c])['actifs'],1)
-            m['corroboration']='unique';self.assertEqual(valider_base([c])['actifs'],1)
+            m['corroboration']='unique'
+            with self.assertRaises(ValueError):valider_base([c])            # indépendance déclarée pour une source unique
+            m.pop('independance');self.assertEqual(valider_base([c])['actifs'],1)
             c2=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps) ; SEUIL → (aucune rupture)')
             st=statuts();cle_=_STATUTS_CACHE['cle'];st[('POL',7)]='Vide';_STATUTS_CACHE.update(st=st)
             try:
@@ -3637,7 +3812,7 @@ def autotest():
             self.assertEqual(r['homologie'],'H1')
         def _f_case(self,a6,**mot):
             c=fake_case();m=c['sequence'][0]['mots'][0];c['fictif']=False;c['sources_verifiees']=True
-            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique',test='pistolet',passage={'localisation':'p. 3, § 2','relation':'soutient'});m.update(mot)
+            m.update(intensite='F',a6=a6,garantie={'mecanisme':'deux camps se définissent l\'un par l\'autre','support':{'type':'texte','reference':'ouvrage de référence (test)','disponible_le':'2000-01-01'},'attendu':'alignements exclusifs','contredirait':'troisième position stable'},option={'acteur':'les électeurs','avant':'choisir entre plusieurs offres','apres':'choisir un camp'},corroboration='unique',test='pistolet',passage={'localisation':'p. 3, § 2','relation':'soutient'});m.update(mot)
             for s_ in c['sequence']+[c['issue']]:s_['etat']=s_['etat'].replace('[f]','[F]')
             return c
         def test_a6_verdicts(self):
@@ -3874,7 +4049,7 @@ def autotest():
                         'source':'source A ; source B','objet':'relation A-B','contre_observation':'médiation acceptée, marginale',
                         'portee':'marginale','test':'pistolet','corroboration':'independantes','classe_source':'contemporain',
                         'passage':[{'localisation':'p. 3','relation':'soutient'},{'localisation':'p. 4','relation':'soutient'}],
-                        'garantie':{'mecanisme':'x','attendu':'y','contredirait':'z'},'option':{'acteur':'A','avant':'a','apres':'b'}}]}
+                        'garantie':{'mecanisme':'x','support':{'type':'cas','reference':'C-0001','disponible_le':'2000-01-01'},'attendu':'y','contredirait':'z'},'option':{'acteur':'A','avant':'a','apres':'b'}}]}
             with self.assertRaises(ValueError) as cm:dossier_valider(d)
             self.assertIn('a6',str(cm.exception))
         def test_dossier_rejette_contre_candidate_hors_liste(self):
@@ -4191,6 +4366,75 @@ def autotest():
             self.assertEqual(accord(35,5,5,1843)['verdict'],'rapportable')
             self.assertTrue(accord(1,1,1,115)['verdict'].startswith('non estimable'))
             with self.assertRaises(ValueError):accord(-1,0,0,1)
+        def test_support_garantie(self):
+            # 0.7.10 : support du mécanisme (Toulmin) ; régression bornée, date ≤ information.
+            g={'mecanisme':'m','attendu':'a','contredirait':'c'}
+            self.assertEqual(controle_support('POL@7',{'garantie':g},False),[])
+            self.assertTrue(controle_support('POL@7',{'garantie':g},True))                       # absent, requis
+            ok=dict(g,support={'type':'loi','reference':'loi n° 1','disponible_le':'2020-01-01'})
+            self.assertEqual(controle_support('POL@7',{'garantie':ok},True,'2026-01-01'),[])
+            for bad in ({'type':'argument','reference':'r','disponible_le':'2020-01-01'},{'type':'avis','reference':'r','disponible_le':'2020-01-01'},
+                        {'type':'texte','reference':'','disponible_le':'2020-01-01'},{'type':'texte','reference':'r','disponible_le':'2027-01-01'},
+                        {'type':'texte','reference':'m','disponible_le':'2020-01-01'}):
+                self.assertTrue(controle_support('POL@7',{'garantie':dict(g,support=bad)},True,'2026-01-01'),bad)
+            d=self._dossier();d['mots'][0]['garantie'].pop('support')
+            with self.assertRaises(ValueError):dossier_valider(d)                                  # un dossier l'exige
+            c=self._f_case('POLARITÉ@7 : CONTRAINTE → (deux camps, pas une règle) ; SEUIL → (aucun passage irréversible)');c['version_regles']='0.7.9'
+            c['sequence'][0]['mots'][0]['garantie'].pop('support');self.assertEqual(valider_base([c])['actifs'],1)   # prospectif
+        def test_refutation_qui_annule(self):
+            ok={'mecanisme':'m','attendu':'positions durcies','contredirait':'concession acceptée'};op={'acteur':'x','avant':'a','apres':'b'}
+            self.assertEqual(controle_garantie('POL@7',{'garantie':ok,'option':op},True),[])
+            self.assertTrue(controle_garantie('POL@7',{'garantie':dict(ok,contredirait='Positions  durcies'),'option':op},True))
+            d=self._dossier();d['mots'][0]['garantie']['contredirait']='si ce n’était pas une polarité'
+            r=dossier_valider(d);self.assertFalse(r['complet']);self.assertTrue(any('contredirait nomme' in m_ for m_ in r['manques']))
+        def test_repetabilite(self):
+            r=accord(35,5,5,1843,True,90);self.assertEqual(r['type'],'repetabilite');self.assertEqual(r['verdict'],'rapportable')
+            self.assertEqual(r['kappa'],accord(35,5,5,1843)['kappa'])                              # même statistique
+            self.assertTrue(accord(35,5,5,1843,True,3)['verdict'].startswith('non recevable'))     # mémoire du codage
+            with self.assertRaises(ValueError):accord(1,1,1,1,True)
+            self.assertEqual(accord(35,5,5,1843)['type'],'reproductibilite')
+        def test_references_interet(self):
+            ok={'frequence':.05,'source':'UCDP, onset dataset','definition':'nouveau conflit armé interétatique','periode':'1990-2020','fenetre':'3 mois','disponible_le':'2026-01-01'}
+            self.assertEqual(erreurs_references({'SEU@7 apparait':dict(ok,interet='aucun',referentiel='date de déclenchement')}),[])
+            self.assertTrue(erreurs_references({'SEU@7 apparait':dict(ok,interet='promoteur')}))
+            self.assertTrue(erreurs_references({'SEU@7 apparait':dict(ok,interet='declare')}))
+            self.assertEqual(erreurs_references({'SEU@7 apparait':dict(ok,interet='declare',fourni_par='association professionnelle')}),[])
+            self.assertTrue(erreurs_references({'SEU@7 apparait':dict(ok,interet='peut-être')}))
+            self.assertTrue(erreurs_references({'SEU@7 apparait':dict(ok,referentiel=' ')}))
+        def test_procedure_jugement(self):
+            j=lambda d,**kw:dict({'type':'prevision','id':'J'+d,'date':d,'echeance':'2027-01-01','version_regles':'0.7.10','origine':'jugement',
+                                  'question':'q','evenement':'X élu','episode_id':'E','refutation':'non','probabilite':.6,'rejeu':False,'fictif':False,
+                                  'resolution':{'source':'s','critere':'c','seuil':'t'}},**kw)
+            valider_journal([j('2026-10-30')])                                                      # avant la date : facultatif
+            with self.assertRaises(ValueError):valider_journal([j('2026-11-02')])                  # après : requis
+            valider_journal([j('2026-11-02',procedure='compromis')])
+            with self.assertRaises(ValueError):valider_journal([j('2026-10-30',procedure='intuition')])
+            r=score_result([j('2026-11-02',procedure='simulation'),{'type':'score','id':'J2026-11-02','date':'2027-01-02','issue':1,'preuve':'p'}])
+            self.assertEqual(r['jugements']['par_procedure']['simulation']['questions'],1)
+        def test_passage_deux_diagnostics(self):
+            # 0.7.11 : « ne permet pas de conclure » scindé ; remèdes opposés, aucun n'ancre.
+            for r_,mot_ in (('absent_de_la_piece','élargir'),('non_soutenu','retirer'),('insuffisant','absent_de_la_piece')):
+                e_=controle_passage('POL@7',{'passage':{'localisation':'p. 2','relation':r_}},'f',False)
+                self.assertTrue(e_ and mot_ in e_[0],(r_,e_))
+        def test_independance(self):
+            it={'corroboration':'independantes','source':'A ; B'}
+            self.assertEqual(controle_corroboration('POL@7',it),[])                                  # fiche antérieure : facultatif
+            self.assertTrue(controle_corroboration('POL@7',it,True))
+            self.assertEqual(controle_corroboration('POL@7',dict(it,independance={'critere':'origine','motif':'m'}),True),[])
+            for bad in ({'critere':'nom','motif':'m'},{'critere':'origine','motif':' '},'origine'):
+                self.assertTrue(controle_corroboration('POL@7',dict(it,independance=bad),True),bad)
+            d=self._dossier();d['mots'][0].pop('independance')
+            with self.assertRaises(ValueError):dossier_valider(d)
+        def test_cloture(self):
+            # 0.7.11 : clôture complète, empreinte stable, comparaison qui voit un changement hors témoin.
+            base=[fake_case()];a=cloture(base);b=cloture(copy.deepcopy(base))
+            self.assertEqual(a['empreinte'],b['empreinte']);self.assertTrue(a['consequences']>0 and a['probant'])
+            self.assertTrue(comparer_clotures(a,b)['conservative'])
+            k_=sorted(a['resultats'])[0];b['resultats'][k_]=dict(b['resultats'][k_],p=0.5)
+            c_=comparer_clotures(a,b);self.assertEqual(c_['changees'],1);self.assertFalse(c_['conservative'])
+            old=P['k'];P['k']=7.0
+            try:self.assertFalse(comparer_clotures(a,cloture(base))['conservative'])                    # un paramètre changé se voit
+            finally:P['k']=old
         def test_rejets_audit(self):
             d=self._dossier();f=feuille_rejets(d)
             self.assertEqual(sorted(f['tirage']),['HIE@6','SEU@7']);self.assertNotIn('motif',json.dumps(f,ensure_ascii=False).lower().replace('motif du rejet',''))

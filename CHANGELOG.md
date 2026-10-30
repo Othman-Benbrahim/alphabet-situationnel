@@ -1,9 +1,58 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.9
+> Version : 0.7.11
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.11 — 2026-10-30 · prouver par clôture
+
+Note *open-ontologies* triée (`apports-theoriques.md` §15). **Aucune probabilité ne change, vérifié par
+clôture complète** : `moteur.py conservativite --base assets/base-de-cas.exemple.jsonl` calcule les 2 790
+conséquences à un pas des 111 états de la base (p, intervalle, ρ, p sans cartes) ; empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique pour la 0.7.9 et la 0.7.10
+(même fonction appliquée à leur moteur). Cela établit aussi, après coup, l'annonce de la 0.7.10, faite sur
+144 calculs témoins. Hors clôture : placebo d'homologie, horizons de plus d'un pas, composés. 142
+autotests (139 + 3).
+
+- **`passage.relation`** : `absent_de_la_piece` (la pièce lue ne contient pas le fait : élargir) et
+  `non_soutenu` (la source ne le soutient pas : retirer) ; `insuffisant`, qui confondait les deux, est
+  refusé avec ce choix pour message.
+- **`independance`** {critere : `origine`, `producteur`, `transmission` ; motif} exigée avec
+  `corroboration: "independantes"` pour un F de cas réel codé sous 0.7.11 ou après et pour tout dossier ;
+  interdite avec `"unique"`. `assets/dossier.exemple.json` la montre.
+- **`conservativite`** : `--sortie`, `--contre` (sortie non nulle si une conséquence change),
+  `--empreinte` ; désarmés comptés, clôture non probante au-delà de la moitié.
+- **Rédaction** : la lecture se mesure ancrage par ancrage, pas en taux de couverture ; le barreau A est une
+  conséquence de l'identifiabilité (CIVeX), pas une prudence.
+
+**Refusé** : vérificateur formel, certificats de dérivation, tout verdict du type « découle des cartes ».
+
+## 0.7.10 — 2026-10-30 · répondre de son mécanisme, se mesurer soi-même
+
+Six notes et un audit des rivaux triés (`apports-theoriques.md` §14). **Aucune probabilité ne change**
+(vérifié : 144 calculs de démonstration identiques à la 0.7.9 ; `scorer` sur le journal d'exemple ne
+diffère que par la clé ajoutée `procedure`). 139 autotests (134 + 5).
+
+- **`garantie.support`** (Toulmin, *backing*) : `{type: texte|loi|donnee|cas, reference, disponible_le}` ;
+  `argument` refusé, référence qui reformule le mécanisme refusée, date ≤ disponibilité. Requis pour un F
+  de cas réel codé sous 0.7.10 ou après et pour tout dossier ; prospectif (fiches antérieures inchangées).
+  `assets/dossier.exemple.json` et le schéma de `base-de-cas.md` §2 le montrent.
+- **Réfutation qui annule** : `contredirait` identique à `attendu` refusé ; `contredirait` qui nomme la
+  carte signalé par `dossier`. Écrit : F n'est pas un modalisateur.
+- **Répétabilité** : `accord --repetabilite --ecart-jours N` ; paramètre `repetabilite_ecart_min_jours`
+  (30). Analyse d'accord par attributs, pas Gage R&R.
+- **Références externes** : `interet` (`aucun`, `declare` avec `fourni_par`, `promoteur` refusé) et
+  `referentiel`, facultatifs, contrôlés s'ils sont présents.
+- **Jugement** : `procedure` (`seul`, `compromis`, `simulation`, `analogies`, `autre`), requise à compter de
+  `jugement_procedure_depuis` (2026-10-31) ; `scorer` rend `jugements.par_procedure`.
+- **Bras externe** : le modèle sans le skill, en contexte séparé, recommandé (`validation.md` §1).
+
+**Refusé après lecture du code** : `homologues_listes` et `contre_homologue`. Le moteur compte déjà tous
+les homologues du niveau retenu, par une règle fixée d'avance (`c_A`, Kish, placebo) ; la note qui lui
+prêtait « un homologue unique » se trompait. Corrigé aussi : la « pluralité forcée mesurée par trois
+équipes » vient d'un seul laboratoire ; la réplication indépendante (Nikolopoulos et al. 2015) contredit
+la supériorité du travail individuel.
 
 ## 0.7.9 — 2026-10-30 · accord sous faible prévalence, rejets, concessions
 

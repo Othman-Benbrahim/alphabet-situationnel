@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.9
+> Version : 0.7.11
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -257,7 +257,7 @@ aucun apport nouveau.
 | Conditions de résolution d'une question ; « non A » ne vaut pas « B » | *Inquisitive Semantics*, ch. 2, §2.3–2.5 | pour un cas réel, chaque question porte `resolution` ; une question de discrimination porte `justification` {oui, non}, une par branche menant à une carte ; une branche peut mener à `indetermine` (les deux, refusé). L'exemple du schéma (« pas de troisième groupe → POLARITÉ ») commettait l'erreur : corrigé | `grammaire.md` §7, `base-de-cas.md` §2, `controle_questions` |
 | Toutes les questions utiles ne départagent pas | *Inquisitive Semantics*, ch. 5, §5.4 et ch. 9, §9.2 | `type: "documentation"` (`carte`, `manque`) ; ne remplace pas la question qui départage, exigée au premier état | idem |
 | Questions qui restent ouvertes, levées ou invalidées | *Inquisitive Semantics* ; GameArena (Hao Zhang) | `statut` (ouverte, partielle, resolue avec `reponse`, presuppose_invalide), chacun avec sa `preuve` | idem |
-| Contrôle affirmation–passage | OpenScholar (Shao) ; spécifications (Hao Zhang) | `passage` {localisation, relation} requis pour F de cas actif ; F exige `soutient`, `partiel` donne f, `contredit` renvoie à A7, `insuffisant` n'ancre rien ; « independantes » exige deux passages | `protocole.md` A6, `controle_passage` |
+| Contrôle affirmation–passage | OpenScholar (Shao) ; spécifications (Hao Zhang) | `passage` {localisation, relation} requis pour F de cas actif ; F exige `soutient`, `partiel` donne f, `contredit` renvoie à A7, `insuffisant` n'ancre rien (scindé en 0.7.11, §15) ; « independantes » exige deux passages | `protocole.md` A6, `controle_passage` |
 | Annonce ≠ réalisation | VECTOR ; OpenScholar | A5 : une possibilité, une condition, une décision non entrée en vigueur ne sont pas une réalisation | `protocole.md` A5 |
 | Requêtes qui ne présupposent pas la lecture ; contradictions conservées | ReasonIR (Shao) | trois familles de requêtes (observation, discrimination, contradiction), jamais sur le nom de la carte | `protocole.md` A7, `sources-france.md` §1 |
 | Arrêt sur contrôles faits, pas sur sentiment de certitude | Certaindex, DeepConf (Hao Zhang) | budget épuisé = dossier incomplet ; la convergence de réponses n'est pas une corroboration | `protocole.md` A7 |
@@ -502,3 +502,119 @@ ces articles ; la rédaction est propre au dépôt.
 Les mécanismes que la note écarte elle-même (§5 : déjà présents, souvent mieux ancrés) ; un barème
 d'accord concurrent ; tout texte du projet examiné.
 
+
+---
+
+## 14. Six notes et un audit des rivaux (0.7.10)
+
+Versés par l'auteur le 30 octobre 2026 : notes sur Green et Armstrong (analogies structurées), sur les
+profils apparentés à Perez, sur Toulmin (lu par Plantin), sur MACTOR (Godet), sur la recension de *Noise*
+par Sood et Gelman, et sur trois rivaux (Wardley, Cynefin, Bueno de Mesquita) ; puis un complément et un
+audit de ces notes. Lus sur le code de la 0.7.9, pas sur les notes seules. **Aucune probabilité ne
+change** (144 calculs de démonstration identiques ; `scorer` ne diffère que par des clés ajoutées).
+
+### 14.1 Retenu
+
+| Point | Vérification | Contrôle ajouté | Où |
+|---|---|---|---|
+| Le mécanisme n'a pas de répondant (*backing*, Toulmin 1958, ch. III) | juste : `garantie` couvre loi de passage et réfutation, pas le support | `garantie.support` {type, reference, disponible_le} ; `argument` refusé ; prospectif | protocole A6 « Support », `base-de-cas.md` §2 |
+| Une réfutation qui n'annule rien n'est pas une réfutation | juste ; aucun contrôle ne le voyait | `contredirait` ≠ `attendu` (refus) ; `contredirait` qui nomme la carte (signalé) | idem, `moteur.py dossier` |
+| F occupe la place du modalisateur de Toulmin sans en être un | juste ; le texte le laissait entendre | écrit : F n'est pas un « probablement », la force d'une conclusion est p et ρ | protocole A6 |
+| Bruit d'occasion (répétabilité) non mesuré | juste ; la source est la métrologie, et pour des codes catégoriels l'**analyse d'accord par attributs**, pas Gage R&R | `accord --repetabilite --ecart-jours`, `repetabilite_ecart_min_jours` 30 | A4, `base-de-cas.md` §6 |
+| Représentation stratégique (Flyvbjerg 2008) | juste ; mais Flyvbjerg est contesté sur le référentiel (Love et Ahiaga-Dagbui 2018 ; réponse Flyvbjerg et al. 2018) | `interet` (promoteur refusé), `fourni_par`, `referentiel`, facultatifs | `frequences-externes.md` §2 |
+| « Jugement » sans procédure | juste : la condition la moins bien mesurée ; un étalon public existe (modèle de compromis, Thomson et al. 2006) | `procedure` requise à compter de `jugement_procedure_depuis` ; Brier par procédure | `validation.md` §1 |
+| Le bras externe le plus exigeant est le modèle sans le skill | juste ; le dispositif existait (0.7.8), pas la consigne | méthode recommandée du comparateur externe | `validation.md` §1 |
+
+### 14.2 Corrigé dans les notes
+
+1. **« Le moteur retient un homologue unique, régime à 38 % » (note Toulmin §5) : faux.** Le moteur compte
+   **tous** les cas de la base au niveau d'homologie retenu (H1, H1.5, H2), pondérés ; il publie `c_A`,
+   `n_eff_kish`, `nb_cas_par_niveau`, la fragilité de niveau et un placebo d'homologie (`graphe.md` §3).
+   La contrainte d'ordre de Green et Armstrong (lister avant de noter) est satisfaite **par construction**
+   pour le moteur : la sélection est une règle fixée d'avance, appliquée à toute la base, sans arrêt à la
+   première analogie — c'est exactement la « règle qui bat la synthèse de l'expert ». Le champ
+   `homologues_listes` proposé n'entre donc pas. Le risque d'arrêt prématuré se déplace vers la
+   **composition de la base** (quels cas on code) : il relève de B5 (registre daté du partage avant
+   codage) et du test à l'aveugle, pas d'un champ du dossier.
+2. **De même, la question critique de Walton** (« un autre cas semblable a-t-il une issue contraire ? »)
+   est déjà dans le calcul : les homologues à issue contraire comptent dans n_A − n_E. Le
+   « contre-homologue » proposé par le complément n'entre pas.
+3. **« Pluralité forcée mesurée trois fois par des équipes différentes » (note des rivaux §6) : faux.**
+   Green 2002, Green 2005 et Green et Armstrong 2007 sont d'un même laboratoire. La seule réplication
+   indépendante trouvée (Nikolopoulos et al. 2015, *J. Business Research* 68(8)) donne un gain **faible**
+   des analogies structurées (+5 à 8 %, deux versions du résumé) et un gain fort des groupes qui mettent en
+   commun leurs analogies : le « travail individuel vaut mieux » ne se généralise pas, et l'expérience y
+   améliore la justesse. Le refus des architectures multi-agents **comme corroboration** (§10.4) tient, par
+   la dépendance des sources ; il ne s'appuie plus sur Green et Armstrong.
+4. **Green 2005** : publié (*IJF* 21(3), 463-472) ; la note citait le document de travail, et ses chiffres
+   (31 % contre 32 %) au lieu de ceux de l'article (31 % contre 31 %).
+5. **Bueno de Mesquita** : l'étalon n'est ni Feder ni le jeu de rôle, mais le modèle de compromis, testé
+   avec le modèle de défi sur les décisions de l'UE (Thomson, Stokman, Achen et König 2006 ; Achen, ch. 10).
+6. **« Les deux concurrents oubliés »** (complément) : le modèle nul existe depuis 0.5 (`--sans-cartes`,
+   `p_sans_cartes`, V4 lu contre l'inertie), le bras externe depuis 0.7.8. Ce qui manquait était la
+   consigne de jouer **le modèle seul** comme bras externe.
+7. **Gage R&R** (note *Noise*) : outil des grandeurs continues ; pour des cartes, l'analyse d'accord par
+   attributs. Recension : *CHANCE* 37(3), 70-72. Théorème des piranhas : *Notices of the AMS* 72(1),
+   15-25 (2025), six auteurs.
+
+### 14.3 Ce qui attend
+
+| Apport | Condition | Note |
+|---|---|---|
+| Analyse CIB (Weimer-Jehle 2006, *TFSC* 73(4) ; ScenarioWizard) : sonde de **cohérence** de la configuration des cartes ancrées | une matrice d'impacts entre **états** publiée et datée, distincte des 66 arêtes | plus proche de la « proxémie » que MICMAC ; sujette à l'erreur de spécification, comme les arêtes |
+| MICMAC : invariant ΣI = ΣD et quadrants influence × dépendance comme sonde | décision d'auteur sur le sort d'une arête non structurante | arithmétique incompatible avec les λ : sonde, jamais multiplicateur |
+| Couverture de l'alphabet (TRIZ : une matrice tirée d'un corpus daté perd de la couverture ; ~40 % contre ~80 % pour une matrice reconstruite, doi:10.1007/s10845-010-0466-4) | premiers cas actifs (étape 2) | part des faits d'un dossier récent exprimés sans « non classé », par strate et période ; **indicateur d'usure, jamais garantie de lecture** (§15 : un taux agrégé monte quand on lit plus, pas quand on lit juste) |
+| Typologie des contraintes de Cynefin (contrainte **habilitante**) | décision d'auteur : touche A1 | CONTRAINTE n'a qu'un type, qui retire des options |
+| Marqueurs de maturité de Wardley (types de publications) | décision d'auteur : marqueur nouveau | candidat pour CROISSANCE et TRANSFORMATION |
+| Épreuves des rivaux : Cynefin (accord **à structure égale**, ≥ 30 situations), Wardley (persistance d'un composant sous la règle de décomposition), SenseMaker (signification par les acteurs contre codeur extérieur) | lots du banc d'essai (`validation.md` §9) | un κ sur cinq domaines exclusifs ne se compare pas à un κ sur ensembles de cartes |
+| Théorème des piranhas comme borne des λ | cas réels actifs | argument externe, analogie de forme : pas de calcul transposable |
+
+### 14.4 Refusé
+
+Les doctrines et prescriptions des rivaux (40 principes de Wardley, « probe-sense-respond », phase 5 de
+MACTOR, 40 principes de TRIZ) : `constitution.md` §5. Les chiffres des rivaux et de *Noise* comme
+fréquences externes. Le seuil « ≥ 2 analogies et expérience directe » (sous-groupe post-hoc de 23
+prévisions) comme filtre. Un champ nommé `qualifier` ou `qualificatif` (collision avec G1). Toute
+conversion de F en force modale. La collaboration entre codeurs comme corroboration.
+
+---
+
+## 15. *open-ontologies* : un régime de preuve, pas un rival (0.7.11)
+
+Note versée par l'auteur le 30 octobre 2026 sur le dépôt `fabio-rovai/open-ontologies` (MIT), à partir de
+son README, de sa décision 0007 et du résumé de CIVeX (arXiv:2605.09168) ; ni code lu ni outil exécuté.
+Tout ce qu'elle rapporte de ce dépôt est donc affirmé par lui, non vérifié ici. Le dépôt ne dispute pas
+l'objet de l'alphabet ; il dit comment rendre une dérivation re-vérifiable par un tiers. **Aucune
+probabilité ne change, et c'est désormais établi par clôture** : 2 790 conséquences sur les 111 états de la
+base d'exemple, empreinte identique pour la 0.7.9, la 0.7.10 et la 0.7.11
+(`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`).
+
+### 15.1 Ce que le skill fait déjà
+
+Six règles du dépôt coïncident avec des règles du skill, trouvées séparément dans une discipline sans
+rapport (ingénierie d'ontologies) : aucun chiffre sans producteur ; vocabulaires séparés et non
+permutables ; l'incertitude portée par l'artefact, pas par une note ; sceller avant l'issue et ne jamais
+réécrire ; un contrôle non exécuté ne s'affiche pas comme un contrôle réussi ; la partie stipulée se
+déclare. C'est une corroboration **de méthode**, venue d'une source qui ignore l'alphabet — pas un
+apport, et pas une preuve que la lecture est juste. Les deux systèmes prouvent ce qui est en aval de leur
+partie stipulée et laissent celle-ci en prose : ici, les 66 arêtes et le barreau déclaré.
+
+### 15.2 Retenu
+
+| Point | Vérification | Contrôle ajouté | Où |
+|---|---|---|---|
+| `insuffisant` confond une lecture trop étroite et un fait sans source, aux remèdes opposés | juste : le message disait « corriger le fait, chercher une autre pièce, ou ne pas ancrer », trois remèdes pour deux causes | `absent_de_la_piece` (élargir) et `non_soutenu` (retirer) ; `insuffisant` refusé | protocole A6, `controle_passage` |
+| « La couverture est mesurée » nomme un proxy qui monte quand on lit plus, pas quand on lit juste | juste ; l'intention (profondeur plutôt qu'étendue) était bonne, le mot mauvais | écrit : chaque ancrage se mesure, un par un ; la couverture TRIZ (§14.3) reste un indicateur d'usure, jamais une garantie | `SKILL.md`, §14.3 |
+| « independantes » ne dit pas ce qui rend les pièces indépendantes | juste : deux identifiants peuvent partager une origine ; l'accord ne protège alors que des erreurs de transcription | `independance` {critere : origine, producteur, transmission ; motif}, prospectif | protocole A6, `controle_corroboration` |
+| « Aucune probabilité ne change » vérifié par témoins, pas par conservativité | juste ; le vocabulaire est fini, la clôture calculable | `conservativite` : clôture complète, empreinte, comparaison ; désarmés comptés | `validation.md` §9 |
+| Le refus du barreau 2 | juste : CIVeX montre qu'une intervention exige l'identifiabilité, donc un graphe causal engagé | rédaction : conséquence de P1, non prudence | `SKILL.md`, Limites |
+
+### 15.3 Refusé
+
+Le vérificateur formel (Lean) : un mécanisme est une phrase, on ne vérifie pas une phrase par machine,
+et le vouloir serait le théâtre théorique (§5). Les certificats de dérivation comme format de fiche : une
+dérivation qui citerait une arête postulée certifierait une pétition de principe ; le dépôt lui-même
+change le mot du verdict dans ce cas. Aucune sortie du skill ne doit dire qu'une issue « découle » ou est
+« impliquée » par les cartes. CIVeX comme outil : il agit sur des actions d'agent dans un environnement
+instrumenté ; une lecture n'a ni action ni graphe engagé. Les ontologies du marché, les plongements et le
+vocabulaire de production (« blast radius », « drift », « rollback ») : hors périmètre.

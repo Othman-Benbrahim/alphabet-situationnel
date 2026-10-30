@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.9
+> Version : 0.7.11
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -82,7 +82,9 @@
 | Question de documentation | question qui cherche la preuve manquante d'un ancrage (`carte`, `manque`) ; ne départage pas deux cartes et ne remplace pas une question qui départage | `base-de-cas.md` §2 |
 | Résolution d'une question | observation et source qui répondraient à une question de lecture ; distincte de la résolution externe d'une prévision (S1) | `base-de-cas.md` §2 |
 | Statut d'une question | ouverte, partielle, résolue (avec la réponse) ou présupposé invalidé, chacun avec la preuve qui l'a fait changer | `base-de-cas.md` §2 |
-| Passage | localisation, dans la source, du fait d'ancrage et relation à ce fait (soutient, partiel, contredit, insuffisant) ; F exige un passage qui soutient le fait tel qu'il est écrit | A6 |
+| Passage | localisation, dans la source, du fait d'ancrage et relation à ce fait (soutient, partiel, contredit, absent de la pièce, non soutenu) ; F exige un passage qui soutient le fait tel qu'il est écrit | A6 |
+| Indépendance | ce qui rend deux pièces corroborantes indépendantes : origine, producteur ou chaîne de transmission distincts ; sans elle, l'accord ne protège que des erreurs de transcription | A6 |
+| Clôture | `moteur.py conservativite` : toutes les conséquences à un pas d'une base (chaque état, chaque carte de ses strates), et leur empreinte ; deux versions sont conservatrices si aucune ne change | `validation.md` §9 |
 | État de travail | résumé révisable d'un dossier long, séparé des pièces et des prévisions scellées, au contenu minimal fixé ; un index, jamais une preuve | `simulation.md` §7 |
 | Dossier de lecture | fichier JSON d'une lecture en mode PRÉVOIR (état, candidates par strate et rejets, pièces de chaque F, questions, événements déclarés), contrôlé par `moteur.py dossier` avec les mêmes règles qu'une fiche, et scellé avant le calcul (`calculer --dossier`) ; contrôle la forme, pas la justesse | `SKILL.md` |
 | Bande de classe | seconde bande de sensibilité : huit variantes sur le choix des cas retenus (Jaccard, lissages k et k₀, demi-vie) ; « instable » si l'ensemble des cas retenus change | `graphe.md` §2.3 |
@@ -94,6 +96,9 @@
 | Rabbit | construction ad hoc d'un codage (carte, strate, règle inventée en cours de route) ; dette ouverte jusqu'à sa résorption | `validation.md` §6 |
 | Temporalité | déclaration d'une prévision : générique, programmée (échéance fixée par un texte) ou durée de vie propre ; hors générique, le taux générique (ρ4) est refusé | `validation.md` §1 |
 | Vide clos | case Vide après trois recherches documentées sans équivalent : non concluant, comptée comme traitée | `equivalences.md` §3 |
+| Support | ce sur quoi repose le mécanisme d'une garantie (*backing* de Toulmin) : un texte, une loi, une donnée ou un cas, jamais un autre argument ; daté, disponible à la date d'information | A6 |
+| Répétabilité | accord d'un codeur avec lui-même, sur les mêmes cas, en deux passes aveugles séparées d'au moins `repetabilite_ecart_min_jours` ; à distinguer de la reproductibilité (accord entre codeurs, κ) | A4 |
+| Procédure du jugement | manière dont une probabilité d'origine `jugement` a été produite : seul, compromis, simulation, analogies, autre | `validation.md` §1 |
 
 La force F/f, l’intensité F/M/f d’une arête de la matrice et une grandeur physique sont trois notions
 distinctes. Les deux premières ne fournissent pas une unité de mesure de la troisième.

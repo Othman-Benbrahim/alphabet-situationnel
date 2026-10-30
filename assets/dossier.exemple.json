@@ -31,6 +31,10 @@
    "portee": "marginale",
    "test": "pistolet",
    "corroboration": "independantes",
+   "independance": {
+    "critere": "producteur",
+    "motif": "un ministère de A et l'agence de presse de B : deux producteurs adverses, chacun rendant compte de sa propre position (fictif : exemple de format)"
+   },
    "passage": [
     {
      "localisation": "communiqué, §2",
@@ -45,6 +49,11 @@
    ],
    "garantie": {
     "mecanisme": "chaque partie construit son identité d'action contre l'autre, ce qui rend la concession coûteuse",
+    "support": {
+     "type": "texte",
+     "reference": "travaux de science politique sur l'escalade des engagements publics (référence fictive : exemple de format)",
+     "disponible_le": "2020-01-01"
+    },
     "attendu": "les positions se durcissent et les canaux de médiation se ferment",
     "contredirait": "une concession publique acceptée sans compensation"
    },
@@ -67,6 +76,10 @@
    "portee": "marginale",
    "test": "double",
    "corroboration": "independantes",
+   "independance": {
+    "critere": "origine",
+    "motif": "un texte réglementaire de A et une note administrative de B : deux actes d'origine distincte, aucun ne reprend l'autre (fictif : exemple de format)"
+   },
    "passage": [
     {
      "localisation": "décret, article 1",
@@ -79,6 +92,11 @@
    ],
    "garantie": {
     "mecanisme": "un plafond administré retire des prix de l'ensemble admissible",
+    "support": {
+     "type": "donnee",
+     "reference": "série des prix administrés et des volumes du bien X, 2015-2026 (série fictive : exemple de format)",
+     "disponible_le": "2026-09-01"
+    },
     "attendu": "les quantités se déplacent vers des marchés non plafonnés",
     "contredirait": "un plafond non contraignant, sans effet sur les prix observés"
    },

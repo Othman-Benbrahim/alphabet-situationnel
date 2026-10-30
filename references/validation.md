@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.9
+> Version : 0.7.11
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -106,6 +106,16 @@ de cartes. Une telle question se journalise avec une probabilité **humaine** : 
 `resolution` (`source`, `critere`, `seuil`) ; sans état, ni ρ, ni comparateur. `scorer` la note dans
 `jugements` (Brier, référence d'une réponse indifférente, incertitude annoncée), **jamais** dans le
 score du moteur ni dans V4 : c'est la calibration du codeur, que le moteur ne mesure pas.
+**Procédure (0.7.10).** « Jugement » sous-spécifiait : le jugement nu est la condition la moins bien
+mesurée sur ces questions (32 % de justesse sur huit conflits, Green et Armstrong 2007 ; Green 2005), et des
+procédures de référence existent. Champ `procedure`, requis pour une ligne `jugement` datée à partir de
+`jugement_procedure_depuis` (§H), facultatif avant : `seul`, `compromis` (moyenne des positions des
+acteurs pondérée par leur poids et leur saillance, l'étalon des modèles de négociation dans Thomson,
+Stokman, Achen et König 2006, *The European Union Decides*), `simulation` (plusieurs passes indépendantes,
+fréquence des issues), `analogies` (cas listés **avant** toute notation de similitude, règle de dérivation
+fixée d'avance), `autre`. `scorer` rend `jugements.par_procedure`, descriptif : aucun test, les effectifs
+seront petits, et les chiffres cités viennent pour l'essentiel d'une seule équipe (`apports-theoriques.md`
+§14).
 `issue` vaut 0, 1 ou null, et le champ est obligatoire : null se déclare, il ne se déduit pas d'une
 absence. `rejeu` et `fictif` sont obligatoires ; leur absence est une erreur. `calcul`, s'il est
 présent, est le JSON du moteur qui a produit la prévision : `probabilite` doit égaler `calcul.p` et
@@ -269,7 +279,15 @@ dégradations comptées, différentiel par épisode et tests exacts), `v4_compar
 `v4_comparateur_discriminant` (questions où |p − p_ext| ≥ δ, avant l'issue). Lecture : un apport nul se
 publie comme tel ; les dégradations se comptent toujours ; le second rapport ne filtre jamais le premier.
 `v4_reference` (§H : `inertie` par défaut, `jugement`, `comparateur_externe`) choisit le bras contre
-lequel V4 se lit ; en changer est une décision d'auteur.
+lequel V4 se lit ; en changer est une décision d'auteur. **Quel bras externe (0.7.10).** Le skill s'exécute
+dans un modèle de langage ; le bras le plus proche et le plus exigeant est donc **le même modèle, sans le
+skill**, dans un contexte séparé, avec la seule question, la résolution et l'échéance (méthode à déclarer
+telle : « modèle de langage seul, sans le skill »). Sur un banc public de questions futures (ForecastBench,
+Forecasting Research Institute), les meilleurs modèles sont annoncés en 2026 au niveau des
+superprévisionnistes, sous réserve d'un ajustement de difficulté discuté : la barre n'est plus « un humain
+sans méthode ». Avec `p_sans_cartes` (le moteur sans multiplicateurs ni homologues), cela fait trois bras
+pour une même question — modèle seul, inertie seule, alphabet complet — et c'est la seule comparaison qui
+dise ce que **les cartes** ajoutent, d'une part, et ce que **le skill** ajoute, d'autre part.
 
 **Second codeur (0.7.8).** `export-codeur` donne les faits, sources et dates d'un cas, mélangés, sans le
 premier codage ni les strates. Chaque codeur déclare `signe_suffisant` avant de coder : la déclaration
@@ -442,6 +460,16 @@ les variantes d'un même épisode (paraphrases, traductions, renommages) restent
 comptent pour un. Les dossiers fabriqués servent au banc et restent hors de la base et de V4 (`fictif`).
 Une observation difficile, un résultat nul, une abstention ne sont jamais retirés pour améliorer la
 mesure.
+
+**Conservativité (0.7.11).** « Aucune probabilité ne change » se vérifiait sur des calculs témoins ; une
+conséquence hors témoin pouvait changer sans être vue. Le vocabulaire étant fini, la vérification se fait
+par **clôture** : `moteur.py conservativite --base B --sortie F` calcule, pour chaque état daté de la base
+et chaque événement à un pas sur ses strates, p, l'intervalle, ρ et p sans cartes, et rend leur empreinte ;
+`--contre F` compare à la clôture d'une version précédente (sortie non nulle si une conséquence change),
+`--empreinte H` à une empreinte publiée. Hors clôture, et déclarés : le placebo d'homologie (200 tirages
+par calcul), les horizons de plus d'un pas, les composés. Un calcul refusé est compté « désarmé » ; au-delà
+de la moitié, la clôture n'établit rien. Une version qui annonce « aucune probabilité ne change » publie
+son empreinte de clôture sur la base d'exemple.
 
 **Décision.** Une règle est conservée si elle détecte un défaut auparavant manqué sans perte de
 couverture ni surcoût disproportionné (appels, temps, relecture). Sinon, l'épreuve est gardée comme test

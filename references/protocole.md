@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.9
+> Version : 0.7.11
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -109,6 +109,12 @@ s'appliquent à PABAK = 2·pₒ − 1, sous la condition que chacun des deux tau
 reste sous `fnr_max` ; aucun codeur n'est la référence de l'autre. Un κ indéfini se déclare indéfini
 (`base-de-cas.md` §6, `moteur.py accord`). Tant que l’accord par carte (κ ≥ 0,67) n’est pas vérifié et archivé,
 aucun accord empirique n’est revendiqué. Effectif insuffisant : mode solo, ρ0 inaccessible.
+**Répétabilité (0.7.10).** L'accord entre codeurs (reproductibilité) ne dit rien du bruit d'un codeur
+seul : le même codeur, sur les mêmes cas, recode à l'aveugle et dans un ordre tiré, au moins
+`repetabilite_ecart_min_jours` jours plus tard ; `moteur.py accord --repetabilite --ecart-jours N` applique
+la même statistique à ses deux passes. C'est l'analyse d'accord par attributs de la métrologie
+(répétabilité intra-évaluateur), et non Gage R&R, réservé aux grandeurs continues. En mode solo, c'est la
+seule mesure de fiabilité disponible ; elle se publie à part de κ, jamais à sa place.
 Une carte dont l’accord est insuffisant revient en Proposé ; rechercher les divergences de définition.
 
 **A5 · Ce qui compte comme fait.** Un fait est un acte, un document, un événement daté, une mesure ou
@@ -151,7 +157,19 @@ distingue pas la confiance du codeur de ce que la preuve soutient. Un mot F de c
 `garantie` à trois parties : le **mécanisme** par lequel ce fait est une instance de la carte, ce que la
 carte rend **attendu** (observable s'il est vrai), et ce qui la **contredirait**. Chaque fiche de
 `cartes.md` en donne la forme type. Une garantie dont la partie « contredirait » est exactement la
-contre-observation trouvée (A7) défait l'ancrage. Le moteur vérifie la présence et la forme ; la
+contre-observation trouvée (A7) défait l'ancrage. **Support (0.7.10).** Le mécanisme est une loi de passage
+au sens de Toulmin (1958, ch. III) ; il dit désormais **sur quoi il repose** : `garantie.support` =
+`{type, reference, disponible_le}`, `type` parmi `texte`, `loi`, `donnee`, `cas`. La régression du support
+s'arrête dans une pièce qui n'est pas un argument : `type: argument` est refusé (régression ouverte, le
+mécanisme serait un *rabbit*) ; une référence qui reformule le mécanisme aussi ; la pièce est disponible à
+la date d'information (B1). Requis pour un mot F de cas réel codé sous 0.7.10 ou après, et pour tout
+dossier ; prospectif, il ne s'applique pas aux fiches antérieures. Le support rend un défaut visible, il
+ne rend pas un mécanisme juste : un support bien référencé peut soutenir un mécanisme faux. **Une
+réfutation doit pouvoir annuler** : un « contredirait » identique à l'« attendu » est refusé ; un
+« contredirait » qui nomme la carte (« si ce n'était pas une polarité ») est signalé par le dossier, car il
+définit la carte au lieu de dire ce qu'on observerait. **F n'est pas un « probablement »** : la lettre dit
+la qualité du codage (A6, test, corroboration), pas la force modale de la conclusion ; dans ce skill, la
+force d'une conclusion est portée par p et son niveau ρ, jamais par la lettre. Le moteur vérifie la présence et la forme ; la
 justesse reste un jugement de codeur, mesuré par l'accord A4. **Marqueur rempli, définition
 contredite** : si un fait remplit le libellé du marqueur local mais contredit la définition de la carte
 (`cartes.md`), la carte n'est pas ancrée, ni en F ni en f, et le marqueur est signalé au journal des
@@ -192,9 +210,24 @@ fait se lit (`localisation`) et ce que ce passage fait au fait (`relation`) :
 | `soutient` | le passage établit le fait écrit, pour cet objet, cet acteur et cette date | admis pour F |
 | `partiel` | il en établit une partie (l'annonce, pas l'entrée en vigueur ; une partie de l'objet) | f au plus |
 | `contredit` | il établit le contraire | contre-observation (A7), pas ancrage |
-| `insuffisant` | il ne permet pas de conclure | n'ancre rien : corriger le fait, chercher une autre pièce ou ne pas ancrer |
+| `absent_de_la_piece` | la pièce lue ne contient pas le fait ; une autre pièce, ou une autre partie de la même, le contiendrait peut-être (fenêtre trop étroite) | n'ancre rien : **élargir la lecture** ; l'absence dans cette pièce ne réfute pas le fait |
+| `non_soutenu` | la source ne soutient pas le fait : rien ne le contient, le fait a pu être composé | n'ancre rien : **retirer l'ancrage** ou réécrire le fait ; au journal des lacunes s'il venait d'un résumé |
+| `insuffisant` | (avant 0.7.11) « ne permet pas de conclure » | refusé : choisir l'une des deux valeurs précédentes |
 
-Une corroboration « independantes » exige deux passages qui soutiennent, un par source. **Si aucun
+**Deux diagnostics, deux remèdes (0.7.11).** « Ne permet pas de conclure » confondait une lecture trop
+étroite et un fait sans source ; un outil qui les rapporte sous un même mot envoie chaque correction au
+mauvais endroit, car une recherche qui perd des pièces et une rédaction qui en invente se corrigent à
+l'opposé (*open-ontologies*, décision 0007). Ne pas jeter un fait vrai parce que la pièce lue était la
+mauvaise ; ne pas élargir indéfiniment la recherche d'un fait que rien ne soutient.
+
+Une corroboration « independantes » exige deux passages qui soutiennent, un par source, et **depuis
+0.7.11** (fiche de cette version ou après, et tout dossier) le champ `independance` = `{critere, motif}` :
+ce qui rend les deux pièces indépendantes — `origine` (deux faits générateurs distincts), `producteur`
+(deux auteurs ou rédactions sans lien) ou `transmission` (deux chaînes de reprise distinctes). Deux
+identifiants distincts peuvent partager une origine : deux dépêches d'un même fil, deux articles citant le
+même rapport, deux passages du même document. **Un accord entre pièces non indépendantes protège des
+erreurs de transcription, presque pas d'une erreur partagée** ; s'il n'y a rien à écrire dans `motif`, la
+corroboration est « unique ». **Si aucun
 passage ne soutient l'affirmation, on corrige l'affirmation ; on ne lui cherche pas une apparence de
 justification.** Un passage qui soutient n'établit pas que le fait est vrai (la source peut se tromper,
 reprendre une autre source) : la corroboration, A6 et A7 restent requises. Le moteur vérifie la
@@ -536,7 +569,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.9"` |
+| `version` | `"0.7.11"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |
@@ -602,6 +635,8 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `kappa_rapportable` | `0.8` |
 | `fnr_max` | `0.2` |
 | `accord_min_ancrages` | `5` |
+| `repetabilite_ecart_min_jours` | `30` |
+| `jugement_procedure_depuis` | `"2026-10-31"` |
 | `rejets_tirage` | `100` |
 | `v4_gain_abs` | `0.025` |
 | `v4_alpha` | `0.05` |

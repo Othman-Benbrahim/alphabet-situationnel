@@ -1,6 +1,6 @@
 # Alphabet situationnel — Fréquences externes (étape 4)
 
-> Version : 0.7.9
+> Version : 0.7.11
 
 > Comment établir une fréquence de référence que l'on passe à `--references`. Charger ce fichier pour
 > constituer ou relire un fichier de références ; il ne sert pas à lire une situation.
@@ -34,6 +34,15 @@ de la source ; `periode` : les années comptées ; `fenetre` : celle de l'état 
 fenêtre est refusée) ; `disponible_le` : date à laquelle le chiffre était consultable, jamais postérieure
 à la date d'information. `moteur.py valider-references F.json` contrôle la forme, refuse la source du
 gabarit et la classe tautologique (§5) ; `calculer --references` applique les mêmes refus.
+
+**Champs facultatifs (0.7.10)**, contrôlés s'ils sont présents. `interet` : `aucun`, `declare` (avec
+`fourni_par` : qui fournit le taux, et son intérêt) ou `promoteur` — une fréquence fournie par une partie
+prenante de l'issue est **refusée** : c'est la « représentation stratégique » de Flyvbjerg (2008), un fait
+fabriqué, pas une donnée. `referentiel` : le point à partir duquel le taux est mesuré (pour un dépassement :
+décision de construire, signature du contrat…) ; deux taux de référentiels différents ne se comparent pas,
+c'est le cœur du désaccord entre Flyvbjerg et Love et Ahiaga-Dagbui (*Transportation Research Part A*,
+2018). La méthode de la classe de référence a elle-même un promoteur, auteur de la base la plus citée :
+ce n'est pas un motif de refus, c'est une raison de ne pas présenter cette base comme neutre.
 
 ## 3. Définir avant de compter
 

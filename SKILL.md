@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.9'
+  version: '0.7.11'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.9. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.11. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -56,7 +56,7 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | Constituer ou relire un fichier de références externes (`--references`, étape 4) | `frequences-externes.md` |
 | Sortie LIRE : « ce que l'alphabet ne voit pas ici » | `angles-morts.md` |
 | Statut d'un équivalent (Documenté, Proposé, Vide), tableau par strate, cases Vides et leur clôture | `equivalences.md` |
-| Pourquoi une règle 0.6.x ou 0.7.x existe (garantie, option, barreau, jugement scellé, sensibilité, corroboration, passage, résolution des questions) | `apports-theoriques.md` |
+| Pourquoi une règle 0.6.x ou 0.7.x existe (garantie et son support, option, barreau, jugement scellé, sensibilité, corroboration, passage, résolution des questions, répétabilité, rivaux) | `apports-theoriques.md` |
 | Modifier le skill, comparer deux versions, évaluer une règle nouvelle | `validation.md` §9 (banc d'essai) |
 | Politique intérieure (gouvernement, Parlement, partis, élections, mobilisations) | strate 13 : `strates.md` §2 et §4, `equivalences/strate-13.md` |
 
@@ -84,6 +84,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… confronter B.jsonl [--json]` | matrice contre observations : chaque apparition codée classée selon la règle du moteur (atteignable, arête inter-strates abaissée, **non atteignable**, depuis l'état nul) ; maintien selon l'âge. Une divergence va au journal des lacunes ; aucun chiffre ne change |
 | `… sceller-comparateur --question "…" --evenement "…" --p 0.34 --date AAAA-MM-JJ --methode "…" --source https://… --contexte separe [--aveugle] [--vu question …]` | scellé du **comparateur externe aveugle**, à produire **avant** le moteur, hors de la session de lecture ; à recopier dans `comparateur_externe` (`validation.md` §1) |
 | `… accord --a A --b B --c C --d D [--json]` | accord de deux codeurs sur une carte : κ (indéfini si pₑ = 1), PABAK, accords spécifiques, deux taux de manque, verdict (`base-de-cas.md` §6) |
+| `… accord … --repetabilite --ecart-jours N` | répétabilité : le même codeur, deux passes aveugles sur les mêmes cas ; non recevable sous `repetabilite_ecart_min_jours` ; publiée à part de κ |
 | `… rejets --dossier D [--audit A.json]` | feuille de relecture aveugle des rejets d'un dossier (tirage fixé par le sceau), ou contrôle de l'audit rempli (`validation.md` §6) |
 | `… valider-references R.json` | forme des références externes, refus du gabarit et de la classe tautologique (`frequences-externes.md`) |
 | `… export-codeur --base B --cas C-0001-S07` | vue d'un cas pour le second codeur : faits, sources et dates, sans le premier codage |
@@ -94,6 +95,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… scorer J.jsonl` | validation du journal, score des questions et épisodes |
 | `… sceller J.jsonl` | empreinte à publier avant échéance ; ne prouve pas seul la prépublication |
 | `… sceller-jugement --question Q --evenement E --p 0.3 --date AAAA-MM-JJ [--origine jugement]` | empreinte de votre propre probabilité, à calculer **avant** le moteur ; à recopier dans `jugement_scelle` ; l'événement est validé (texte libre seulement avec `--origine jugement`), la date ne peut pas être future |
+| `… conservativite --base B [--sortie F] [--contre F \| --empreinte H]` | clôture : toutes les conséquences à un pas de la base et leur empreinte ; avec `--contre`, vérifie qu'une modification ne change aucune probabilité (sortie non nulle sinon) ; placebo, horizons longs et composés hors clôture (`validation.md` §9) |
 | `… manifeste` | régénère `SHA256SUMS` (empreinte de chaque fichier livré), à lancer en dernier avant livraison |
 | `… audit` / `… autotest` / `… parametres` | intégrité / tests / table documentaire générée ; l'audit vérifie la forme et les recoupements internes, pas la justesse du contenu |
 
@@ -143,13 +145,18 @@ exploration des suites, sans faire passer celle-ci pour une prescription.
 **3. Ancrage (A1, A5, A6).** Citer fait, objet, source, date ; attribuer F/f selon la preuve. F exige un
 fait précis et **suffisant** (`test` : pistolet ou double ; un fait qui remplit seulement le marqueur
 est un cerceau et donne f), la **corroboration** déclarée pour une lecture réelle comme pour une fiche
-(deux sources indépendantes nommées ; une source unique est admise si elle est primaire, texte officiel
+(deux sources indépendantes nommées, et ce qui les rend indépendantes : origine, producteur ou
+transmission, 0.7.11 ; une source unique est admise si elle est primaire, texte officiel
 ou donnée publiée, et signalée « source unique » dans « À vérifier » ; un fait repris d'un seul relais
 secondaire donne f : un fait forgé bien formé ne doit pas suffire à porter F), une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?`, une
 **garantie** (mécanisme, attendu, contredirait : forme type dans la fiche), une **option** (acteur,
 option avant, option après : un fait qui ne change l'espace d'action de personne ne s'ancre pas) et
+**sur quoi repose** le mécanisme (`garantie.support` : texte, loi, donnée ou cas, jamais un autre argument,
+0.7.10), un « contredirait » qui pourrait annuler la carte (différent de l'attendu, sans nommer la carte),
 le **passage** lu qui soutient le fait tel qu'il est écrit (localisation ; « peut être activé » ne
-soutient pas « a été activé » ; un soutien partiel donne f, une pièce qui contredit va en A7) ;
+soutient pas « a été activé » ; un soutien partiel donne f, une pièce qui contredit va en A7 ; une pièce
+qui ne contient pas le fait se dit `absent_de_la_piece` — élargir la lecture — et un fait qu'aucune
+source ne soutient `non_soutenu` — retirer l'ancrage) ;
 équivalent Vide : au plus f. Lister les équivalents Proposés dans « À vérifier auprès de vous ». Ne
 jamais rétablir « Documenté » à partir d'un souvenir bibliographique.
 
@@ -216,7 +223,9 @@ continue. Comparateur au même horizon. Trajectoires seulement si utiles, avec l
 le 2026-10-29, une prévision du moteur n'y entre qu'avec `preuve_dossier` (sceau du dossier publié au
 plus tard à la date d'information, `validation.md` §1). Une
 question nominative (« qui sera élu ? ») n'est pas un événement de carte : la journaliser avec
-`"origine": "jugement"` et une probabilité humaine, scorée à part (`validation.md` §1). Rejeux
+`"origine": "jugement"`, une probabilité humaine et sa `procedure` (`seul`, `compromis`, `simulation`,
+`analogies`, `autre` ; requise depuis le 2026-10-31), scorée à part (`validation.md` §1). Le comparateur
+externe le plus exigeant est le même modèle **sans le skill**, en contexte séparé. Rejeux
 successifs : du plus ancien au plus récent ; une issue déjà vue rend la question `rejeu: true`.
 
 **10. Sortie.** Suivre `simulation.md` : analytique, symbolique sans chiffre, lignes de journal,
@@ -254,14 +263,16 @@ trajectoires ; `exemples.md` ; `dynamiques.md` au-delà de la fiche concernée ;
 candidates ; `apports-theoriques.md`. **Ne jamais abandonner** : l'état daté, la ligne A6, l'anti-résonance
 A7, les questions qui départagent, la définition de la résolution, ni la mention de ce qui n'a pas été
 chargé. Une lecture partielle se déclare ; elle ne se présente pas comme complète. Deux strates lues et
-contrôlées valent mieux que sept survolées : c'est la couverture qui est mesurée, pas le nombre de
-fichiers ouverts.
+contrôlées valent mieux que sept survolées : ce qui se mesure, c'est **chaque ancrage, un par un** — la
+pièce effectivement lue qui le soutient, et aucun fait décisif écarté par étroitesse de lecture —, ni un
+taux de couverture ni le nombre de fichiers ouverts. Un taux agrégé monte quand on lit plus, pas quand on
+lit juste.
 
 ## Ce que le moteur contrôle, et ce qu'il ne contrôle pas
 
 | Contrôlé sur une fiche ou un dossier (refus si absent) | Laissé au jugement, jamais certifié |
 |---|---|
-| forme de l'état (G6) ; statuts d'équivalent (A3) ; pièces de F (A6, A7, test, garantie, option, corroboration, passage) ; questions et leurs branches ; partage apprentissage/test ; empreintes | vérité d'un fait ; justesse d'une justification ; choix des strates ; pertinence de la contre-candidate ; qualité de la source de résolution |
+| forme de l'état (G6) ; statuts d'équivalent (A3) ; pièces de F (A6, A7, test, garantie et son support, option, corroboration, passage) ; questions et leurs branches ; partage apprentissage/test ; empreintes | vérité d'un fait ; justesse d'une justification ; choix des strates ; pertinence de la contre-candidate ; qualité de la source de résolution |
 
 Un `audit` ou un `valider` conformes ne disent donc rien de la lecture : ils disent qu'elle est complète
 et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les questions — et le dit.
@@ -270,7 +281,10 @@ et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les q
 
 - Le moteur est **associationnel** (barreau A de Pearl) : il extrapole des motifs observés et ne
   répond ni à « que produirait telle action ? » ni à « que se serait-il passé autrement ? ». Toute
-  sortie se lit « si le motif observé se répète, alors… ».
+  sortie se lit « si le motif observé se répète, alors… ». Ce n'est pas une prudence mais une
+  conséquence : répondre à une intervention exige de l'**identifier**, et l'identification exige un graphe
+  causal engagé (CIVeX, arXiv:2605.09168, qui rend ABSTAIN faute d'identifiabilité) ; les 66 arêtes sont
+  postulées, P1 interdit d'en poser un. Aucune sortie ne dit qu'une issue « découle » des cartes.
 - L'alphabet décrit des structures, pas des issues nominatives : qui gagne, quel nom, quel effectif
   exact relèvent du jugement, journalisé à part (`origine: jugement`).
 - Treize équivalents ont une référence lue, tous en strate 7 : 0 Attesté, 13 Documenté, 181 Proposé,

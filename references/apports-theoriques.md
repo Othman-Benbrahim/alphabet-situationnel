@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.7
+> Version : 0.7.9
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -455,4 +455,50 @@ Vapnik-Chervonenkis : refusés avec la note. Weibull : différé, le diagnostic 
 (`confronter`). Seuil d'ancrage dédoublé, rétrogradation de CROISSANCE@7, troisième recherche de
 RÉSONANCE@7, lecture d'un texte pour PÉRIODICITÉ@7 : décisions et travaux de l'auteur
 (`feuille-de-route.md` §1 et §4).
+
+---
+
+## 13. Accord sous faible prévalence, rejets, concessions (0.7.9)
+
+Document versé par l'auteur le 30 octobre 2026. Il signale que la nécessité de ces contrôles a été
+constatée en examinant un projet public de skills sous licence CC-BY-NC 4.0 ; **aucun texte, tableau,
+gabarit ni code de ce projet n'est repris**, et seules les sources primaires sont citées : Cohen (1960) ;
+Feinstein et Cicchetti (1990, « High agreement but low kappa: I ») ; Cicchetti et Feinstein (1990,
+« … II. Resolving the paradoxes », accords spécifiques positif et négatif) ; Byrt, Bishop et Carlin
+(1993) ; Krippendorff (1980) via Carletta (1996) ; Reidsma et Carletta (2008). Les formules sont celles de
+ces articles ; la rédaction est propre au dépôt.
+
+### 13.1 Retenu
+
+| Point | Vérification | Contrôle ajouté | Où |
+|---|---|---|---|
+| κ s'effondre sous faible prévalence | juste ; κ = −0,009 pour 116 accords sur 118 reproduit | table 2×2, κ indéfini déclaré, PABAK, accords spécifiques | `moteur.py accord`, `base-de-cas.md` §6, A4 |
+| PABAK seul ne voit pas un codeur qui n'ancre jamais | juste : 0,908 contre κ = 0 | verdict sous plafond des taux de manque (`fnr_max` 0,20) | idem |
+| Erreurs directionnelles | juste dans l'idée ; corrigé (13.2) | **deux** taux de manque | idem |
+| Les rejets ne sont relus par rien | juste | `rejets` : feuille aveugle, tirage fixé par le sceau, contrôle de l'audit | `validation.md` §6 |
+| Révision sous insistance | juste ; déjà en partie couvert par A7 et A5 | journal des concessions, contrôles de cohérence | `validation.md` §6 |
+
+### 13.2 Corrigé
+
+1. **Prévalence mesurée.** La note compte 87 ancrages sur 1 888 décisions (4,6 %) ; il y en a 205 (10,9 %)
+   — elle comptait les seuls mots documentés à leur apparition, pas leur présence dans chaque état. Les huit
+   cartes jamais présentes sont exactes ; la conclusion tient, moins fortement.
+2. **Tables de κ.** La ligne « 0 ancrage » (pₒ 0,983, PABAK 0,966) est impossible : sans ancrage, pₒ = 1 et
+   PABAK = 1. « Un désaccord → κ 0,496 » ne se reproduit pas : un désaccord donne κ = 0 (un seul ancrage, non
+   partagé) ou 0,663 (un ancrage commun, un en plus) ; 0,491 correspond à deux désaccords.
+3. **FNR et FPR prennent le premier codeur pour référence.** A4 n'en reconnaît aucune. Les deux taux de
+   manque se publient ; c/(c+d), voisin de zéro sous faible prévalence, n'informe pas.
+4. **Le seuil de 15 % de prévalence** pour passer de κ à PABAK n'est dans aucune des sources citées : non
+   repris. PABAK sous plafond des taux de manque porte le verdict à toute prévalence ; κ est toujours publié.
+5. **Les « 95 % de rejets ».** Les 1 888 décisions comptent toutes les cartes de tous les états ; un rejet
+   au sens du dossier est une candidate écartée avec motif, soit quelques-unes par dossier. Les cartes
+   jamais candidates ne sont pas relues. Le **rejet « near-miss »** (tous les marqueurs présents dans les
+   faits) n'est pas calculable par machine : un marqueur est une phrase, pas un champ ; non repris, la
+   liste ne pourrait pas être « recalculée ».
+6. **Numéro.** 0.7.9, la 0.8 restant réservée aux étapes 2 et 3.
+
+### 13.3 Refusé
+
+Les mécanismes que la note écarte elle-même (§5 : déjà présents, souvent mieux ancrés) ; un barème
+d'accord concurrent ; tout texte du projet examiné.
 

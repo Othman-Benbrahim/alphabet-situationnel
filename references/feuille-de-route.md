@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.7
+> Version : 0.7.9
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -18,7 +18,7 @@
 | 1 | Trois décisions d'auteur | auteur | les trois choix sont inscrits au §9 et appliqués | prises (§9) |
 | 2 | Premiers cas réels sous les règles courantes | auteur, Claude assiste | au moins un cas `actif`, codé sous la version courante, de préférence avant son issue, relu par l'auteur | mesuré (`bilan`) |
 | 3 | Sourcer une strate pilote | Claude cherche, auteur vérifie | 16/16 cases traitées dans la strate (Documenté, Attesté, Vide clos ou Hors domaine) | mesuré (`bilan`) |
-| 4 | Bibliothèque de fréquences externes | Claude cherche, auteur vérifie | une référence vérifiée par type d'événement prévu dans la strate pilote ; sources : `sources-france.md` | mesuré (`bilan --references`) |
+| 4 | Bibliothèque de fréquences externes | Claude cherche, auteur vérifie | une référence vérifiée par type d'événement prévu dans la strate pilote ; méthode : `frequences-externes.md` ; sources : `sources-france.md` | mesuré (`bilan --references`) |
 | 5 | Base réelle et second codeur | auteur, second codeur | 3 cas homologues (ρ1), puis 20 cas double-codés et 20 % (sortie du mode solo) | mesuré (`bilan`) |
 | 6 | Code différé | Claude | déclenché par les données, voir §7 | déclaré (§9) |
 | — | Test à l'aveugle | auteur | V4 : gain absolu de 2,5 points testé, épisodes ≥ max(50, effectif requis par σ̂(d)) | mesuré (`bilan --journal`) |
@@ -29,6 +29,8 @@
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.9 (faite) | Accord et rejets | `accord` : κ, PABAK, accords spécifiques, deux taux de manque, verdict ; audit aveugle des rejets (`rejets`) ; journal des concessions ; probabilités identiques à la 0.7.8 | — |
+| 0.7.8 (faite) | Se comparer à autre chose qu'à soi | comparateur externe aveugle et scellé (`sceller-comparateur`, rapport, `v4_reference`) ; `frequences-externes.md` et refus du gabarit et des classes tautologiques ; `export-codeur` ; probabilités identiques à la 0.7.7 | — |
 | 0.7.7 (faite) | Paramétrer avant de mesurer | seuil d'ancrage dédoublé ; V4 absolu, testé, effectif calculé avec plancher ; questions discriminantes et double rapport V4 ; seuil de niveau séparé (valeur inchangée) ; règles figées ; strate 7 à 14/16 ; probabilités identiques à la 0.7.6 | — |
 | 0.7.6 (faite) | Éprouver les paramètres | `sonde` (arêtes, intensités, inerties) contre la référence « cas seuls » ; couverture des arêtes ; Kish ; sondes d'atténuation ; circularité signalée ; `signe_suffisant` ; critère du premier cas ; probabilités identiques à la 0.7.5 | — |
 | 0.7.5 (faite) | Confronter et tester | matrice confrontée aux observations (`confronter`) ; tests exacts du signe et de Wilcoxon, σ(d), score logarithmique ; poids des deux a priori et intervalle de f publiés ; épreuve commune des révisions ; `classe_source` ; κ 0,67 / 0,80 ; puissance des jalons ; probabilités identiques à la 0.7.4 | — |
@@ -91,6 +93,9 @@ puissance 80 % pour V4) :
 | ρ0 · 30 cas distincts | 30 | compte les cas, pas l'effectif pondéré : sur la démonstration, 10 cas valent 4,8 observations effectives. La règle « n > 30 » n'est pas une borne du théorème central limite, et ρ0 ne repose pas sur une approximation normale ; le seuil est une convention, déclarée comme telle |
 | V4 · 50 épisodes, gain de 10 % (jusqu'en 0.7.6 ; règle calculée depuis 0.7.7) | 50 | sur un Brier de référence de 0,25, 10 % font 2,5 points ; n ≈ (2,80 σ(d) / 0,025)² : 32 épisodes si σ(d) = 0,05, 126 si σ(d) = 0,10, 503 si σ(d) = 0,20. **50 épisodes ne suffisent que si σ(d) ≲ 0,063**, valeur inconnue : `scorer` la publie dès les premiers épisodes résolus |
 
+Ces calculs supposent un accord attendu pₑ de 0,3 à 0,5. Sous faible prévalence, pₑ approche 1 et
+l'effectif requis pour κ devient inaccessible : c'est PABAK, sous le plafond des taux de manque, qui
+porte le verdict (0.7.9), et la puissance se recalcule avec pₑ = p₁p₂ + (1 − p₁)(1 − p₂) observé.
 Ces chiffres ne changent aucun seuil : ils disent ce qu'un seuil atteint permettra de conclure. Un κ de
 0,70 sur un petit effectif ne prouve pas le franchissement de 0,67 ; il se publie avec son intervalle.
 
@@ -270,7 +275,7 @@ Chaque élément attend une condition de données ; le coder avant serait coder 
 
 | Élément | Condition de déclenchement | Paramètre concerné |
 |---|---|---|
-| Calcul de l'accord κ par carte | premiers cas double-codés | `kappa_min` (réservé) |
+| Calcul de l'accord par carte depuis deux fiches d'un même cas (la statistique, `accord`, existe depuis 0.7.9) | premiers cas double-codés | `kappa_min`, `kappa_rapportable`, `fnr_max` |
 | Pondération continue des homologues par similarité | au moins une strate avec 30 cas actifs | `jaccard_H15` |
 | Intervalles des événements composés et multi-pas | premières références conditionnelles vérifiées | — |
 | Calibration des multiplicateurs et des inerties | jalon V4 atteint | `lambda`, `inertie` |
@@ -325,7 +330,9 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-30 | — | Apport « capacité et généralisation » et réponses à la feuille de route triés (0.7.6, `apports-theoriques.md` §12) ; une erreur de la feuille de route corrigée (`n_min_frequence` ne change pas p) |
 | 2026-10-30 | 1 | Décisions 0.7.7 vérifiées : 1, 2, 5, 6 appliquées ; 3 avec plancher ; 4 séparée de la version (change un p) ; strate 7 : RÉSONANCE close, CROISSANCE Vide |
 | 2026-10-30 | 3 | Strate 7 : 14 cases traitées sur 16 (13 Documentées, RÉSONANCE close) ; restent CROISSANCE (une recherche) et PÉRIODICITÉ (un texte) |
-| 2026-10-30 | 0 | À faire : installer la 0.7.7 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
+| 2026-10-30 | — | Document « mesures à prendre » trié (0.7.8) : comparateur externe, fréquences externes, export du second codeur ; quatre corrections avant intégration |
+| 2026-10-30 | — | Document « accord et rejets » trié (0.7.9) : trois apports retenus, cinq corrections, aucun texte tiers |
+| 2026-10-30 | 0 | À faire : installer la 0.7.9 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) |
 
 ---
 

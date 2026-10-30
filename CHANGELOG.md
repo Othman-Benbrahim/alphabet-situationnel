@@ -1,9 +1,60 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.7
+> Version : 0.7.9
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.9 — 2026-10-30 · accord sous faible prévalence, rejets, concessions
+
+**Aucune probabilité ne change** (vérifié : valeurs témoins, 72 calculs de démonstration, `scorer`). 134
+autotests (131 + 3). Tri : `apports-theoriques.md` §13.
+
+- **`accord`** : table 2×2, pₒ, pₑ, κ et intervalle (indéfini si pₑ = 1), PABAK, accords spécifiques, deux
+  taux de manque, verdict (sans objet, non estimable, insuffisant, provisoire, rapportable). Paramètres
+  `fnr_max` (0,20), `accord_min_ancrages` (5) ; `kappa_min` et `kappa_rapportable` ne sont plus réservés.
+- **`rejets`** : feuille aveugle des rejets d'un dossier, tirage fixé par le sceau (`rejets_tirage`), et
+  contrôle de l'audit rempli.
+- **`dossier.concessions`** : journal des rétrogradations et retraits sous contestation, score de 1 à 5,
+  contrôles de cohérence, signalement au-delà de la moitié des mots.
+- **Corrigé dans le document** : prévalence (10,9 % et non 4,6 %), deux tables de κ non reproductibles,
+  taux d'erreur à référence unique, seuil de 15 % sans source, rejets confondus avec les cartes non
+  candidates, « near-miss » non calculable.
+
+**Provenance.** Les contrôles d'accord de cette version suivent la littérature statistique de l'accord
+entre codeurs (Cohen 1960 ; Feinstein et Cicchetti 1990 ; Cicchetti et Feinstein 1990 ; Byrt, Bishop et
+Carlin 1993 ; Reidsma et Carletta 2008). Leur nécessité a été constatée en examinant un projet public de
+skills sous licence CC-BY-NC 4.0 ; aucun texte, tableau, gabarit ni code de ce projet n'est repris, et
+ses sources primaires sont citées directement.
+
+## 0.7.8 — 2026-10-30 · se comparer à autre chose qu'à soi
+
+Document « mesures à prendre » trié. **Aucune probabilité ne change** : les quatre valeurs témoins du
+document (p 0,22037939…, ρ1, comparateur 0,12087199…, p placebo 0,20242412…) et les 72 calculs de
+démonstration sont identiques à la 0.7.7 ; `scorer` sur le journal d'exemple ne diffère que par des clés
+ajoutées. 131 autotests (126 + 5). Vingt références (une nouvelle).
+
+- **Comparateur externe aveugle** : `sceller-comparateur`, champ `comparateur_externe` (requis depuis
+  0.7.8, null si non joué), contrôles dans `valider_journal`, rapport `comparateur_externe`,
+  `v4_comparateur`, `v4_comparateur_discriminant`, colonnes CSV, `v4_reference` (`inertie` par défaut :
+  V4 inchangé).
+- **`frequences-externes.md`** : méthode de l'étape 4 ; `refs_valider` et `valider-references` refusent la
+  source du gabarit et la classe tautologique.
+- **`export-codeur`** : faits, sources et dates d'un cas, sans le premier codage.
+
+**Corrigé dans le document avant intégration**
+- La liste blanche admettait `evenement` (« SEU@7 apparait » : le nom de la carte) et `strate` : retirés ;
+  la question et la résolution en clair suffisent. La question est contrôlée comme la méthode.
+- `aveugle` déclaré ne suffisait pas : un bras produit par le même modèle dans la session de lecture n'est
+  pas aveugle. Champ `contexte` (`separe`, `meme_session`) ; `meme_session` est publié contaminé.
+- L'empreinte ne liait pas la méthode, alors que le document voulait empêcher de changer de méthode après
+  coup : ajoutée. Une adresse de branche mobile ne prouve pas la date : écrit.
+- L'export proposé gardait `strate` et `sans_evenement`, deux décisions de codage, et l'ordre des faits par
+  mot, qui trahit la structure du codage : retirés, faits mélangés ; la limite (faits choisis par le
+  premier codeur) est écrite dans la sortie.
+- Numéro : 0.7.8 et non 0.8.0, la feuille de route réserve 0.8 aux étapes 2 et 3. Les six échecs
+  d'autotests signalés par le document viennent de son bac à sable (dossier temporaire refusé) : ici, les
+  131 passent.
 
 ## 0.7.7 — 2026-10-30 · paramétrer avant de mesurer
 

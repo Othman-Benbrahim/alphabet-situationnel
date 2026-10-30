@@ -1,5 +1,5 @@
 {
- "version": "0.7.7",
+ "version": "0.7.9",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -69,10 +69,14 @@
  "double_codage_min_cas": 20,
  "kappa_min": 0.67,
  "kappa_rapportable": 0.8,
+ "fnr_max": 0.2,
+ "accord_min_ancrages": 5,
+ "rejets_tirage": 100,
  "v4_gain_abs": 0.025,
  "v4_alpha": 0.05,
  "v4_puissance": 0.8,
  "v4_test": "signe",
+ "v4_reference": "inertie",
  "v4_n": 50,
  "matrice": {
   "SEU": {

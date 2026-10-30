@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.7
+> Version : 0.7.9
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -97,13 +97,17 @@ stipuler F sans valeur empirique ; leurs chiffres restent réservés au mode `--
 **A4 · Accord entre codeurs.** Au moins 20 cas par strate et 20 % des cas de cette strate sont
 codés indépendamment par deux codeurs distincts, dont au moins un humain. Le moteur contrôle les
 identités déclarées, les attestations d’indépendance et les effectifs ; il ne certifie pas l’indépendance
-réelle et ne calcule pas encore κ ; le seuil `kappa_min` de §H est donc **réservé** : déclaré pour le
-futur calcul, lu par aucun calcul en 0.4.x. Repères (0.7.5) : `kappa_min` 0,67, seuil des conclusions provisoires, et `kappa_rapportable` 0,80, seuil d'une
+réelle ; depuis 0.7.9, `moteur.py accord` calcule l'accord d'une carte à partir de sa table 2×2 et lit
+`kappa_min`, `kappa_rapportable` et `fnr_max` ; le calcul depuis deux fiches d'un même cas reste différé. Repères (0.7.5) : `kappa_min` 0,67, seuil des conclusions provisoires, et `kappa_rapportable` 0,80, seuil d'une
 fiabilité rapportable (Krippendorff 1980, cité par Carletta 1996) ; ces repères valent pour α de
 Krippendorff et sont repris pour κ à titre indicatif. Un κ se publie avec son intervalle, et la **forme**
 des désaccords compte plus que leur ampleur (Reidsma et Carletta 2008) : les désaccords se conservent et
 s'examinent par carte. L'effectif de 20 cas n'est pas justifié par un calcul de puissance
-(`feuille-de-route.md` §1). Tant que l’accord par carte (κ ≥ 0,67) n’est pas vérifié et archivé,
+(`feuille-de-route.md` §1). **Prévalence (0.7.9).** κ dépend de la prévalence du code : indéfini à prévalence
+nulle (pₑ = 1), il passe de 1 à 0 sur une carte ancrée une fois, au premier désaccord. Les repères
+s'appliquent à PABAK = 2·pₒ − 1, sous la condition que chacun des deux taux de manque, b/(a+b) et c/(a+c),
+reste sous `fnr_max` ; aucun codeur n'est la référence de l'autre. Un κ indéfini se déclare indéfini
+(`base-de-cas.md` §6, `moteur.py accord`). Tant que l’accord par carte (κ ≥ 0,67) n’est pas vérifié et archivé,
 aucun accord empirique n’est revendiqué. Effectif insuffisant : mode solo, ρ0 inaccessible.
 Une carte dont l’accord est insuffisant revient en Proposé ; rechercher les divergences de définition.
 
@@ -532,7 +536,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.7"` |
+| `version` | `"0.7.9"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |
@@ -596,10 +600,14 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 | `double_codage_min_cas` | `20` |
 | `kappa_min` | `0.67` |
 | `kappa_rapportable` | `0.8` |
+| `fnr_max` | `0.2` |
+| `accord_min_ancrages` | `5` |
+| `rejets_tirage` | `100` |
 | `v4_gain_abs` | `0.025` |
 | `v4_alpha` | `0.05` |
 | `v4_puissance` | `0.8` |
 | `v4_test` | `"signe"` |
+| `v4_reference` | `"inertie"` |
 | `v4_n` | `50` |
 | `matrice.SEU.PER` | `"f"` |
 | `matrice.SEU.TRA` | `"M"` |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.7 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.9 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -765,6 +765,66 @@ def empreinte_jugement(question, evenement, probabilite, date):
     return empreinte({'question':question,'evenement':evenement,'probabilite_jugement':probabilite,'date':date})
 
 
+VUS_ADMIS = ('question', 'resolution', 'echeance', 'date', 'domaine')
+VUS_INTERDITS = ('etat_present', 'etat', 'cartes', 'evenement', 'marqueur', 'strate', 'p', 'probabilite', 'p_sans_cartes',
+                 'p_placebo', 'jugement_scelle', 'dossier', 'calcul')
+CONTEXTES_COMPARATEUR = ('separe', 'meme_session')
+
+
+def empreinte_comparateur(question, evenement, probabilite, date, source, methode):
+    """0.7.8. Scellé du comparateur externe : lie la question, l'événement, la probabilité, la date, la
+    source **et la méthode** (changer de méthode après coup change l'empreinte)."""
+    return empreinte({'question':question,'evenement':evenement,'probabilite_comparateur':probabilite,'date':date,
+                      'source':source,'methode':methode})
+
+
+def mots_de_cartes(texte_):
+    """Noms et abréviations de cartes présents dans un texte, comme mots entiers (accents et casse ignorés)."""
+    mots=set(re.findall(r'[A-Z0-9]+',_plat_mots(str(texte_))));out=[]
+    for ab,nom in NOMS.items():
+        if ab in mots or set(re.findall(r'[A-Z0-9]+',_plat_mots(nom)))<=mots:out.append(nom)
+    return out
+
+
+def erreurs_comparateur(c, question, evenement, date_prevision=None):
+    """0.7.8. Comparateur externe aveugle : un second bras qui produit une probabilité sans avoir vu l'état,
+    les cartes, ni p. Contrôles : forme ; scellé au plus tard à la date de la prévision et jamais futur ;
+    publication https ; empreinte ; liste blanche de ce qui a été vu (l'événement codé « SEU@7 apparait » et
+    le marqueur local sont du vocabulaire de l'alphabet : ils sont interdits, la question et la résolution
+    en clair suffisent) ; méthode et question sans nom de carte (tautologie). `aveugle` et `contexte` sont
+    déclarés : un bras non aveugle, ou produit dans la même session que la lecture, est accepté mais
+    publié « contaminé » et exclu du rapport."""
+    err=[]
+    if not isinstance(c,dict):return ['comparateur_externe = {methode, probabilite, scelle_le, source, aveugle, elements_vus, contexte, empreinte}']
+    for k in ('methode','scelle_le','source','empreinte'):
+        if not (isinstance(c.get(k),str) and c[k].strip()):err.append(f'comparateur_externe.{k} requis')
+    if err:return err
+    try:proba(c.get('probabilite'),'comparateur_externe.probabilite')
+    except ValueError as e:return [str(e)]
+    try:date_iso(c['scelle_le'])
+    except ValueError:return ['comparateur_externe.scelle_le au format AAAA-MM-JJ']
+    if date_prevision is not None and jour(c['scelle_le'])>jour(date_prevision):err.append('comparateur scellé après la prévision')
+    if jour(c['scelle_le'])>datetime.date.today().toordinal():err.append('comparateur scellé à une date future : on scelle un comparateur déjà formé')
+    if type(c.get('aveugle')) is not bool:err.append('comparateur_externe.aveugle = true ou false')
+    if c.get('contexte') not in CONTEXTES_COMPARATEUR:err.append('comparateur_externe.contexte = separe ou meme_session')
+    vus=c.get('elements_vus')
+    if not isinstance(vus,list) or not all(isinstance(v,str) for v in vus):err.append('comparateur_externe.elements_vus = liste')
+    else:
+        for v in vus:
+            if v not in VUS_ADMIS:err.append(f'comparateur_externe.elements_vus : « {v} » '+('interdit' if v in VUS_INTERDITS else 'inconnu')+f' (admis : {", ".join(VUS_ADMIS)})')
+    if not re.match(r'https://\S+$',c['source']):err.append('comparateur sans publication https : la date n’est pas prouvée')
+    for champ,txt in (('methode',c['methode']),('question',question)):
+        cs=mots_de_cartes(txt)
+        if cs:err.append(f'{champ} du comparateur tautologique : cite {", ".join(cs)}')
+    if not err and c['empreinte']!=empreinte_comparateur(question,evenement,c['probabilite'],c['scelle_le'],c['source'],c['methode']):
+        err.append('comparateur_externe.empreinte absente ou différente (question, événement, probabilité, date, source et méthode)')
+    return err
+
+
+def comparateur_contamine(c):
+    return isinstance(c,dict) and (c.get('aveugle') is not True or c.get('contexte')!='separe')
+
+
 def empreinte_prevision(prediction):
     # A publication receipt can be added later without changing the frozen substantive forecast.
     return empreinte({k:v for k,v in prediction.items() if k != 'preuve_prepublication'})
@@ -1065,6 +1125,41 @@ def _plat_mots(s):
     return ''.join(ch for ch in s if unicodedata.category(ch)!='Mn').upper().replace('·',' ')
 
 
+def controle_concessions(cs,fm,candidats,n_mots):
+    """0.7.9. Journal des concessions : une rétrogradation ou un retrait consécutif à une contestation se
+    note de 1 à 5 (5 : pièce nouvelle ou raisonnement qui défait l'ancrage ; 4 : affaiblit
+    substantiellement ; 3 et moins : la lecture tient). Rétrogradation : score ≥ 4 ; retrait : 5 ; après
+    une concession, la suivante exige 5. La concession doit se lire dans le dossier (rétrogradée → f,
+    retirée → absente). Au-delà de la moitié des mots, signalement : relire si c'est le dossier qui a changé
+    ou le codeur qui a cédé. Le score est une déclaration ; la règle lie la cohérence, pas la vérité. Ne
+    s'y inscrivent ni une portée dominante (A7), ni une correction matérielle, ni un rejet motivé par A6."""
+    if cs is None:return [],[]
+    if not isinstance(cs,list):return ['dossier.concessions = liste'],[]
+    err=[];prec=False;n=0
+    for i,c in enumerate(cs):
+        if not isinstance(c,dict):err.append(f'concessions[{i}] : objet requis');continue
+        try:k=cle_valide(str(c.get('carte')))
+        except (ValueError,IndexError):err.append(f'concessions[{i}] : carte = CARTE@strate');continue
+        sc=c.get('score');ac=c.get('action')
+        if type(sc) is not int or not 1<=sc<=5:err.append(f'{k} : score de 1 à 5');continue
+        if ac not in ('maintien','retrogradation','retrait'):err.append(f'{k} : action = maintien, retrogradation ou retrait');continue
+        for ch in ('contestation','motif'):
+            if not (isinstance(c.get(ch),str) and c[ch].strip()):err.append(f'{k} : {ch} requis')
+        try:date_iso(c.get('date'))
+        except ValueError:err.append(f'{k} : date au format AAAA-MM-JJ')
+        if k not in candidats:err.append(f'{k} : concession sur une carte qui n’est pas candidate')
+        if ac!='maintien':
+            mini=5 if prec or ac=='retrait' else 4
+            if sc<mini:err.append(f'{k} : {ac} avec un score {sc} < {mini}'+(' (concession précédente : la suivante exige 5)' if prec else '')+' ; l’insistance n’est pas une preuve')
+            if ac=='retrogradation' and fm.get(k)!='f':err.append(f'{k} : rétrogradation déclarée, mais le mot n’est pas f dans l’état')
+            if ac=='retrait' and k in fm:err.append(f'{k} : retrait déclaré, mais le mot est encore dans l’état')
+            n+=1
+        if type(c.get('concession_precedente')) is bool and c['concession_precedente']!=prec:err.append(f'{k} : concession_precedente incohérente avec le journal')
+        prec=ac!='maintien'
+    sig=[f'concessions : {n} pour {n_mots} mot(s), plus de la moitié ; relecture humaine : le dossier a-t-il changé, ou le codeur a-t-il cédé ?'] if n_mots and n>n_mots/2 else []
+    return err,sig
+
+
 def signalements_circularite(mots):
     """0.7.6. Une garantie circulaire reformule la carte au lieu de nommer un mécanisme (« c'est un seuil
     parce qu'il y a hystérésis »). Signalée — jamais refusée : nommer la carte n'est pas forcément
@@ -1177,6 +1272,7 @@ def dossier_valider(d):
     errs,manques=controle_recherches(d.get('recherches'),set(fm),keys)
     exiger(not errs,'dossier refusé — '+' ; '.join(errs))
     manques+=signalements_circularite(mots)
+    errs,sig=controle_concessions(d.get('concessions'),fm,keys,len(mots));exiger(not errs,'dossier refusé — '+' ; '.join(errs));manques+=sig
     return {'conforme':True,'complet':not manques,'manques':manques,'etat':etat,'mots':len(mots),'candidats':keys,'contre_candidate':contre,
             'disponible_le':d.get('disponible_le') or e['date'],
             'evenements':evs or [],'sceau':empreinte(d),
@@ -1184,11 +1280,108 @@ def dossier_valider(d):
                           'Il fige la lecture et les événements, pas le jugement (voir sceller-jugement).'}
 
 
+def accord(a,b,c,d):
+    """0.7.9. Accord de deux codeurs sur une carte, à partir de la table 2×2 de leurs décisions (a : les deux
+    ancrent ; b : le premier seul ; c : le second seul ; d : aucun). κ (Cohen 1960) dépend de la prévalence :
+    indéfini si pₑ = 1, effondré quand le code est rare (Feinstein et Cicchetti 1990). PABAK = 2·pₒ − 1
+    (Byrt, Bishop et Carlin 1993) ne s'effondre pas, mais ne voit pas un codeur qui n'ancre jamais. On
+    publie donc aussi les accords spécifiques positif et négatif (Cicchetti et Feinstein 1990) et les
+    **deux** taux de manque, b/(a+b) et c/(a+c) : aucun codeur n'est la référence de l'autre (A4), un
+    seul taux supposerait le contraire ; c/(c+d) (taux de faux positifs) est publié mais, sous faible
+    prévalence, il est presque toujours voisin de zéro et n'informe pas. Verdict : sans objet si personne
+    n'ancre ; non estimable si aucun codeur n'atteint `accord_min_ancrages` ancrages ; sinon PABAK ≥ kappa_min (et
+    ≥ kappa_rapportable pour « rapportable ») **et** les deux taux de manque ≤ fnr_max."""
+    for v in (a,b,c,d):exiger(type(v) is int and v>=0,'accord : a, b, c, d entiers ≥ 0')
+    n=a+b+c+d;exiger(n>0,'accord : table vide')
+    po=(a+d)/n;p1=(a+b)/n;p2=(a+c)/n;pe=p1*p2+(1-p1)*(1-p2)
+    k=None if abs(1-pe)<1e-12 else (po-pe)/(1-pe)
+    se=None if k is None else math.sqrt(po*(1-po)/n)/(1-pe)
+    m1=None if a+b==0 else b/(a+b);m2=None if a+c==0 else c/(a+c)
+    r={'table':{'a':a,'b':b,'c':c,'d':d},'n':n,'prevalence':(2*a+b+c)/(2*n),'po':po,'pe':pe,'kappa':k,
+       'kappa_intervalle_95_approche':None if se is None else [k-1.96*se,k+1.96*se],'pabak':2*po-1,
+       'accord_positif':None if 2*a+b+c==0 else 2*a/(2*a+b+c),'accord_negatif':None if 2*d+b+c==0 else 2*d/(2*d+b+c),
+       'manque_second':m1,'manque_premier':m2,'faux_positifs_second':None if c+d==0 else c/(c+d)}
+    if a+b+c==0:v='sans objet : aucun des deux codeurs n’ancre la carte'
+    elif max(a+b,a+c)<P['accord_min_ancrages']:v=f'non estimable : moins de {P["accord_min_ancrages"]} ancrages pour chaque codeur'
+    else:
+        # Le taux de manque se lit depuis le codeur qui ancre assez : un codeur qui n'ancre jamais manque tout.
+        ok=max(x for x,base_ in ((m1,a+b),(m2,a+c)) if x is not None and base_>=P['accord_min_ancrages'])<=P['fnr_max']
+        v=('rapportable' if r['pabak']>=P['kappa_rapportable'] else 'provisoire' if r['pabak']>=P['kappa_min'] else 'insuffisant') if ok \
+          else f'insuffisant : un codeur manque plus de {round(100*P["fnr_max"])} % des ancrages de l’autre'
+    r['verdict']=v
+    return r
+
+
 def wilson(k,n):
     """Intervalle de Wilson à 95 % d'une proportion k/n (Wilson 1927), sans valeurs hors [0, 1]."""
     if not n:return None
     z=1.959964;p_=k/n;c=(p_+z*z/(2*n))/(1+z*z/n);h=z*math.sqrt(p_*(1-p_)/n+z*z/(4*n*n))/(1+z*z/n)
     return [max(0.,c-h),min(1.,c+h)]
+
+
+def feuille_rejets(dossier):
+    """0.7.9. Feuille de relecture aveugle des rejets d'un dossier : les candidates écartées et les faits
+    de l'état, **sans** le motif du rejet ni la lecture retenue. Tirage de `rejets_tirage` rejets au plus,
+    ordonné par SHA-256 du sceau du dossier : on ne peut pas choisir le tirage."""
+    dv=dossier_valider(dossier)
+    rej=sorted(cle_valide(str(k)) for k in (dossier.get('rejets') or {}))
+    tir=sorted(rej,key=lambda k:hashlib.sha256(f"{dv['sceau']}:{k}".encode()).hexdigest())[:P['rejets_tirage']]
+    faits=sorted({str(m.get(x)).strip() for m in dossier.get('mots') or [] for x in ('fait','contre_observation') if m.get(x)},
+                 key=lambda f:hashlib.sha256(f"{dv['sceau']}|{f}".encode()).hexdigest())
+    return {'sceau_dossier':dv['sceau'],'etat_date':lire_etat(dossier['etat'])['date'],'tirage':tir,'rejets_au_dossier':len(rej),
+            'faits':faits,'consigne':'Pour chaque carte du tirage : « maintenu » ou « annule », avec une ligne de justification, '
+                                    'sans consulter le motif du rejet ni la lecture retenue.'}
+
+
+def erreurs_audit_rejets(audit,dossier):
+    """0.7.9. Contrôle d'un audit de rejets : même tirage que la feuille, relecture déclarée aveugle,
+    verdict pour chaque carte tirée, motif d'origine recopié exact, taux d'annulation cohérent."""
+    err=[];f=feuille_rejets(dossier);rej={cle_valide(str(k)):v for k,v in (dossier.get('rejets') or {}).items()}
+    if not isinstance(audit,dict):return ['audit_rejets : objet JSON requis']
+    if audit.get('sceau_dossier')!=f['sceau_dossier']:err.append('audit_rejets : sceau d’un autre dossier')
+    if [cle_valide(str(k)) for k in audit.get('tirage') or []]!=f['tirage']:err.append('audit_rejets : tirage différent de celui de la feuille (graine non choisie)')
+    if audit.get('aveugle') is not True:err.append('audit_rejets : relecture non aveugle')
+    if not (isinstance(audit.get('relecteur'),str) and audit['relecteur'].strip()):err.append('audit_rejets : relecteur requis')
+    vs=audit.get('verdicts')
+    if not isinstance(vs,list):return err+['audit_rejets : verdicts = liste']
+    vus=set();ann=0
+    for v in vs:
+        if not isinstance(v,dict):err.append('audit_rejets : verdict = objet');continue
+        k=cle_valide(str(v.get('carte')));vus.add(k)
+        if v.get('verdict') not in ('maintenu','annule'):err.append(f'{k} : verdict = maintenu ou annule')
+        if not (isinstance(v.get('justification'),str) and v['justification'].strip()):err.append(f'{k} : justification requise')
+        if v.get('motif_original')!=rej.get(k):err.append(f'{k} : motif_original différent du motif du dossier')
+        ann+=v.get('verdict')=='annule'
+    if vus!=set(f['tirage']):err.append('audit_rejets : un verdict par carte tirée, ni plus ni moins')
+    if vs and abs(audit.get('taux_annulation',-1)-ann/len(vs))>1e-9:err.append('audit_rejets : taux_annulation ≠ annulés / verdicts')
+    return err
+
+
+CLES_CODAGE=('mots','cartes','intensite','questions','recherches','liaisons','positions','retraits','preuves_liaisons',
+             'preuves_qualificatifs','preuve_positions','strates','sans_evenement','etat','codage')
+
+
+def export_codeur(cas):
+    """0.7.8. Vue d'un cas pour un second codeur : les faits, leurs sources et les dates de disponibilité,
+    sans le premier codage. Les faits sont regroupés par état, dédoublonnés et **mélangés** (ordre par
+    SHA-256) : l'ordre et le regroupement par mot trahiraient la structure du premier codage. Exclus aussi
+    les strates (le rattachement O1 est une décision de codage) et `sans_evenement` (un jugement B4).
+    Limite : ces faits sont ceux que le premier codeur a retenus ; un codage indépendant part au mieux du
+    dossier de sources complet. Un fait qui nomme une carte est signalé."""
+    def faits(x):
+        out={}
+        for m in x.get('mots') or []:
+            for k in ('fait','contre_observation'):
+                if isinstance(m.get(k),str) and m[k].strip():out[m[k].strip()]={'fait':m[k].strip(),'source':m.get('source')}
+        for r_ in x.get('retraits') or []:
+            if isinstance(r_.get('fait'),str):out[r_['fait'].strip()]={'fait':r_['fait'].strip(),'source':r_.get('source')}
+        return sorted(out.values(),key=lambda f:hashlib.sha256(f"{cas.get('id')}|{f['fait']}".encode()).hexdigest())
+    seq=[{'date':x.get('date'),'disponible_le':x.get('disponible_le'),'faits':faits(x)} for x in cas.get('sequence') or []]
+    iss=cas.get('issue') or {};issue={'date':iss.get('date'),'disponible_le':iss.get('disponible_le'),'faits':faits(iss)}
+    sig=[f"{e['date']} : « {f['fait'][:50]} » nomme {', '.join(mots_de_cartes(f['fait']))}" for e in seq+[issue] for f in e['faits'] if mots_de_cartes(f['fait'])]
+    return {'id':cas.get('id'),'fenetre':cas.get('fenetre'),'sequence':seq,'issue':issue,
+            'avertissements':['Faits retenus par le premier codeur, sans leur rattachement : la sélection elle-même reste une trace du premier codage.']
+                             +[f'fait qui nomme une carte (à reformuler avant envoi) : {x}' for x in sig]}
 
 
 def confronter(base):
@@ -1303,7 +1496,24 @@ def refs_valider(refs, fenetre, asof):
         try:cle_valide(key)
         except (ValueError,IndexError):raise ValueError(f'référence « {event} » : « {key} » n’est pas une clé CARTE@strate') from None
         exiger(typ in ('apparait','persiste','disparait','hausse|persiste','transformation|persiste'),f'{event} : type de référence inconnu')
+    errs=erreurs_references(refs);exiger(not errs,' ; '.join(errs))
     return refs
+
+
+GABARIT_SOURCE='SOURCE À REMPLACER PAR UNE RÉFÉRENCE VÉRIFIÉE'
+
+
+def erreurs_references(refs):
+    """0.7.8 (`frequences-externes.md`). Deux erreurs que la forme ne voyait pas : une source recopiée du
+    gabarit de `graphe.md` §2.2, et une classe de référence définie avec le vocabulaire des cartes
+    (« épisodes de POLARITÉ ») — compter ce que l'alphabet a déjà codé, ce n'est pas une référence externe."""
+    err=[]
+    for event,r in (refs or {}).items():
+        if not isinstance(r,dict):continue
+        if GABARIT_SOURCE.lower() in str(r.get('source','')).lower():err.append(f'{event} : source du gabarit, à remplacer par une référence lue')
+        cs=mots_de_cartes(r.get('definition',''))
+        if cs:err.append(f'{event} : classe tautologique, la définition cite {", ".join(cs)} ; définir la classe dans le vocabulaire de la source')
+    return err
 
 
 def reference(refs, cible, typ):
@@ -1811,6 +2021,7 @@ def valider_journal(data):
         origine=x.get('origine','moteur')
         exiger(origine in ('moteur','jugement'),f'{ident} : origine « moteur » ou « jugement »')
         if origine=='jugement':
+            exiger(x.get('comparateur_externe') is None,f'{ident} : pas de comparateur externe sur une ligne « jugement » (calibration du codeur)')
             # Question nominative ou hors alphabet (« qui sera élu ? ») : probabilité humaine, journalisée
             # et scorée à part, jamais mêlée au score du moteur ni à V4.
             version_lue(x.get('version_regles'),ident+'.version_regles')
@@ -1910,6 +2121,13 @@ def valider_journal(data):
                 if k_ in calc:
                     a_,b_=calc[k_],x.get(k_)
                     exiger(a_==b_ if not isinstance(a_,float) else (isinstance(b_,(int,float)) and abs(a_-b_)<1e-12),f'{ident} : {k_} différent du calcul figé')
+        # 0.7.8 : comparateur externe aveugle, requis (null si non joué) depuis 0.7.8.
+        if vr>=(0,7,8):
+            exiger('comparateur_externe' in x,f'{ident} : comparateur_externe requis depuis 0.7.8 (null si le bras n’a pas été joué)')
+        if x.get('comparateur_externe') is not None:
+            exiger(not x.get('partition'),f'{ident} : un comparateur externe ne s’applique pas à une partition')
+            errs=erreurs_comparateur(x['comparateur_externe'],x['question'],x['evenement'],x['date'])
+            exiger(not errs,f'{ident} : '+' ; '.join(errs))
         # 0.7.4 (décision 1) : sceau du dossier de lecture et sa publication.
         pdos=x.get('preuve_dossier')
         if pdos is not None:
@@ -2026,6 +2244,32 @@ def perte_log(items,champ,scores):
         if q<=0:return float('inf')
         t-=math.log(q)
     return t
+
+
+def brier_comparateur(items,scores,ech,origine):
+    """0.7.8. Brier du comparateur externe (questions binaires du moteur seulement), et indicateurs : bras
+    contaminé (publié, exclu du rapport), question discriminante contre le bras (|p − p_ext| ≥ δ, avant l'issue)."""
+    c=items[0].get('comparateur_externe') if len(items)==1 and origine=='moteur' else None
+    if c is None:return {'brier_comparateur':None,'comparateur_contamine':None,'discriminant_comparateur':None}
+    cont=comparateur_contamine(c);o=scores[items[0]['id']]['issue']
+    return {'brier_comparateur':None if cont else (c['probabilite']-o)**2,'comparateur_contamine':cont,
+            'discriminant_comparateur':abs(items[0]['probabilite']-c['probabilite'])>=P['delta_discriminant']-1e-12}
+
+
+def comparateur_externe(units):
+    """0.7.8. Ce que vaut le dispositif entier contre un bras indépendant : Brier du bras, du moteur,
+    améliorations et dégradations comptées, différentiel par épisode et tests exacts. Les bras contaminés
+    sont comptés à part."""
+    cont=sum(1 for x in units if x.get('comparateur_contamine'))
+    v=[x for x in units if x.get('brier_comparateur') is not None]
+    if not v and not cont:return None
+    if not v:return {'questions':0,'contamines_exclus':cont,'lecture':'aucun bras aveugle et séparé : rien à comparer'}
+    n=len(v);bc=sum(x['brier_comparateur'] for x in v)/n;bm=sum(x['brier'] for x in v)/n
+    dm=differentiel(v,'brier_comparateur')
+    return {'questions':n,'contamines_exclus':cont,'brier_comparateur':bc,'brier_moteur':bm,
+            'ameliorations':sum(x['brier']<x['brier_comparateur'] for x in v),
+            'degradations':sum(x['brier']>x['brier_comparateur'] for x in v),'par_episode':dm,
+            'lecture':lecture_test(dm,'moteur contre comparateur externe') if bm!=bc else 'aucun écart : un apport nul se publie comme tel'}
 
 
 def discriminant(items):
@@ -2176,6 +2420,14 @@ def murphy(paires):
                        'fiabilité 0 = calibré ; résolution haute = discrimine ; incertitude = difficulté de l’ensemble posé')}
 
 
+def v4_bras(eligible,champ,filtre):
+    """0.7.8. V4 lu contre un bras donné (ici le comparateur externe), sur toutes les questions éligibles
+    ou sur les seules discriminantes contre ce bras ; second rapport, jamais filtre du premier."""
+    v=[x for x in eligible if x.get(champ) is not None and (filtre is None or x.get(filtre))]
+    if not v:return None
+    r={k:w for k,w in v4_statut(differentiel(v,champ)).items() if k!='regle'};r['questions']=len(v);return r
+
+
 def v4_statut(dm):
     """0.7.7 (décisions 2 et 3). V4 se juge sur le différentiel **absolu** par épisode d̄ = Brier − Brier
     de référence : atteint si d̄ ≤ −v4_gain_abs, si le test exact (v4_test) rejette « aucune amélioration »
@@ -2247,6 +2499,7 @@ def score_result(data):
                       'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_jugement':bj,
                       **pertes_log(items,scores),
                       'discriminant':None if origine=='jugement' else discriminant(items),
+                      **brier_comparateur(items,scores,ech,origine),
                       'difficulte':None if ref is None else .5-abs(ref-.5),'reference_difficulte':ref,
                       'hors_V4':excluded,'partition':bool(items[0].get('partition')),
                       'rho':'jugement' if origine=='jugement' else max(x['rho'] for x in items),
@@ -2262,12 +2515,18 @@ def score_result(data):
     gain=1-b/bb if bb is not None and bb>0 else None
     # 0.7.5 : le gain est un « skill score » (Gneiting et Raftery 2007, §2.3) ; il s'accompagne du
     # différentiel par épisode contre la référence et de ses tests exacts.
-    dv4=differentiel([dict(x,brier_base=x['brier_base']) for x in eligible if x['brier_base'] is not None],'brier_base')
-    v4=v4_statut(dv4)
+    # 0.7.8 : `v4_reference` choisit le bras contre lequel le jalon se lit (inertie par défaut : inchangé).
+    champ_ref={'inertie':'brier_base','jugement':'brier_jugement','comparateur_externe':'brier_comparateur'}[P['v4_reference']]
+    if champ_ref!='brier_base':
+        episodes=defaultdict(list)
+        for x in eligible:
+            if x[champ_ref] is not None:episodes[x['episode_id']].append(x)
+    dv4=differentiel([x for x in eligible if x[champ_ref] is not None],champ_ref)
+    v4=v4_statut(dv4);v4['reference']=P['v4_reference']
     status=v4['statut']
     # 0.7.7 (décision 6) : second rapport sur les seules questions discriminantes, jamais un filtre du premier.
     disc=[x for x in eligible if x.get('discriminant')]
-    dv4d=differentiel([x for x in disc if x['brier_base'] is not None],'brier_base')
+    dv4d=differentiel([x for x in disc if x[champ_ref] is not None],champ_ref)
     v4_discriminant={'questions':len(disc),'part_des_eligibles':len(disc)/len(eligible) if eligible else None,
                      'differentiel':dv4d,**{k:v for k,v in v4_statut(dv4d).items() if k!='regle'}}
     by={}
@@ -2296,7 +2555,10 @@ def score_result(data):
             'moteur_contre_jugement':moteur_contre_jugement([x for x in units if x['origine']=='moteur']),
             'difficulte':difficulte(units),'questions_hors_V4':len(units)-len(eligible),
             'sans_score':missing,'non_resolues':unresolved,'episodes_comparables':len(episodes),'brier_par_episode':b,
-            'brier_base_par_episode':bb,'gain':gain,'gain_par_episode':dv4,'v4':v4,'v4_discriminant':v4_discriminant,'statut':status,'par_groupe':by,'calibration':calibration,
+            'brier_base_par_episode':bb,'gain':gain,'gain_par_episode':dv4,'v4':v4,'v4_discriminant':v4_discriminant,
+            'comparateur_externe':comparateur_externe([x for x in units if x['origine']=='moteur']),
+            'v4_comparateur':v4_bras(eligible,'brier_comparateur',None),
+            'v4_comparateur_discriminant':v4_bras(eligible,'brier_comparateur','discriminant_comparateur'),'statut':status,'par_groupe':by,'calibration':calibration,
             'decomposition_murphy':decomposition,'details':units,
             'limites':['Prépublication déclarée : authenticité à vérifier humainement.',
                        '50 épisodes et 10 % de gain constituent un jalon interne, pas une preuve statistique : lire avec gain_par_episode (tests exacts, sigma_d).',
@@ -2305,7 +2567,7 @@ def score_result(data):
 
 
 COLONNES_CSV=('ids','episode_id','origine','rho','strate','partition','hors_V4','brier','brier_base','brier_sans_cartes',
-              'brier_jugement','log','log_sans_cartes','difficulte','reference_difficulte','incertitude_annoncee')
+              'brier_jugement','brier_comparateur','comparateur_contamine','log','log_sans_cartes','difficulte','reference_difficulte','incertitude_annoncee')
 
 
 def scorer(path, csv_=False):
@@ -2340,7 +2602,7 @@ RENVOIS = {
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
     ('constitution.md','2'):'principes', ('constitution.md','3'):'risque', ('constitution.md','4'):'couches',
-    ('constitution.md','5'):"n'est pas", ('constitution.md','6'):'Données personnelles', ('equivalences.md','2'):'Statuts', ('feuille-de-route.md','5.1'):'Strate 7', ('feuille-de-route.md','4'):'Premiers cas', ('grammaire.md','2'):'Syntaxe', ('equivalences.md','3'):'Bilan',
+    ('constitution.md','5'):"n'est pas", ('constitution.md','6'):'Données personnelles', ('equivalences.md','2'):'Statuts', ('feuille-de-route.md','5.1'):'Strate 7', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('grammaire.md','2'):'Syntaxe', ('equivalences.md','3'):'Bilan',
     ('grammaire.md','4'):'liaisons', ('grammaire.md','5'):'Positions', ('grammaire.md','7'):'bonne formation',
     ('graphe.md','2'):'priori', ('graphe.md','2.1'):'Sources', ('graphe.md','2.2'):'Fréquence',
     ('graphe.md','2.3'):'Combinaison', ('graphe.md','3'):'homologues',
@@ -2349,7 +2611,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -2516,7 +2778,7 @@ def schema_documente():
 
 
 # Paramètres déclarés mais lus par aucun calcul, à dessein (protocole.md A4 pour kappa_min).
-PARAMETRES_RESERVES = {'kappa_min','kappa_rapportable'}
+PARAMETRES_RESERVES = set()   # 0.7.9 : kappa_min et kappa_rapportable sont lus par `accord`
 
 
 def erreurs_parametres(params=None):
@@ -2568,15 +2830,16 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.7','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.9','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
-    for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
+    for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
     for k in ('k','k0_frequence','demi_vie_ans','fenetre_reference_jours','multiplicateur_bouge','plafond_LR'):
         exiger(type(P[k]) in (int,float) and math.isfinite(P[k]) and P[k]>0,f'paramètre positif : {k}')
     date_iso(P['v4_dossier_depuis'])
     exiger(P['v4_test'] in ('signe','wilcoxon'),'v4_test : signe ou wilcoxon')
-    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_publication','n_min_ancrage','c_min_rho1','c_min_niveau','placebo_tirages','weibull_occasions_min'):
+    exiger(P['v4_reference'] in ('inertie','jugement','comparateur_externe'),'v4_reference : inertie, jugement ou comparateur_externe')
+    for k in ('seuil_rho0_cas_distincts','double_codage_min_cas','v4_n','faisceau_max','pas_max','n_min_publication','n_min_ancrage','c_min_rho1','c_min_niveau','placebo_tirages','weibull_occasions_min','accord_min_ancrages','rejets_tirage'):
         exiger(type(P[k]) is int and P[k]>0,f'paramètre entier positif : {k}')
     for ab,p in P['inertie'].items():exiger(ab in NOMS and 0<proba(p)<1,'inertie invalide')
     exiger(set(P['inertie'])==set(NOMS),'inerties incomplètes')
@@ -2587,7 +2850,7 @@ def audit():
     for v in P['lambda'].values():exiger(math.isfinite(v) and v>0,'multiplicateur positif requis')
     exiger(P['barreau']['defaut'] in BARREAUX and all(re.fullmatch(r'[A-Z]{3}>[A-Z]{3}',k) and v in BARREAUX for k,v in P['barreau']['exceptions'].items()),
            'barreau : A, I ou C ; exceptions « SRC>CIB »')
-    files=['constitution','protocole','glossaire','strates','cartes-index','cartes','equivalences','antagonismes','grammaire','dynamiques','base-de-cas','graphe','simulation','validation','exemples','feuille-de-route','sources-france','angles-morts','apports-theoriques']
+    files=['constitution','protocole','glossaire','strates','cartes-index','cartes','equivalences','antagonismes','grammaire','dynamiques','base-de-cas','graphe','simulation','validation','exemples','feuille-de-route','sources-france','angles-morts','apports-theoriques','frequences-externes']
     paths=[RACINE/'references'/f'{x}.md' for x in files]+[RACINE/'references/equivalences'/f'strate-{s:02}.md' for s in range(1,NS+1)]
     for path in paths:
         exiger(path.is_file(),f'fichier absent : {path.relative_to(RACINE)}')
@@ -2863,6 +3126,14 @@ def main():
     p=subs.add_parser('partager');p.add_argument('ids',nargs='+')
     p.add_argument('--registre',default='partage.jsonl');p.add_argument('--date')
     subs.add_parser('manifeste')
+    sc=subs.add_parser('sceller-comparateur')
+    for k in ('--question','--evenement','--date','--methode','--source'):sc.add_argument(k,required=True)
+    sc.add_argument('--p',type=float,required=True);sc.add_argument('--aveugle',action='store_true')
+    sc.add_argument('--vu',action='append',default=[]);sc.add_argument('--contexte',choices=CONTEXTES_COMPARATEUR,required=True)
+    ex=subs.add_parser('export-codeur');ex.add_argument('--base',required=True);ex.add_argument('--cas',required=True)
+    ac=subs.add_parser('accord');[ac.add_argument(k,type=int,required=True) for k in ('--a','--b','--c','--d')];ac.add_argument('--json',action='store_true')
+    rj=subs.add_parser('rejets');rj.add_argument('--dossier',required=True);rj.add_argument('--audit')
+    vr_=subs.add_parser('valider-references');vr_.add_argument('fichier')
     cf=subs.add_parser('confronter');cf.add_argument('fichier');cf.add_argument('--json',action='store_true')
     ds=subs.add_parser('dossier');ds.add_argument('--fichier',required=True);ds.add_argument('--json',action='store_true')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
@@ -2956,6 +3227,46 @@ def main():
         exiger(jour(a.date)<=datetime.date.today().toordinal(),f'--date {a.date} postérieure à aujourd’hui : on scelle un jugement déjà formé')
         print(json.dumps({'probabilite_jugement':a.p,'jugement_scelle':empreinte_jugement(a.question,a.evenement,a.p,a.date),
                           'instruction':'Recopier ces deux champs dans la ligne de prévision, puis seulement lancer le moteur.'},ensure_ascii=False));return
+    if a.cmd=='sceller-comparateur':
+        evenement_lire(a.evenement)
+        c={'methode':a.methode,'probabilite':a.p,'scelle_le':a.date,'source':a.source,'aveugle':a.aveugle,
+           'elements_vus':a.vu,'contexte':a.contexte}
+        c['empreinte']=empreinte_comparateur(a.question,a.evenement,a.p,a.date,a.source,a.methode)
+        errs=erreurs_comparateur(c,a.question,a.evenement);exiger(not errs,' ; '.join(errs))
+        print(json.dumps({'comparateur_externe':c,'contamine':comparateur_contamine(c),
+                          'instruction':'Recopier ce champ dans la ligne de prévision, puis seulement lancer le moteur. '
+                                        'Un bras non aveugle ou produit dans la même session que la lecture est publié, mais exclu du rapport.'},ensure_ascii=False));return
+    if a.cmd=='export-codeur':
+        cas=next((c for c in charger(a.base) if c.get('id')==a.cas),None);exiger(cas is not None,f'export-codeur : {a.cas} absent de {a.base}')
+        print(json.dumps(export_codeur(cas),ensure_ascii=False,indent=2));return
+    if a.cmd=='accord':
+        r=accord(a.a,a.b,a.c,a.d)
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        f_=lambda v:'indéfini' if v is None else f'{v:.3f}'
+        print(f"table a={a.a} b={a.b} c={a.c} d={a.d} · prévalence {r['prevalence']*100:.1f} % · pₒ {r['po']:.3f} · κ {f_(r['kappa'])} · PABAK {r['pabak']:.3f} · "
+              f"accord positif {f_(r['accord_positif'])} · manque du second {f_(r['manque_second'])} · manque du premier {f_(r['manque_premier'])}")
+        print('verdict : '+r['verdict']);return
+    if a.cmd=='rejets':
+        d_=lire_json(a.dossier,'--dossier')
+        if a.audit:
+            errs=erreurs_audit_rejets(lire_json(a.audit,'--audit'),d_);exiger(not errs,' ; '.join(errs))
+            au=lire_json(a.audit,'--audit');print(f"audit conforme · {len(au['verdicts'])} rejet(s) relu(s) · taux d’annulation {au['taux_annulation']*100:.0f} %");return
+        print(json.dumps(feuille_rejets(d_),ensure_ascii=False,indent=2));return
+    if a.cmd=='valider-references':
+        refs=lire_json(a.fichier,'fichier de références')
+        exiger(isinstance(refs,dict),'références : objet indexé par événement requis')
+        errs=erreurs_references(refs)
+        for event,r in refs.items():
+            try:
+                exiger(isinstance(r,dict),f'{event} : référence invalide');proba(r.get('frequence'),event)
+                for k in ('source','definition','periode','fenetre','disponible_le'):texte_requis(r.get(k),f'{event}.{k}')
+                duree_jours(r['fenetre']);date_iso(r['disponible_le'])
+                key,typ=event.split(' ',1);cle_valide(key)
+                exiger(typ in ('apparait','persiste','disparait','hausse|persiste','transformation|persiste'),f'{event} : type de référence inconnu')
+            except (ValueError,IndexError) as e:errs.append(str(e))
+        exiger(not errs,' ; '.join(errs))
+        print(f'{len(refs)} référence(s) conformes en forme : six champs, fréquence dans ]0 ; 1[, fenêtre, date, clé, ni gabarit ni classe tautologique ; '
+              'la vérité de la source reste à vérifier par un humain');return
     if a.cmd=='sceller':
         data=charger(a.fichier);valider_journal(data)
         predictions=[x for x in data if x['type']=='prevision']
@@ -3128,7 +3439,7 @@ def autotest():
            'etat_present':'[2026-01-01 | 3 mois] POLARITÉ@7[f]','probabilite':.2,'intervalle':None,'rho':'ρ4',
            'resolution':{'source':'registre public','critere':'rupture publiée','seuil':'une publication','marqueur':'rupture diplomatique','objet':'relation A-B'},
            'resolution_verifiee':True,'frequence_de_base':.3,'p_sans_cartes':None,'probabilite_jugement':None,'temporalite':'generique','rejeu':False,'fictif':True,'partition':None,
-           'p_placebo':None,'graine_placebo':None,'apport_homologie':None,
+           'p_placebo':None,'graine_placebo':None,'apport_homologie':None,'comparateur_externe':None,
            'empreintes':None,'preuve_prepublication':None}
         x.update(kw);return x
     def calc_reel(**kw):
@@ -3819,6 +4130,93 @@ def autotest():
             lo,hi=wilson(68,80);self.assertTrue(lo<.85<hi);self.assertIsNone(wilson(0,0))
             cw=confronter(charger(RACINE/'assets/base-de-cas.exemple.jsonl'))['test_age']['critere_weibull']
             self.assertFalse(cw['applicable'])                                                  # base fictive : jamais applicable
+        def _comparateur(self,x,**kw):
+            c={'methode':'décomposition de Fermi et taux de base externe','probabilite':.34,'scelle_le':x['date'],
+               'source':'https://github.com/exemple/depot/commit/abc123','aveugle':True,'elements_vus':['question','resolution','echeance'],'contexte':'separe'}
+            c.update(kw);c['empreinte']=empreinte_comparateur(x['question'],x['evenement'],c['probabilite'],c['scelle_le'],c['source'],c['methode'])
+            return c
+        def test_comparateur_controles(self):
+            # 0.7.8 : comparateur externe aveugle, scellé, publié, non tautologique.
+            x=forecast(version_regles='0.7.8');x['comparateur_externe']=self._comparateur(x);self.assertTrue(valider_journal([x]))
+            for kw in ({'scelle_le':'2026-01-02'},{'source':'http://exemple.org/p'},{'methode':'lecture des SEUIL ancrés'},
+                       {'methode':'analogie POL'},{'elements_vus':['question','etat_present']},{'elements_vus':['evenement']},
+                       {'elements_vus':['strate']},{'contexte':'ailleurs'},{'aveugle':'oui'}):
+                y=forecast(version_regles='0.7.8');y['comparateur_externe']=self._comparateur(y,**kw)
+                with self.assertRaises(ValueError,msg=str(kw)):valider_journal([y])
+            y=forecast(version_regles='0.7.8');y['comparateur_externe']=self._comparateur(y);y['comparateur_externe']['probabilite']=.4
+            with self.assertRaises(ValueError):valider_journal([y])                              # modifié après scellé
+            y=forecast(version_regles='0.7.8',question='Un SEUIL est-il franchi ?');y['comparateur_externe']=self._comparateur(y)
+            with self.assertRaises(ValueError):valider_journal([y])                              # question tautologique
+            y=forecast(version_regles='0.7.8');y.pop('comparateur_externe')
+            with self.assertRaises(ValueError):valider_journal([y])                              # requis depuis 0.7.8
+            z=forecast(version_regles='0.4.0');z.pop('comparateur_externe');self.assertTrue(valider_journal([z]))   # journaux antérieurs
+            p_=forecast('P-A',partition='part',probabilite=.5,version_regles='0.7.8');p_['comparateur_externe']=self._comparateur(p_)
+            q_=forecast('P-B',partition='part',probabilite=.5,version_regles='0.7.8',evenement='HIE@7 apparait')
+            with self.assertRaises(ValueError):valider_journal([p_,q_])                          # pas sur une partition
+        def test_comparateur_rapport(self):
+            ps=[]
+            for i in range(6):
+                x=forecast(f'P-{i}',episode_id=f'e{i}',version_regles='0.7.8',probabilite=.2 if i%3 else .6)
+                x['comparateur_externe']=self._comparateur(x,probabilite=.3);ps.append(x)
+            c_=forecast('P-9',episode_id='e9',version_regles='0.7.8');c_['comparateur_externe']=self._comparateur(c_,contexte='meme_session');ps.append(c_)
+            r=score_result(ps+[score(f'P-{i}',0) for i in list(range(6))+[9]])
+            ce=r['comparateur_externe'];self.assertEqual(ce['questions'],6);self.assertEqual(ce['contamines_exclus'],1)
+            self.assertEqual(ce['ameliorations']+ce['degradations'],6);self.assertEqual(ce['par_episode']['episodes'],6)
+            self.assertIn('v4_comparateur',r);self.assertIn('v4_comparateur_discriminant',r)
+            self.assertEqual(r['v4']['reference'],'inertie')
+        def test_v4_reference_defaut(self):
+            ps=[forecast(f'P-{i}',episode_id=f'e{i}',version_regles='0.7.8',probabilite=.2) for i in range(4)]
+            r=score_result(ps+[score(f'P-{i}',0) for i in range(4)])
+            self.assertEqual(r['v4']['episodes'],r['episodes_comparables']);self.assertEqual(r['statut'],'non encore évalué')
+        def test_references_gabarit_tautologie(self):
+            ok={'SEU@7 apparait':{'frequence':.05,'source':'UCDP, onset dataset','definition':'nouveau conflit armé interétatique','periode':'1990-2020','fenetre':'3 mois','disponible_le':'2026-01-01'}}
+            self.assertEqual(erreurs_references(ok),[])
+            self.assertTrue(erreurs_references({'SEU@7 apparait':dict(ok['SEU@7 apparait'],source=GABARIT_SOURCE)}))
+            self.assertTrue(erreurs_references({'SEU@7 apparait':dict(ok['SEU@7 apparait'],definition='épisodes de POLARITÉ')}))
+            with self.assertRaises(ValueError):refs_valider({'SEU@7 apparait':dict(ok['SEU@7 apparait'],definition='cas où un SEUIL est franchi')},'3 mois','2026-02-01')
+        def test_export_codeur(self):
+            cas=schema_documente();r=export_codeur(cas)
+            dump=json.dumps(r,ensure_ascii=False)
+            for k in CLES_CODAGE:self.assertNotIn(f'"{k}"',dump)
+            self.assertNotIn('POLARITÉ@7',dump);self.assertTrue(r['sequence'][0]['faits'])
+            self.assertEqual(export_codeur(cas),r)                                               # ordre stable
+        def test_accord(self):
+            # 0.7.9 : κ, PABAK, accords spécifiques, deux taux de manque ; κ indéfini déclaré indéfini.
+            r=accord(0,0,0,118);self.assertIsNone(r['kappa']);self.assertEqual(r['pabak'],1);self.assertTrue(r['verdict'].startswith('sans objet'))
+            r=accord(0,1,1,116);self.assertAlmostEqual(r['kappa'],-0.0086,places=3);self.assertAlmostEqual(r['pabak'],0.966,places=3)
+            self.assertAlmostEqual(accord(0,1,0,117)['kappa'],0.0,places=9)                 # un seul désaccord : κ = 0, pas 0,496
+            r=accord(0,87,0,1801);self.assertAlmostEqual(r['kappa'],0);self.assertAlmostEqual(r['pabak'],0.908,places=3)
+            self.assertEqual(r['accord_positif'],0);self.assertTrue(r['verdict'].startswith('insuffisant'))   # PABAK seul se tromperait
+            r=accord(35,52,5,1796);self.assertAlmostEqual(r['manque_second'],0.598,places=3);self.assertTrue(r['verdict'].startswith('insuffisant'))
+            self.assertEqual(accord(35,5,5,1843)['verdict'],'rapportable')
+            self.assertTrue(accord(1,1,1,115)['verdict'].startswith('non estimable'))
+            with self.assertRaises(ValueError):accord(-1,0,0,1)
+        def test_rejets_audit(self):
+            d=self._dossier();f=feuille_rejets(d)
+            self.assertEqual(sorted(f['tirage']),['HIE@6','SEU@7']);self.assertNotIn('motif',json.dumps(f,ensure_ascii=False).lower().replace('motif du rejet',''))
+            self.assertEqual(feuille_rejets(copy.deepcopy(d))['tirage'],f['tirage'])
+            rej={cle_valide(k):v for k,v in d['rejets'].items()}
+            au={'sceau_dossier':f['sceau_dossier'],'tirage':f['tirage'],'aveugle':True,'relecteur':'relecteur-B',
+                'verdicts':[{'carte':k,'verdict':'annule' if i==0 else 'maintenu','justification':'x','motif_original':rej[k]} for i,k in enumerate(f['tirage'])],
+                'taux_annulation':0.5}
+            self.assertEqual(erreurs_audit_rejets(au,d),[])
+            for mod in ({'aveugle':False},{'taux_annulation':1.0},{'tirage':list(reversed(f['tirage']))}):
+                self.assertTrue(erreurs_audit_rejets(dict(au,**mod),d),msg=str(mod))
+            b=copy.deepcopy(au);b['verdicts'][0]['motif_original']='autre';self.assertTrue(erreurs_audit_rejets(b,d))
+            b=copy.deepcopy(au);b['verdicts']=b['verdicts'][:1];self.assertTrue(erreurs_audit_rejets(b,d))
+        def test_concessions(self):
+            d=self._dossier();d['etat']=d['etat'].replace('CONTRAINTE@6[F]','CONTRAINTE@6[f]');m=d['mots'][1];m['intensite']='f'
+            c4={'carte':'CTR@6','contestation':'le plafond n’est pas contraignant','score':4,'action':'retrogradation','motif':'aucun prix au plafond','date':'2026-09-15'}
+            d['concessions']=[c4];self.assertTrue(dossier_valider(d)['conforme'])
+            d['concessions']=[dict(c4,score=3)]
+            with self.assertRaises(ValueError):dossier_valider(d)                   # l'insistance n'est pas une preuve
+            d['concessions']=[dict(c4,carte='POL@7',action='maintien',score=2),c4];self.assertTrue(dossier_valider(d)['conforme'])
+            d['concessions']=[dict(c4,carte='SEU@7',action='retrait',score=5),c4]
+            with self.assertRaises(ValueError):dossier_valider(d)                   # deux concessions : la seconde exige 5
+            d['concessions']=[dict(c4,carte='POL@7')]
+            with self.assertRaises(ValueError):dossier_valider(d)                   # POL@7 est encore F : rétrogradation non lisible
+            d['concessions']=[dict(c4,carte='SEU@7',action='retrait',score=5),dict(c4,score=5)]
+            self.assertTrue(any('plus de la moitié' in x for x in dossier_valider(d)['manques']))
         def test_barreau_exception(self):
             # 0.6.5 (audit O7) : la mécanique des exceptions n'avait jamais été exercée.
             src=[{'mot':'POL@7'},{'mot':'CTR@6'}]

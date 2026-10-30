@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.7
+> Version : 0.7.9
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -30,6 +30,12 @@
 | Échangeabilité | « événements équivalents » de de Finetti : les cas d'une classe sont interchangeables ; le placebo teste que la classe se distingue du reste de la strate | `graphe.md` §3.3 |
 | Confrontation | `moteur.py confronter` : apparitions observées classées selon leur atteignabilité par la matrice ; maintien selon l'âge | `graphe.md` §2.4 |
 | Différentiel de perte | d = perte du moteur − perte de la référence, moyenné par épisode ; publié avec σ(d), l'autocorrélation d'ordre 1 et les tests exacts du signe et de Wilcoxon (Diebold et Mariano 1995) | `validation.md` §5 |
+| PABAK | accord ajusté de la prévalence et du biais, 2·pₒ − 1 (Byrt, Bishop et Carlin 1993) ; porte le verdict d'accord sous faible prévalence, sous plafond des taux de manque | `base-de-cas.md` §6 |
+| Taux de manque | part des ancrages d'un codeur que l'autre ne fait pas, b/(a+b) et c/(a+c) ; les deux se publient, aucun codeur n'est la référence | `base-de-cas.md` §6 |
+| Audit des rejets | relecture aveugle d'un tirage non choisi des candidates écartées d'un dossier ; taux d'annulation publié | `validation.md` §6 |
+| Concession | rétrogradation ou retrait consécutif à une contestation, notée de 1 à 5 au journal du dossier | `validation.md` §6 |
+| Comparateur externe | second bras, aveugle à l'état, aux cartes et à p, scellé avant le moteur et publié ; contaminé s'il a vu l'un d'eux ou vient de la même session ; mesure le dispositif entier | `validation.md` §5 |
+| Classe tautologique | classe de référence définie avec le nom d'une carte : refusée, elle compterait les codages de l'alphabet | `frequences-externes.md` |
 | Question discriminante | question dont p s'écarte, avant l'issue, d'au moins 2 points de probabilité de p_sans_cartes ou de p_placebo ; V4 est publié aussi sur elles seules | `validation.md` §5 |
 | Seuils d'ancrage | `n_min_publication` (f publié comme comparateur) et `n_min_ancrage` (f « ancré », accès à ρ3), dédoublés en 0.7.7 | `graphe.md` §2.2 |
 | Sonde | `moteur.py sonde` : le calcul refait avec des arêtes tirées au hasard, des intensités ou des inerties permutées ; la matrice réelle est située parmi ces tirages, contre la référence « cas seuls, sans multiplicateurs » | `graphe.md` §3.4 |

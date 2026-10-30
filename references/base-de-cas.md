@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.7
+> Version : 0.7.9
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -264,7 +264,8 @@ le même ensemble scientifique, même si les identifiants doivent être revus av
 | Date d'issue ou disponibilité après la prévision | transition exclue, y compris de la fréquence de base |
 | Plusieurs transitions d'un cas | poids total ≤1 avant décroissance temporelle |
 | Double codage | ≥20 cas et ≥20 % dans la strate pour sortir du mode solo ; ne prouve pas κ |
-| Accord par carte | mesurer κ et examiner la **forme** des désaccords, pas seulement leur ampleur (Reidsma et Carletta 2008) ; repères `kappa_min` 0,67 (conclusions provisoires) et `kappa_rapportable` 0,80 (Krippendorff, cité par Carletta 1996), avec l'intervalle de κ, jamais le seul point |
+| Accord par carte | `moteur.py accord --a --b --c --d` : publier la table 2×2 (a : les deux ancrent ; b : le premier seul ; c : le second seul ; d : aucun), pₒ, pₑ, κ et son intervalle (« indéfini » si pₑ = 1, jamais 0), PABAK = 2·pₒ − 1, les accords spécifiques positif et négatif, et **les deux** taux de manque b/(a+b) et c/(a+c). Examiner la **forme** des désaccords, pas seulement leur ampleur (Reidsma et Carletta 2008) |
+| Prévalence | une carte est absente de la plupart des états (base d'exemple : 205 présences sur 1 888 décisions carte × état, 10,9 % ; huit cartes jamais présentes) : κ y sous-estime l'accord et devient indéfini à prévalence nulle (Feinstein et Cicchetti 1990 ; Byrt, Bishop et Carlin 1993). Les repères `kappa_min` 0,67 et `kappa_rapportable` 0,80 (Krippendorff, cité par Carletta 1996) s'appliquent donc à **PABAK**, et seulement si aucun codeur ne manque plus de `fnr_max` (20 %) des ancrages de l'autre : PABAK seul ne voit pas un codeur qui n'ancre jamais (0,908 pour 87 ancrages contre 0). Sous `accord_min_ancrages` ancrages, non estimable ; une carte que personne n'ancre est sans objet. Ce sont des résultats, pas des échecs |
 | Cas futurs, test, archives | exclus des estimations |
 | Cas fictifs | démonstration explicite seulement, jamais validation prospective |
 | Référence documentaire absente | équivalent Proposé, confiance f au maximum |

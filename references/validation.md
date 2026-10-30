@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.7
+> Version : 0.7.9
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -250,6 +250,33 @@ calculé avant l'issue depuis le journal. `v4_discriminant` refait le rapport su
 part : le premier dit ce que vaut le protocole, le second ce que l'alphabet apporte là où il peut
 s'exprimer ; ne filtrer que le second serait choisir après coup.
 
+**Comparateur externe aveugle (0.7.8).** `p_sans_cartes`, `p_placebo` et le jugement scellé viennent
+du même dispositif, souvent du même auteur dans la même session : le dispositif ne se compare qu'à
+lui-même. Un **second bras** produit, sur une question d'origine `moteur`, une probabilité sans avoir vu
+l'état daté, les cartes ni p, et la scelle au plus tard à la date de la prévision (`sceller-comparateur`).
+Champ `comparateur_externe` (requis depuis 0.7.8, null si non joué) : `methode`, `probabilite`,
+`scelle_le`, `source` (https : seule une publication datée prouve la date ; une adresse de branche
+mobile, `…/blob/main/…`, ne le prouve pas, préférer un commit ou une release), `aveugle`, `contexte`
+(`separe` ou `meme_session`), `elements_vus` (liste blanche : question, résolution, échéance, date,
+domaine ; l'événement codé « SEU@7 apparait », le marqueur local et la strate sont du vocabulaire de
+l'alphabet et sont refusés), `empreinte` (question, événement, probabilité, date, source et méthode).
+La méthode et la question ne citent aucune carte, sinon la comparaison est tautologique : refus. Les
+déclarations `aveugle` et `contexte` ne se vérifient pas par machine : un bras non aveugle ou produit
+dans la même session est publié « contaminé » et exclu du rapport ; un modèle qui vient de lire la
+situation avec le skill n'est pas un bras aveugle. Pas de comparateur sur une partition, ni sur une
+ligne `jugement`. `scorer` rend `comparateur_externe` (Brier du bras et du moteur, améliorations et
+dégradations comptées, différentiel par épisode et tests exacts), `v4_comparateur` et
+`v4_comparateur_discriminant` (questions où |p − p_ext| ≥ δ, avant l'issue). Lecture : un apport nul se
+publie comme tel ; les dégradations se comptent toujours ; le second rapport ne filtre jamais le premier.
+`v4_reference` (§H : `inertie` par défaut, `jugement`, `comparateur_externe`) choisit le bras contre
+lequel V4 se lit ; en changer est une décision d'auteur.
+
+**Second codeur (0.7.8).** `export-codeur` donne les faits, sources et dates d'un cas, mélangés, sans le
+premier codage ni les strates. Chaque codeur déclare `signe_suffisant` avant de coder : la déclaration
+sert à expliquer des désaccords systématiques, pas à les excuser. Le dossier de lecture scellé (0.7.3)
+est la pièce que relit le second codeur ; il n'y a pas d'autre mécanisme de scellé. κ reste du code
+différé (`feuille-de-route.md` §7).
+
 **Score logarithmique (0.7.5).** En regard du Brier : `log` et `log_sans_cartes` (perte −ln de la
 probabilité donnée à l'issue réalisée). Tous deux sont strictement propres (Gneiting et Raftery 2007) ;
 le Brier est borné par 1, le logarithmique ne l'est pas et pèse davantage les erreurs confiantes, ce qui
@@ -282,6 +309,27 @@ qualificatif, statut ou règle, `necessite` : fait daté qui la rendait nécessa
 une règle écrite, contrôlée et réemployée). Une entrée reste ouverte tant que la construction n'existe
 que dans le cas qui l'a fait naître : c'est une dette. C'est la seconde information qui permet
 d'étendre l'alphabet par méthode plutôt que par intuition ; `audit` contrôle la forme et le statut.
+
+**Audit des rejets (0.7.9).** A6 et A7 contrôlent les ancrages ; rien ne relisait les candidates
+écartées, dont le motif n'était contrôlé que pour sa présence. `moteur.py rejets --dossier D` produit une
+feuille aveugle : les rejets tirés (au plus `rejets_tirage`, ordre fixé par le sceau du dossier, donc non
+choisi) et les faits de l'état, sans motif ni lecture retenue. Un relecteur distinct déclare `maintenu`
+ou `annule`, avec une justification ; `rejets --dossier D --audit A.json` vérifie le tirage, l'aveuglement
+déclaré, un verdict par carte, le motif d'origine recopié et le taux d'annulation, qui se publie. Un taux
+élevé : chercher le motif commun (une carte, une strate, les états sans contre-observation) avant de
+réutiliser la base. Un rejet annulé ne réécrit pas le dossier scellé : il va au journal des lacunes et le
+dossier se recode sous un nouvel identifiant. Le taux n'entre dans aucun calcul. Les cartes jamais
+candidates ne sont pas des rejets : elles ne sont pas relues.
+
+**Journal des concessions (0.7.9).** Rien ne protégeait une lecture révisée sous l'insistance d'un tiers,
+ou d'un modèle qui concède trop vite. `dossier.concessions` consigne chaque contestation : score de 1 à 5,
+action (`maintien`, `retrogradation` à 4 au moins, `retrait` à 5), motif, date. Après une concession, la
+suivante exige 5 ; la concession doit se lire dans l'état (mot passé à f, ou retiré) ; au-delà de la
+moitié des mots, signalement. Le score est déclaré : la règle lie la cohérence du journal, pas la vérité
+du jugement. A7 reste la règle de fond : une rétrogradation s'appuie sur une contre-observation dans la
+situation, et un discours n'est un fait que sur le discours (A5). Ne s'inscrivent pas : une portée
+dominante, une correction matérielle, un rejet motivé par A6. C'est une procédure de journal, jamais un
+verrou.
 
 ---
 

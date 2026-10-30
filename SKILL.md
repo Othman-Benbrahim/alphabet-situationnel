@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.7'
+  version: '0.7.9'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.7. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 19 références principales,
+Version 0.7.9. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -53,6 +53,7 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | Ambiguïté ou exemple | l'exemple concerné de `exemples.md` ; un terme dans `glossaire.md` |
 | « Où en est le skill ? », « que reste-t-il à faire ? » | `feuille-de-route.md` et `moteur.py bilan` |
 | Situation française : chercher un fait, une source de résolution, une série chiffrée | `sources-france.md` |
+| Constituer ou relire un fichier de références externes (`--references`, étape 4) | `frequences-externes.md` |
 | Sortie LIRE : « ce que l'alphabet ne voit pas ici » | `angles-morts.md` |
 | Statut d'un équivalent (Documenté, Proposé, Vide), tableau par strate, cases Vides et leur clôture | `equivalences.md` |
 | Pourquoi une règle 0.6.x ou 0.7.x existe (garantie, option, barreau, jugement scellé, sensibilité, corroboration, passage, résolution des questions) | `apports-theoriques.md` |
@@ -81,6 +82,11 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… dossier --fichier D.json` | dossier de lecture d'un **calcul** : mêmes contrôles qu'une fiche (A1, A3, A6, A7, test, garantie, option, corroboration, passage, questions), rendus **avant** le chiffre ; rend un sceau. Format complet : `assets/dossier.exemple.json` |
 | `… partager C-0042-S07 [--registre partage.jsonl]` | partage par empreinte, fixé avant codage : inscrit id, usage et date au registre (jamais réécrit) ; recopier `usage_fige_le` dans la fiche |
 | `… confronter B.jsonl [--json]` | matrice contre observations : chaque apparition codée classée selon la règle du moteur (atteignable, arête inter-strates abaissée, **non atteignable**, depuis l'état nul) ; maintien selon l'âge. Une divergence va au journal des lacunes ; aucun chiffre ne change |
+| `… sceller-comparateur --question "…" --evenement "…" --p 0.34 --date AAAA-MM-JJ --methode "…" --source https://… --contexte separe [--aveugle] [--vu question …]` | scellé du **comparateur externe aveugle**, à produire **avant** le moteur, hors de la session de lecture ; à recopier dans `comparateur_externe` (`validation.md` §1) |
+| `… accord --a A --b B --c C --d D [--json]` | accord de deux codeurs sur une carte : κ (indéfini si pₑ = 1), PABAK, accords spécifiques, deux taux de manque, verdict (`base-de-cas.md` §6) |
+| `… rejets --dossier D [--audit A.json]` | feuille de relecture aveugle des rejets d'un dossier (tirage fixé par le sceau), ou contrôle de l'audit rempli (`validation.md` §6) |
+| `… valider-references R.json` | forme des références externes, refus du gabarit et de la classe tautologique (`frequences-externes.md`) |
+| `… export-codeur --base B --cas C-0001-S07` | vue d'un cas pour le second codeur : faits, sources et dates, sans le premier codage |
 | `… sonde --etat "…" --evenement "…" --tirage aretes\|intensites\|inerties [--base B --demo]` | variable sonde sur les paramètres : même calcul avec une matrice altérée au hasard, contre la référence « cas seuls, sans multiplicateurs » ; centile de la matrice réelle (`graphe.md` §3.4) |
 | `… bilan [--references R.json] [--journal J.jsonl]` | position mesurée sur la feuille de route |
 | `… equivalences --carte SEUIL [--json]` | les 13 équivalents d'une carte (statut, marqueur local) : le marqueur à recopier dans la résolution, **avant** tout calcul (étape 6) |
@@ -182,6 +188,10 @@ condition pour que l'écart jugement / moteur mesure ce que le moteur ajoute (le
 jugement n'a pas été modifié, pas qu'il est antérieur : seul un dépôt externe daté le prouve). Recopier la bande de
 sensibilité : si la bande retenue traverse 50 %, dire « non identifié » et nommer son origine (classe de
 référence ou hypothèses de modèle) ; recopier les deux bandes, pas seulement la plus étroite. Recopier le résultat complet, ses références, avertissements et empreintes. Aucun cas/source futur.
+**Deux scellés, pas un** (0.7.8) : le jugement du codeur, et, quand il est joué, le **comparateur externe** —
+une probabilité produite sans voir l'état, les cartes ni p, par une méthode qui ne cite aucune carte, hors de
+la session de lecture (`sceller-comparateur`). Un bras produit dans la même session, ou qui a vu l'événement
+codé, est publié « contaminé » et ne compte pas. Ne jamais présenter ce bras comme une sortie de l'alphabet.
 **Avant** ce calcul, écrire le dossier de lecture (`moteur.py dossier --fichier D.json`) : 2 à 4
 candidates par strate, dont la contre-candidate, chaque candidate non retenue avec le motif de son rejet
 (`rejets`), la ligne A6 de chaque F, le test, la garantie, l'option, la corroboration, le passage, les

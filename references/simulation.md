@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.11
+> Version : 0.7.12
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -49,7 +49,11 @@ Coût du codage : [faits examinés et écartés (dont faits sans option changée
  dépasse `ecart_niveaux_max` (§H, 10 points : le seuil c_min_rho1 décide seul du niveau retenu) ; le sceau du dossier de lecture
  s'il a été fourni ; le jugement scellé avant le calcul ;
  la probabilité sans cartes et l'écart en points ; le placebo d'homologie et l'apport de l'homologie
- (p − p_placebo), y compris nul ; si le dossier est incomplet (plancher A7), statut de lecture Spéculatif et
+ (p − p_placebo), y compris nul ; **sans cas réel actif, la paire « sans cartes → avec cartes » en tête**,
+ avant p seul (0.7.12 : arêtes non éprouvées, P8) ; si p tombe dans la plage à 90 % du placebo, « homologie
+ indiscernable d'une sélection au hasard » ; la **bande d'horizon** (p à 1, 3 et 6 fenêtres, même
+ sémantique) à côté de la bande de sensibilité : l'horizon est la question, pas une incertitude, mais c'est
+ lui qui déplace le plus p ; si le dossier est incomplet (plancher A7), statut de lecture Spéculatif et
  manques dans « À vérifier » ; un écart nul se dit : la question
  ne teste que l'inertie ;
  afficher p en pourcentage entier (une décimale sous 1 % et au-dessus de 99 %) avec son intervalle ;

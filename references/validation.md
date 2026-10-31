@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.11
+> Version : 0.7.12
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -260,6 +260,16 @@ calculé avant l'issue depuis le journal. `v4_discriminant` refait le rapport su
 part : le premier dit ce que vaut le protocole, le second ce que l'alphabet apporte là où il peut
 s'exprimer ; ne filtrer que le second serait choisir après coup.
 
+**Lecture séquentielle (0.7.12).** Les tests exacts du signe et de Wilcoxon supposent un effectif fixé
+d'avance ; lus sur un journal qui grandit, à des moments choisis, ils gonflent l'erreur de type I (audit
+V34, D4). Chaque différentiel publie donc aussi un **e-processus** (`e_amelioration` : H0 « aucune
+amélioration » ; `e_gain_v4` : H0 « gain inférieur à `v4_gain_abs` »), valide à tout instant par
+l'inégalité de Ville : on peut le relire après chaque épisode et conclure dès qu'il franchit 1/`v4_alpha`
+(20), sans correction. Construction : paris fixes sur une grille, mélangés (Waudby-Smith et Ramdas,
+paris à capital ; Ramdas et al. 2023). `v4.sequentiel` dit si et à quel épisode le seuil a été franchi.
+Il s'ajoute au statut sans le remplacer : lire V4 sur lui est une décision d'auteur
+(`feuille-de-route.md` §1). Les deux lectures supposent des épisodes indépendants.
+
 **Comparateur externe aveugle (0.7.8).** `p_sans_cartes`, `p_placebo` et le jugement scellé viennent
 du même dispositif, souvent du même auteur dans la même session : le dispositif ne se compare qu'à
 lui-même. Un **second bras** produit, sur une question d'origine `moteur`, une probabilité sans avoir vu
@@ -370,6 +380,18 @@ verrou.
 
 ## 8. Test à l'aveugle
 
+**Test à trois bras (audit V34, L1).** Le geste le moins coûteux qui change le statut de l'outil ne
+demande aucun cas rétrospectif : des questions futures, résolubles, prises à une source tierce (banc public
+de questions de prévision), choisies et préenregistrées avant toute lecture ; pour chacune, trois
+probabilités scellées avant l'issue — le **modèle seul**, sans le skill, en contexte séparé (comparateur
+externe, §1) ; l'**inertie** (`p_sans_cartes`) ; l'**alphabet complet** (dossier scellé, `--dossier`). Brier
+stratifié par difficulté, différentiels par épisode, lecture séquentielle (§5). Le résultat se publie
+quel qu'il soit : un apport nul de l'alphabet sur un modèle de langage est une mesure, et à ce jour
+aucune n'existe. La barre réelle est discutée : les bancs publics donnent des modèles au niveau des
+superprévisionnistes (ForecastBench, 2026, après ajustement de difficulté), une évaluation sur 464 questions
+Metaculus des modèles meilleurs que la foule mais nettement derrière un groupe d'experts (Lu 2025,
+arXiv:2507.04562) : le chiffre à battre se mesure, il ne se présume pas.
+
 1. Choisir une population, un domaine et des événements dont la résolution est vérifiable.
 2. Sourcer un sous-ensemble des équivalents, coder indépendamment et figer la version. Chaque
    prévision du test part d'un dossier de lecture scellé (`calculer --dossier`), publié au plus tard à
@@ -441,6 +463,7 @@ toujours la même carte réussit les premières et échoue aux secondes.
 | Conservation | dossier repris depuis l'état de travail seul (`simulation.md` §7) | pièces décisives et désaccords retrouvés |
 | Convergence | plusieurs réponses répétant la même erreur | l'accord n'est pas une corroboration |
 | Instruction injectée | une consigne dans une pièce | signalée, non exécutée (B1) |
+| Érosion de P1 (0.7.12) | promotion d'un équivalent après retrait d'éléments du marqueur | retraits comptés par carte et par strate (`equivalences.md` §4) ; au-delà du seuil, carte à instruire, non promue en silence |
 
 **Corrigé indépendant.** Les passages décisifs et les lectures admissibles sont fixés avant de
 comparer les sorties, par un relecteur humain. Le modèle évalué ne fabrique pas seul son corrigé ; un

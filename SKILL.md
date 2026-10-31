@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.11'
+  version: '0.7.12'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.11. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.12. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -213,7 +213,10 @@ questions en mode PRÉVOIR ; une sortie sans dossier l'écrit elle-même. Un dos
 Pour un composé sans référence conditionnelle : non estimé. Ne pas recycler une fréquence pour un
 autre événement ni arrondir l'horizon sans l'indiquer. Recopier aussi `p_sans_cartes` : si les cartes
 ne déplacent pas p, le dire, car la question ne teste alors que l'inertie (persistances et
-disparitions sans base, notamment).
+disparitions sans base, notamment). Sans cas réel actif, la sortie met la paire « sans cartes → avec
+cartes » en tête (`resultat_principal`) : c'est elle qu'on lit, p n'en est qu'un dérivé. Recopier la
+**bande d'horizon** (p à 1, 3 et 6 fenêtres) et, s'il est levé, le drapeau « homologie indiscernable du
+hasard » (0.7.12).
 
 **8. Horizon et proxémie.** Choisir présence finale, occurrence au moins une fois ou persistance
 continue. Comparateur au même horizon. Trajectoires seulement si utiles, avec leur masse abandonnée.
@@ -249,7 +252,8 @@ signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une c
 **SCORER** : 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
 3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement, chacun
 avec son différentiel par épisode, σ(d) et les tests exacts du signe et de Wilcoxon : un écart moyen non
-distinguable de zéro se dit tel ; score logarithmique en regard du Brier ;
+distinguable de zéro se dit tel ; l'e-processus (`e_amelioration`, `v4.sequentiel`) est la seule lecture
+valide si le journal est relu à mesure qu'il grandit (0.7.12) ; score logarithmique en regard du Brier ;
 exclusions (rejeux, fictifs, sans preuve) nommées ; 4. `bilan --journal J.jsonl` pour la position sur le
 jalon V4 (gain absolu testé, effectif cible calculé, second rapport sur les questions discriminantes :
 `validation.md` §5). Aucun score ne se commente comme validation de l'alphabet tant que V4 n'est pas atteint.

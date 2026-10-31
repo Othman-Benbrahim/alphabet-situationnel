@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.11
+> Version : 0.7.12
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -22,6 +22,17 @@
 | 5 | Base réelle et second codeur | auteur, second codeur | 3 cas homologues (ρ1), puis 20 cas double-codés et 20 % (sortie du mode solo) | mesuré (`bilan`) |
 | 6 | Code différé | Claude | déclenché par les données, voir §7 | déclaré (§9) |
 | — | Test à l'aveugle | auteur | V4 : gain absolu de 2,5 points testé, épisodes ≥ max(50, effectif requis par σ̂(d)) | mesuré (`bilan --journal`) |
+| — | Test à trois bras (audit V34, L1) | auteur, Claude assiste | questions futures préenregistrées, trois bras scellés : modèle seul (comparateur externe), inertie (`p_sans_cartes`), alphabet complet ; résultat publié, nul compris (`validation.md` §8) | proposé, non commencé |
+
+**Décisions d'auteur ouvertes par l'audit V34 (0.7.12)** — instruites, non appliquées, parce qu'elles
+changent une règle constitutive, un statut ou l'ordre de la feuille de route (`apports-theoriques.md` §16) :
+(1) conditionner ρ1 à une homologie discernable du placebo, ce qui ferait de ρ une note de séparation et
+plus seulement de provenance ; (2) lire V4 sur l'e-processus plutôt que sur le test exact à effectif
+fixe ; (3) un statut d'arête « Éprouvée » (n occasions, k transitions sur cas réels), distinct de
+l'échelle des équivalents ; (4) appliquer la règle d'érosion de P1 (`equivalences.md` §4) ; (5) faire le
+test à trois bras **avant** la 0.8, et donner un responsable et une échéance au rédacteur indépendant de
+la 1.0 — ou renoncer à la clause et l'écrire ; (6) réduire la boîte (une strate entièrement sourcée avant
+toute autre) ; (7) dériver ou calibrer λ.
 
 **Versions à venir** (apports théoriques, `apports-theoriques.md` §4 ; chaque bloc attend sa condition) :
 
@@ -29,6 +40,7 @@
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.12 (faite) | Ce que le lecteur voit d'abord | paire (sans cartes, avec cartes) en tête quand aucun cas réel n'est actif ; bande d'horizon (1, 3, 6 fenêtres) ; homologie indiscernable du placebo signalée ; lecture séquentielle de V4 (e-processus, valide à tout instant) ; épreuve d'érosion de P1 comptée en strate 7 ; clôture identique à la 0.7.9 | — |
 | 0.7.11 (faite) | Prouver par clôture | `passage` : `absent_de_la_piece` et `non_soutenu` au lieu d'`insuffisant` ; `independance` des sources corroborantes ; couverture remplacée par la mesure de chaque ancrage ; `conservativite` (clôture complète, empreinte) ; barreau A justifié par l'identifiabilité ; clôture identique à la 0.7.9 et à la 0.7.10 | — |
 | 0.7.10 (faite) | Répondre et se mesurer soi-même | support du mécanisme (Toulmin), réfutation qui annule, F n'est pas un modalisateur ; répétabilité (`accord --repetabilite`) ; intérêt et référentiel des références externes ; procédure du jugement ; bras « modèle seul » recommandé ; probabilités identiques à la 0.7.9 | — |
 | 0.7.9 (faite) | Accord et rejets | `accord` : κ, PABAK, accords spécifiques, deux taux de manque, verdict ; audit aveugle des rejets (`rejets`) ; journal des concessions ; probabilités identiques à la 0.7.8 | — |
@@ -336,7 +348,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-30 | — | Document « accord et rejets » trié (0.7.9) : trois apports retenus, cinq corrections, aucun texte tiers |
 | 2026-10-30 | — | Six notes et un audit des rivaux triés (0.7.10, `apports-theoriques.md` §14) : quatre contrôles retenus, deux affirmations des notes réfutées sur le code (homologue unique, pluralité « trois équipes ») |
 | 2026-10-30 | — | Note *open-ontologies* triée (0.7.11, `apports-theoriques.md` §15) : quatre imports retenus, certificats formels refusés ; clôture 0.7.9 → 0.7.11 : 0 conséquence changée sur 2 790 |
-| 2026-10-30 | 0 | À faire : installer la 0.7.11 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) ; mesurer la répétabilité dès les premiers cas codés en solo |
+| 2026-10-31 | — | Audit V34 trié (0.7.12, `apports-theoriques.md` §16) : quatre sorties ajoutées sans changer aucune probabilité (clôture identique), sept décisions d'auteur ouvertes, trois points de l'audit corrigés |
+| 2026-10-31 | 0 | À faire : installer la 0.7.12 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) ; mesurer la répétabilité dès les premiers cas codés en solo |
 
 ---
 

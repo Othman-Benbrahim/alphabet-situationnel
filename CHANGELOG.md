@@ -1,9 +1,32 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.11
+> Version : 0.7.12
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.12 — 2026-10-31 · ce que le lecteur voit d'abord
+
+Audit V34 trié (`apports-theoriques.md` §16). **Aucune probabilité ne change, vérifié par clôture** :
+2 790 conséquences, empreinte `b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à
+la 0.7.9. Changent : la sortie humaine, des clés JSON ajoutées, des drapeaux, les rapports de `scorer`
+(clés ajoutées). 144 autotests (142 + 2).
+
+- **Paire en tête** : sans cas réel actif, `resultat_principal` {p_sans_cartes, p_avec_cartes}, imprimée
+  avant le reste (arêtes non éprouvées, P8).
+- **Bande d'horizon** : p à 1, 3 et 6 fenêtres, avec et sans cartes (`bande_horizon`).
+- **Homologie indiscernable** : `homologie_discernable` et drapeau quand p est dans la plage à 90 % du
+  placebo ; ρ inchangé (ρ = provenance).
+- **Lecture séquentielle** : `e_amelioration` et `e_gain_v4` dans chaque différentiel, `v4.sequentiel` ;
+  le statut V4 n'est pas modifié.
+- **Érosion de P1** : retraits de marqueurs comptés en strate 7 (`equivalences.md` §4) ; règle proposée,
+  non appliquée ; épreuve ajoutée au banc (`validation.md` §9).
+- **Test à trois bras** écrit (`validation.md` §8) et placé dans la feuille de route ; sept décisions
+  d'auteur ouvertes (`feuille-de-route.md` §1).
+
+**Corrigé dans l'audit** : ρ1 conditionné au placebo (change le sens de ρ : décision d'auteur) ; CIB
+« gratuit » depuis les antagonismes (ce sont des incompatibilités, déjà appliquées par G6) ; mode
+`coder --rapide` (le statut `proposition` est déjà le chemin léger) ; chiffres d'o3 non vérifiés.
 
 ## 0.7.11 — 2026-10-30 · prouver par clôture
 

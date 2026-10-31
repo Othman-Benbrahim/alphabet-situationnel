@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.11
+> Version : 0.7.12
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -618,3 +618,78 @@ change le mot du verdict dans ce cas. Aucune sortie du skill ne doit dire qu'une
 « impliquée » par les cartes. CIVeX comme outil : il agit sur des actions d'agent dans un environnement
 instrumenté ; une lecture n'a ni action ni graphe engagé. Les ontologies du marché, les plongements et le
 vocabulaire de production (« blast radius », « drift », « rollback ») : hors périmètre.
+
+---
+
+## 16. Audit V34 de la 0.7.11 (0.7.12)
+
+Audit versé par l'auteur le 31 octobre 2026 : lecture de la documentation, exécution du moteur (`audit`,
+`autotest`, `bilan`, calcul de démonstration), comparaison avec des théories rivales. Son verdict :
+**l'instrument est terminé, la mesure n'a pas commencé** (0 cas actif, 0 Attesté, 13 Documentés sur 208).
+Chaque point a été revérifié sur le code avant tri. **Aucune probabilité ne change** : clôture identique à
+celle de la 0.7.9 (2 790 conséquences, empreinte `b1a592c8…`).
+
+### 16.1 Vérifié et retenu
+
+| Défaut | Vérification | Ajouté | Où |
+|---|---|---|---|
+| D5 · le placebo ne commande rien | juste : démonstration p 22 %, placebo 20 %, plage à 90 % 10–34 %, apport +1,8 point, ρ1 maintenu | `homologie_discernable` et drapeau « indiscernable du hasard » ; ρ inchangé (16.2) | `simulation.md` §1 |
+| D6 · l'horizon, levier le plus fort, hors de la sortie | juste ; sur la démonstration : 22 % à un pas, 52 % à trois, 76 % à six | `bande_horizon` (1, 3, 6 fenêtres, avec et sans cartes) | idem |
+| D7 · un paramètre non estimable (P8) déplace p, et p vient en tête | juste : 12 % → 22 % par des arêtes jamais éprouvées | sans cas réel actif, `resultat_principal` = paire (sans cartes, avec cartes), imprimée avant le reste ; aucun calcul changé | idem, `SKILL.md` étape 7 |
+| D4 · tests exacts à effectif fixe sur un journal croissant | juste : relire le test à 50, 80, 120 épisodes gonfle α | `e_processus` dans chaque différentiel ; `v4.sequentiel` à côté du statut | `validation.md` §5 |
+| D3 · retraits de marqueurs jamais agrégés | juste : 6 cartes sur 13 en strate 7 promues après modification | compte publié ; règle proposée, non appliquée | `equivalences.md` §4, `validation.md` §9 |
+| L1 · le test qui change le statut n'est pas planifié | juste | test à trois bras écrit et placé dans la feuille de route | `validation.md` §8 |
+
+### 16.2 Corrigé dans l'audit
+
+1. **D5, ρ1 conditionné au placebo.** L'audit propose de refuser ρ1 quand p est dans la plage placebo.
+   C'est changer le sens de ρ : ρ dit **d'où vient** le chiffre (trois homologues et plus), pas s'il est
+   bon — l'audit lui-même compte cette distinction parmi les forces du skill (son §2.3). Le constat est
+   retenu comme drapeau ; changer ρ reste une décision d'auteur.
+2. **D3, « 46 % ».** Exact en nombre de cartes modifiées, mais trois seulement perdent deux éléments ou plus,
+   et la règle proposée (≥ 2 éléments dans ≥ 2 strates) ne peut pas mordre avec une seule strate
+   documentée. Un retrait peut aussi préciser un marqueur trop large ; la règle vise la répétition.
+3. **CIB « gratuit » depuis `antagonismes.md` (§4.3).** Inexact : les antagonismes sont des
+   **incompatibilités** binaires, déjà appliquées par G6, qui refuse un état incohérent. Une consistance à
+   la CIB demande des impacts **signés et gradués** entre états ; aucun fichier ne les contient. Reste en
+   §14.3.
+4. **D8, « coder --rapide ».** Le chemin léger existe : une fiche `statut_donnees: proposition` n'exige ni
+   corroboration ni passage, et n'entre pas dans les estimations. Un mode qui mettrait des champs à `null`
+   dans une fiche active affaiblirait A6 sans gain : refusé.
+5. **§4.4, chiffres d'o3.** L'évaluation sur 464 questions Metaculus existe (Lu 2025, arXiv:2507.04562 :
+   modèles devant la foule, nettement derrière un groupe d'experts) ; les valeurs citées (0,1352 contre
+   0,0225 en médiane) ne sont pas vérifiées ici et ne sont pas reprises.
+6. **§6, « excès de prudence ».** La description du skill garde « aucune performance prédictive n'est
+   acquise » : c'est vrai, et c'est la ligne qu'un modèle lit pour décider de charger le skill. Les forces
+   se revendiquent ailleurs (16.4), sans retirer un avertissement exact.
+
+### 16.3 Ce qui attend
+
+| Proposition | Condition | Note |
+|---|---|---|
+| D1 · dériver ou calibrer λ | rédacteur indépendant (1.0) ou cas réels | l'audit mesure le déséquilibre : abaisser toutes les forces F à f déplace p de +0,7 point sur la démonstration |
+| D2 · statut d'arête « Éprouvée » (n occasions, k transitions) | décision d'auteur ; premiers cas réels | `confronter` calcule déjà les occasions ; « Attesté » reste indexé sur la case |
+| Dynamics of Contention (McAdam, Tarrow, Tilly 2001) : table 16 cartes ↔ mécanismes (courtage, diffusion, attribution de menace…) | une heure de lecture, texte en main | soit l'alphabet est une redescription, soit il ajoute la dimension de strate ; déjà signalé dans les notes de profils (MTT), jamais instruit |
+| QCA (Ragin) : consistance et couverture d'une règle configuration → issue | cas réels actifs | indicateurs, jamais garanties (§15) |
+| Gentner (structure-mapping) : H1.5 est une similarité d'**attributs** (Jaccard pondéré sur les cartes), pas de relations | décision d'auteur | les liaisons G3 n'entrent pas dans l'homologie ; l'écart entre le mot « structurale » et la mesure est à écrire |
+| L7 · réduire la boîte (une strate entièrement sourcée d'abord) | décision d'auteur | compatible avec P1 : l'universalité est une hypothèse |
+| Suspendre la 0.8 jusqu'au test à trois bras | décision d'auteur | `feuille-de-route.md` §1 |
+
+### 16.4 Ce que l'alphabet fait que ses rivaux ne font pas
+
+Trois revendications, chacune vérifiable dans le paquet et chacune réfutable :
+
+- **Décomposabilité** (contre la panarchie, Holling et Gunderson ; Sundstrom et Allen 2019, *Ecological
+  Complexity* 39, posent eux-mêmes la question « plus qu'une métaphore ? ») : une carte peut être Vide ou
+  close dans une strate sans que les quinze autres soient touchées ; un cycle adaptatif échoue ou réussit
+  en bloc.
+- **Marqueur indépendant du modèle** (contre la théorie des catastrophes en sciences sociales, Zeeman ;
+  critique de Sussmann et Zahler 1978) : SEUIL a la même forme que la fronce (hystérésis), mais un fait ne
+  l'ancre que par un marqueur local mesuré hors du modèle (« franchissement reconnu par les parties »), ce
+  qui empêche l'ajustement après coup à toute discontinuité. Réfutable : un dossier qui ancre SEUIL sans
+  marqueur rempli serait un contre-exemple.
+- **Provenance ρ** : une échelle qui dit d'où vient le chiffre, distincte de sa fiabilité.
+
+Et une comparaison de statut, pas de théorie : la cliodynamique (Turchin, lettre à *Nature*, 2010) a une
+prédiction datée et publique ; l'alphabet n'en a aucune. Le test à trois bras (`validation.md` §8) est ce
+qui changerait cela.

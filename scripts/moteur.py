@@ -2467,6 +2467,27 @@ def test_wilcoxon(d):
             'p_bilateral':min(1.,2*min(sum(c_ for k_,c_ in dist.items() if k_<=w),sum(c_ for k_,c_ in dist.items() if k_>=w))/N)}
 
 
+def e_processus(d,decalage=0.):
+    """0.7.12 (audit V34, D4). Les tests exacts du signe et de Wilcoxon sont à effectif fixe ; lus sur un
+    journal croissant, à des moments choisis, ils gonflent l'erreur de type I. Un e-processus reste valide à
+    tout instant (inégalité de Ville) : on peut le relire après chaque épisode et s'arrêter dès qu'il franchit
+    1/α. Hypothèse nulle : E[d] ≥ −decalage (aucune amélioration au-delà de decalage). Paris fixes λⱼ sur
+    x = −d − decalage, mélange uniforme sur une grille (Waudby-Smith et Ramdas 2024, paris à capital ;
+    Ramdas et al. 2023, *Statistical Science*) : chaque produit Π(1 + λⱼxᵢ) est une surmartingale positive
+    sous l'hypothèse nulle, leur moyenne aussi. Épisodes supposés indépendants, comme pour les tests exacts."""
+    if not d:return None
+    borne=2.+abs(decalage)                       # |d| ≤ 2 (partitions) ; 1 + λx > 0 pour λ < 1/borne
+    lams=[j/(10*borne) for j in range(1,10)]
+    caps=[1.]*len(lams);e_max=1.;franchi=None
+    for i,x_ in enumerate(d,1):
+        x=-x_-decalage
+        caps=[c*(1+l*x) for c,l in zip(caps,lams)]
+        e=sum(caps)/len(caps)
+        if e>e_max:e_max=e
+        if franchi is None and e>=1/P['v4_alpha']:franchi=i
+    return {'e_valeur':e,'e_max':e_max,'seuil':1/P['v4_alpha'],'franchi_a_l_episode':franchi,'decalage':decalage}
+
+
 def differentiel(units,champ):
     """0.7.5. Différentiel de perte par épisode (d̄ de Diebold-Mariano : le numérateur ; on publie aussi sa
     dispersion et les tests exacts). Les questions liées d'un épisode sont moyennées : un épisode, une
@@ -2482,7 +2503,9 @@ def differentiel(units,champ):
     den=sum((x-m_)**2 for x in d)
     r1=sum((d[i]-m_)*(d[i+1]-m_) for i in range(n-1))/den if n>2 and den>0 else None
     return {'episodes':n,'d_moyen':m_,'sigma_d':sd,'erreur_type':None if sd is None else sd/math.sqrt(n),
-            'autocorrelation_1':r1,'test_signe':test_signe(d),'test_wilcoxon':test_wilcoxon(d)}
+            'autocorrelation_1':r1,'test_signe':test_signe(d),'test_wilcoxon':test_wilcoxon(d),
+            # 0.7.12 : lecture séquentielle, valide à tout instant (e_processus) ; s'ajoute aux tests exacts.
+            'e_amelioration':e_processus(d),'e_gain_v4':e_processus(d,P['v4_gain_abs'])}
 
 
 def lecture_test(dm,nom):
@@ -2596,8 +2619,15 @@ def v4_statut(dm):
     if cible is None or dm['episodes']<cible:st='non encore évalué'
     elif dm['d_moyen']<=-P['v4_gain_abs'] and p_ is not None and p_<P['v4_alpha']:st='jalon interne atteint — validation externe non établie'
     else:st='jalon interne non atteint'
+    # 0.7.12 (audit V34, D4) : seconde lecture, séquentielle — l'e-processus de H0 « gain < v4_gain_abs » a-t-il
+    # franchi 1/v4_alpha à un épisode quelconque ? Valide malgré les relectures du journal. Elle ne remplace
+    # pas le statut (règle de 0.7.7, décision d'auteur) : elle se publie à côté.
+    eg=dm.get('e_gain_v4')
+    seq=None if eg is None else {'e_valeur':eg['e_valeur'],'e_max':eg['e_max'],'seuil':eg['seuil'],'franchi_a_l_episode':eg['franchi_a_l_episode'],
+        'lecture':('franchi : gain ≥ v4_gain_abs établi à tout instant, sous indépendance des épisodes' if eg['franchi_a_l_episode']
+                   else 'non franchi : le journal peut être relu à chaque épisode sans gonfler α')}
     return {'statut':st,'episodes':dm['episodes'],'effectif_requis':req,'effectif_cible':cible,'d_moyen':dm['d_moyen'],
-            'intervalle_95_approche':ic,'p_test':p_,'sigma_d':sd,'regle':regle}
+            'intervalle_95_approche':ic,'p_test':p_,'sigma_d':sd,'regle':regle,'sequentiel':seq}
 
 
 def dossier_publie(x):
@@ -2761,7 +2791,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -2980,7 +3010,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.11','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.12','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3169,6 +3199,13 @@ def afficher(result,as_json=False):
         print(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False));return
     print(OUVERTURE)
     print(ligne_signalement(result))
+    rp_=result.get('resultat_principal')
+    if rp_:print(f"À lire d’abord : sans cartes {pct(rp_['p_sans_cartes'])} → avec cartes {pct(rp_['p_avec_cartes'])} "
+                 "(aucun cas réel actif : arêtes non éprouvées, P8 ; p seul n’est qu’un dérivé de cette paire"
+                 +(" ; a priori non ancré : l’écart lui-même n’est pas interprétable)" if not (result.get('a_priori') or {}).get('ancrage') else ")"))
+    bh_=result.get('bande_horizon')
+    if bh_:print('Bande d’horizon ('+bh_['semantique']+') : '+' · '.join(f"{h} × {bh_['fenetre']} : {pct(v['p'])} (sans cartes {pct(v['p_sans_cartes'],False)})"
+                                       for h,v in bh_['pas'].items() if v)+" — l’horizon est la question, pas une incertitude")
     # 0.6.13 (audit 0.6.12, m4) : en sortie, le nom canonique (grammaire.md) ; l'abréviation reste dans le JSON.
     ev=result['evenement'];k_,t_=ev.split(' ',1) if ' ' in ev else (ev,'')
     try:c_,s_=k_.split('@');ev=f"{NOMS[c_]}@{s_} {t_}".strip()
@@ -3543,11 +3580,34 @@ def main():
             result['p_placebo']=pl_['p'] if pl_ else None
             result['graine_placebo']=pl_['graine'] if pl_ else None
             result['apport_homologie']=None if pl_ is None or result.get('p') is None else result['p']-pl_['p']
+            # 0.7.12 (audit V34, D5) : un p dans la plage à 90 % du placebo est indiscernable d'une sélection de cas
+            # au hasard. Constat publié et drapeau ; ρ, qui dit la provenance et non la fiabilité, est inchangé.
+            pg_=(pl_ or {}).get('plage_90')
+            result['homologie_discernable']=None if not pg_ or result.get('p') is None else not (pg_[0]<=result['p']<=pg_[1])
+            if result['homologie_discernable'] is False:
+                result.setdefault('drapeaux',[]).append(f"Homologie indiscernable du hasard : p ({pct(result['p'])}) dans la plage à 90 % du placebo "
+                    f"({pct(pg_[0],False)}–{pct(pg_[1])}) ; la sélection des homologues ne fait pas mieux que des cas tirés au hasard dans la strate.")
             if not a.sans_cartes:
                 # Comparateur inertiel : même calcul sans cartes (inertie, fréquences, références seules).
                 # Sans lui, un bon Brier peut ne venir que du statu quo (exemple 11).
                 nu=horizon_result(etat,typ,cible,active,dict(opts,sans_cartes=True),a.pas,sem)
                 result['p_sans_cartes']=nu['p'];result['apport_cartes']=result['p']-nu['p']
+                # 0.7.12 (audit V34, D7) : sans cas réel actif, aucune arête n'est éprouvée (P8) ; la paire
+                # (sans cartes, avec cartes) est le résultat à lire, p seul en est dérivé. Aucun calcul ne change.
+                if not any(not c.get('fictif') for c in active) and result.get('p') is not None and nu.get('p') is not None:
+                    result['resultat_principal']={'p_sans_cartes':nu['p'],'p_avec_cartes':result['p'],
+                        'motif':'aucun cas réel actif : arêtes non éprouvées (P8) ; lire l’écart, pas p seul'}
+                # 0.7.12 (audit V34, D6) : l'horizon est le levier le plus fort ; p à 1, 3 et 6 pas, même sémantique,
+                # sans placebo. Ce n'est pas une incertitude (l'horizon est la question), c'est ce qu'il faut voir.
+                bh={}
+                for h_ in (1,3,6):
+                    if h_>P['pas_max']:continue
+                    try:
+                        bh[str(h_)]={'p':horizon_result(etat,typ,cible,active,opts,h_,sem)['p'],
+                                     'p_sans_cartes':horizon_result(etat,typ,cible,active,dict(opts,sans_cartes=True),h_,sem)['p']}
+                    except ValueError:bh[str(h_)]=None
+                result['bande_horizon']={'pas':bh,'fenetre':etat['fenetre'],'semantique':sem,
+                                         'lecture':'même question à 1, 3 et 6 fenêtres : l’horizon choisi change p plus que les variantes de modèle'}
                 pieces=None
                 if dossier:
                     pieces={}
@@ -4435,6 +4495,28 @@ def autotest():
             old=P['k'];P['k']=7.0
             try:self.assertFalse(comparer_clotures(a,cloture(base))['conservative'])                    # un paramètre changé se voit
             finally:P['k']=old
+        def test_e_processus(self):
+            # 0.7.12 (audit V34, D4) : valide à tout instant ; franchit vite sur un gain net, jamais sans gain.
+            self.assertIsNone(e_processus([]))
+            r=e_processus([-.3]*40);self.assertTrue(r['franchi_a_l_episode'] is not None and r['e_valeur']>=r['seuil'])
+            r=e_processus([0.]*500);self.assertIsNone(r['franchi_a_l_episode']);self.assertAlmostEqual(r['e_max'],1.)
+            r=e_processus([-.02]*500,P['v4_gain_abs']);self.assertIsNone(r['franchi_a_l_episode'])   # gain sous le seuil V4
+            import random as rd_;g=rd_.Random(5);fr=0
+            for _ in range(200):                                                               # H0 vraie : E[d] = 0
+                if e_processus([g.choice((-.2,.2)) for _ in range(100)])['franchi_a_l_episode']:fr+=1
+            self.assertLessEqual(fr/200,P['v4_alpha']+.03)                                     # Ville : ≤ α à tout instant
+            dm=differentiel([{'episode_id':f'E{i}','date':f'2026-01-{i+1:02d}','brier':.1,'ref':.3} for i in range(25)],'ref')
+            self.assertIsNotNone(v4_statut(dm)['sequentiel'])
+        def test_sorties_audit_v34(self):
+            # 0.7.12 : paire (sans cartes, avec cartes), bande d'horizon, homologie indiscernable — aucun p changé.
+            import subprocess
+            cmd=[sys.executable,__file__,'calculer','--demo','--base',str(RACINE/'assets/base-de-cas.exemple.jsonl'),'--etat',
+                 '[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]','--liaison','CONTRAINTE@6 echo POLARITÉ@7',
+                 '--evenement','SEUIL@7 apparait','--temporalite','generique','--json']
+            r=json.loads(subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8').stdout)
+            self.assertEqual(r['resultat_principal']['p_avec_cartes'],r['p']);self.assertEqual(r['resultat_principal']['p_sans_cartes'],r['p_sans_cartes'])
+            self.assertEqual(sorted(r['bande_horizon']['pas']),['1','3','6']);self.assertAlmostEqual(r['bande_horizon']['pas']['1']['p'],r['p'])
+            self.assertIs(r['homologie_discernable'],False);self.assertTrue(any('indiscernable' in x for x in r['drapeaux']))
         def test_rejets_audit(self):
             d=self._dossier();f=feuille_rejets(d)
             self.assertEqual(sorted(f['tirage']),['HIE@6','SEU@7']);self.assertNotIn('motif',json.dumps(f,ensure_ascii=False).lower().replace('motif du rejet',''))

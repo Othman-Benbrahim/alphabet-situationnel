@@ -1,6 +1,6 @@
 # Alphabet situationnel — Équivalents par strate (index, couche 1)
 
-> Version : 0.7.11
+> Version : 0.7.12
 
 > Les équivalents locaux des 16 cartes sont rangés **par strate**, un fichier par strate :
 > `equivalences/strate-01.md` à `equivalences/strate-13.md`. Raison : la procédure va des faits vers les
@@ -102,3 +102,32 @@ RÉSONANCE@8 et @12, HIÉRARCHIE@11) et le cas contesté (RÉCURSIVITÉ@2) reste
 | RÉSONANCE@7 (0.6.4) | sources lues : la vague révolutionnaire est une diffusion par émulation, pas une synchronisation | lacune de recherche (décision 1b) |
 | HIÉRARCHIE@11 | le climat a des ordres imbriqués ; la définition sociale de la carte (autorité, préséance) contredit sa structure mathématique (ordre partiel) | anomalie de **définition** : Hors domaine détruirait l'information |
 | RÉCURSIVITÉ@2 | le vivant se représente-t-il son fonctionnement ? | cas contesté |
+
+## 4. Érosion des marqueurs — épreuve de P1 (0.7.12)
+
+P1 tient les cartes pour des structures transversales **candidates** ; le tableau des équivalents est
+l'endroit où l'hypothèse se teste. Il peut aussi s'y **ajuster** : quand une source ne soutient qu'une
+partie du marqueur, on retire le reste et la case passe Documenté. Chaque retrait est consigné
+(`feuille-de-route.md` §5.1, colonne « Écart à trancher ») ; jusqu'en 0.7.11, ils n'étaient pas comptés
+(audit V34, D3).
+
+**Compte, strate 7** (seule strate documentée) : 6 cartes Documentées sur 13 l'ont été après
+modification de l'équivalent ; 3 ont perdu au moins deux éléments nommés du marqueur.
+
+| Carte | Éléments retirés | Nombre |
+|---|---|---|
+| SEUIL | « rupture diplomatique », « annexion déclarée » | 2 |
+| ÉMERGENCE | « sans puissance dominante », « sans traité » | 2 |
+| HIÉRARCHIE | veto, préséance | 2 |
+| RÉCURSIVITÉ | sécuritisation (intitulé changé) | 1 |
+| TRANSFORMATION | transition de régime pactée (renvoyée en strate 13) | 1 |
+| TRACE·MÉMOIRE | griefs (intitulé réduit aux frontières héritées) | 1 |
+
+Un changement d'intitulé sans retrait (RÉSEAU) et un complément (CONTRAINTE) ne comptent pas.
+
+**Règle proposée, non appliquée** (décision d'auteur) : une carte qui perd au moins deux éléments nommés
+de son marqueur dans au moins deux strates n'est pas transversale au sens de P1, mais une famille
+d'homonymes à scinder ou à redéfinir. Avec une seule strate documentée, la règle ne peut pas encore
+mordre : elle se tient dès la deuxième strate sourcée, et le compte se publie à chaque promotion.
+Un retrait n'est pas toujours une érosion — une source peut préciser un marqueur trop large — ; c'est
+pourquoi la règle porte sur la répétition à travers les strates, non sur un retrait isolé.

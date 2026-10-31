@@ -1,9 +1,45 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.12
+> Version : 0.7.14
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.14 — 2026-10-31 · déclarer l'objet calculé
+
+Note « unifier représentation, inférence et dynamique » triée (`apports-theoriques.md` §18). **Aucune
+probabilité ne change, vérifié par clôture** : empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à la 0.7.9. 148 autotests
+(146 + 2).
+
+- **`modele`** dans `calculer --json` : estimande, lecture en pseudo-vraisemblance, quotient (ce que l'état
+  calculé ne distingue pas), produit des λ ; drapeau pour toute liaison de l'état sans effet sur p.
+- **Table « lu / non lu »** et identité logistique, avec la réciprocité de la matrice (12 / 8 / 46 sur 66)
+  et la raison de ne pas la symétriser (`graphe.md` §2.1).
+- **Trajectoires** : `estimande` (premier changement) et `masse_simultanee_pas1`.
+- **`moteur.py noyau`** : loi jointe d'un pas sur une frontière de 2 à 10 événements, marginales égales à
+  `calculer`, exclusions déclarées, `p_horizon` et `p_premier` ; aucune dépendance estimée.
+- **Gabarit (P, G, I)** des cartes, critère descriptif / local / transversal, SEUIL en exemple.
+- Chantier formel planifié (Joindre, Signer, Structurer, Mélange, Estimer), chaque étape en version
+  séparée. Numéro 0.7.14 : la 0.8 reste réservée aux étapes 2 et 3.
+
+## 0.7.13 — 2026-10-31 · dire où représentation, inférence et dynamique divergent
+
+Audit comparatif trié (PyCIB, FCMpy, pgmpy, EMA Workbench, Metaculus `forecasting-tools` ;
+`apports-theoriques.md` §17). **Aucune probabilité ne change, vérifié par clôture** : empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à la 0.7.9. 146 autotests
+(144 + 2).
+
+- **`variantes_codage`** : p si chaque mot f, puis tous, étaient absents ; F et f ayant le même effet sur
+  les multiplicateurs, c'est cette plage qui dit ce que coûte un ancrage incertain.
+- **`ecart_marginales_pas1`** dans `trajectoires`, avec drapeau au-delà de `delta_discriminant` : le noyau
+  concurrent et `calculer` sont deux modèles.
+- **Corrigé** : de Finetti (mélange de Bernoulli ; la bêta est un choix), lissage bayésien empirique en deux
+  étapes (même données pour f et la révision), hystérésis (une inertie est une persistance — la 0.7.5 avait
+  corrigé à tort une note juste).
+- **Écrit** : analogie, définition formelle et transfert séparés (`cartes.md`) ; décision 1b comme politique
+  de recherche ; matrice sans inhibition en limite. Quatre décisions d'auteur ajoutées (jointe, inhibitions,
+  similarité relationnelle, définitions abstraites).
 
 ## 0.7.12 — 2026-10-31 · ce que le lecteur voit d'abord
 

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.12
+> Version : 0.7.14
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -36,6 +36,40 @@ plafonné à 10. Ces règles ne démontrent ni causalité ni indépendance ; ell
 modèle `--sans-cartes`. Ce dernier désactive également les homologues : il mesure l'apport conjoint
 de la modulation et de la sélection structurelle, pas l'effet isolé d'un seul mécanisme.
 Les effets inhibiteurs ne sont pas estimés dans cette version ; ne pas en inventer.
+
+**Ce que le calcul lit, et ce qu'il ne lit pas (0.7.14).** La grammaire écrit plus que l'inférence n'en
+utilise. Tout symbole qui n'entre pas dans le calcul est **déclaré non inférentiel** (P7 : la confiance
+affichée correspond à ce qui est utilisé) ; `calculer --json` le recopie dans `modele.quotient` et signale
+toute liaison de l'état qui n'agit pas.
+
+| Symbole de l'état | Lu par le calcul | Effet numérique |
+|---|---|---|
+| `carte@strate` | oui | choix des sources (matrice) |
+| `[F]` / `[f]` | indirectement | aucun sur λ ; seulement l'identité H1 et la pondération H1.5 (`variantes_codage`) |
+| `{qualificatif}` | identité H1 seulement | aucun sur λ |
+| objet, rôle | non (validation G6 seulement) | aucun : deux situations qui ne diffèrent que par là sont le même état |
+| liaison `transfert` | oui | évite l'abaissement d'un cran entre strates, et déduplique |
+| liaisons `inclusion`, `renforcement` | oui | déduplication : la source la plus forte est gardée |
+| liaisons `conflit`, `tension`, `appui`, `reproduction`, `écho` | **non** | aucun |
+| liaison `indépendance` | validation G6 seulement | aucun |
+| position `bouge` | oui | λ × 1,5 : ne peut qu'augmenter |
+| position `manque` | oui | **ajoute** une source λ = 1,8 : une lacune ne peut qu'appeler son comblement, jamais empêcher |
+
+Les deux dernières lignes sont des contraintes de signe du modèle, pas des choix de lecture : tant que
+tous les λ sont ≥ 1, un empêchement ne peut s'écrire qu'en aide supplémentaire (décision d'auteur 9).
+
+**Quelle forme a ce calcul (0.7.14).** logit p₀ = logit f + Σ ln λᵢ est **exactement** la conditionnelle
+d'un modèle log-linéaire à paires sur des indicatrices (bⱼ = logit fⱼ, θᵢⱼ = ln λᵢⱼ) : sur la
+démonstration, logit 0,05 + ln 1,8 + ln 1,2 = −2,174, soit p₀ = 10,2079 %. Mais une famille de
+conditionnelles n'admet une loi jointe que sous des conditions (Arnold et Press 1989) ; pour un champ non
+orienté, θᵢⱼ = θⱼᵢ. La matrice ne l'est pas : sur 66 couples ordonnés, 12 entrées (6 paires) sont
+réciproques à intensité égale, 8 ont une réciproque d'intensité différente, 46 n'en ont aucune. Le produit
+des λ est donc une **pseudo-vraisemblance** (Besag 1975) : cohérente pour prédire un événement
+conditionnellement à l'état, sans loi jointe garantie. **L'asymétrie n'est pas à corriger** : SEUIL → TRACE
+· MÉMOIRE (F) contre TRACE·MÉMOIRE → SEUIL (f) est la thèse de la fiche (le retour est fermé) ;
+symétriser pour obtenir un champ détruirait l'irréversibilité. La lecture cohérente avec l'asymétrie est
+celle d'un **générateur** de transitions hors équilibre, qui n'a pas à être réversible
+(`apports-theoriques.md` §18).
 
 **Portée des cartes.** Les multiplicateurs ne s'appliquent qu'aux **apparitions**. Sans base de cas,
 la probabilité d'une persistance ou d'une disparition ne dépend que de l'inertie de la carte : une
@@ -152,10 +186,13 @@ Aucun intervalle multi-pas : propager seulement les bornes d'une composante igno
 **Hypothèse de taux constant (0.7.5).** Le modèle est une chaîne de Markov d'ordre 1 sur l'état codé,
 à taux constant : l'inertie est ramenée à la fenêtre par inertie^(durée / 91,3125 j), et la persistance
 continue vaut r^h (loi géométrique, analogue discret de l'exponentielle). La probabilité qu'un mot
-disparaisse ne dépend donc pas du nombre de pas où il est déjà présent. Ce n'est **pas** une négation de
-l'hystérésis de SEUIL ni de la dépendance au chemin de TRACE·MÉMOIRE : celles-ci portent sur la
-*situation* et sont portées par l'état lui-même (une inertie de 0,97, les arêtes qui suivent SEUIL, une
-carte TRACE·MÉMOIRE qui inscrit le passé dans l'état). Ce qui n'est pas modélisé, c'est la dépendance
+disparaisse ne dépend donc pas du nombre de pas où il est déjà présent. **Corrigé en 0.7.13** : une inertie
+de 0,97 représente une **persistance**, pas une hystérésis. L'hystérésis demande que l'aller et le retour
+basculent à des valeurs **différentes** d'un paramètre de contrôle ; l'état codé ne contient pas ce
+paramètre, et aucune règle de transition ne distingue l'aller du retour. Le modèle **ne représente donc pas**
+l'hystérésis de SEUIL : il en représente une conséquence observable (un SEUIL franchi tend à rester),
+pas le mécanisme. La présence d'une carte TRACE·MÉMOIRE n'y suffit pas non plus : elle inscrit qu'un passé
+compte, pas lequel ni comment. Ce qui n'est pas modélisé, c'est la dépendance
 à l'**âge** du mot (un SEUIL franchi depuis un an tient-il mieux qu'un SEUIL franchi hier ?). Elle se
 mesure par `moteur.py confronter` (maintien selon l'âge) ; une loi à taux variable (Weibull discrète,
 forme c ≠ 1) attend des cas réels pour estimer c. Sur la base d'exemple, fictive : 85 % de maintien à
@@ -225,8 +262,11 @@ cas au hasard dans la strate et la fenêtre ; si `apport_homologie` ≈ 0, la st
 comme une seule classe échangeable pour cet événement, et l'homologie n'est pas pertinente ; s'il
 s'écarte nettement de la plage des tirages, la classe est une sous-population distincte. Le théorème
 de représentation de de Finetti suppose une suite infinie échangeable *a priori* ; la classe est finie,
-petite et choisie après observation : il donne la **forme** Beta-binomiale de l'estimateur (§4), pas
-sa validité, qui reste une hypothèse empirique.
+petite et choisie après observation. **Corrigé en 0.7.13** : le théorème justifie, sous ces hypothèses,
+une représentation des issues comme **mélange de lois de Bernoulli** ; il ne donne pas la forme
+Beta-binomiale. Le choix d'une loi bêta pour ce mélange est une **hypothèse de modélisation
+supplémentaire**, retenue pour sa conjugaison et sa simplicité (§4). La validité de l'ensemble reste une
+hypothèse empirique.
 
 **Décomposition.** p − p_sans_cartes = (p − p_placebo) + (p_placebo − p_sans_cartes) : la première part
 mesure le choix des homologues, la seconde les multiplicateurs et les cas de la strate pris au hasard.
@@ -277,6 +317,14 @@ pseudo-observations pour f contre la strate (§2.2), k = 2 pour p₀ contre les 
 pas sur la même quantité, et le rapport 10× n'est pas « dix fois plus de confiance dans le défaut que
 dans les homologues ». `calculer` publie les deux poids (« part de l'a priori dans f », « part de p₀
 dans p »). Le nombre de cas n'est pas une preuve de calibration. Sans cas ou loi dégénérée : null.
+**Deux étapes sur les mêmes données (0.7.13).** f est estimée sur les transitions de la strate (§2.2), puis
+p₀, qui en dérive, est révisé par les homologues — qui sont une partie de ces mêmes transitions. C'est un
+**lissage bayésien empirique en deux étapes**, pas une mise à jour bayésienne ordinaire avec un a priori
+fixé indépendamment des observations : un même cas peut compter dans l'a priori et dans la
+vraisemblance. L'intervalle de §4 est donc conditionnel à cet a priori **estimé**, et plus étroit qu'il
+ne devrait ; l'effet est faible quand f repose surtout sur sa référence externe (k₀ = 20) et grand quand
+la strate compte peu de cas. Aucune correction n'est appliquée : elle demanderait d'estimer f hors des
+homologues (validation croisée), ce qui attend une base réelle.
 Les seuils ρ sont définis par T3 ; double codage insuffisant, absence de cas sans événement et
 non-stationnarité empêchent ρ0. Les sources de référence et les cas sont versionnés.
 

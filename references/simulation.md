@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.12
+> Version : 0.7.14
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -53,7 +53,8 @@ Coût du codage : [faits examinés et écartés (dont faits sans option changée
  avant p seul (0.7.12 : arêtes non éprouvées, P8) ; si p tombe dans la plage à 90 % du placebo, « homologie
  indiscernable d'une sélection au hasard » ; la **bande d'horizon** (p à 1, 3 et 6 fenêtres, même
  sémantique) à côté de la bande de sensibilité : l'horizon est la question, pas une incertitude, mais c'est
- lui qui déplace le plus p ; si le dossier est incomplet (plancher A7), statut de lecture Spéculatif et
+ lui qui déplace le plus p ; les **variantes de codage** (p si chaque mot f, puis tous, étaient absents) :
+ un ancrage f pèse autant qu'un F dans les multiplicateurs, et c'est cette plage qui dit ce qu'il coûte (0.7.13) ; si le dossier est incomplet (plancher A7), statut de lecture Spéculatif et
  manques dans « À vérifier » ; un écart nul se dit : la question
  ne teste que l'inertie ;
  afficher p en pourcentage entier (une décimale sous 1 % et au-dessus de 99 %) avec son intervalle ;
@@ -104,6 +105,21 @@ journal-lacunes.md : [si motif descriptif réellement hors corpus]
 
 Noyau à risques concurrents : au plus un changement par pas ; intensité −ln(1−p), statu quo exp(−Σλ),
 répartition des changements proportionnellement aux intensités. Toutes les probabilités sont bornées.
+**C'est un second modèle, pas une conséquence du premier (0.7.13).** La normalisation dépend de tous les
+candidats et exclut les réalisations simultanées : deux événements à 50 % isolément y reçoivent 37,5 %
+chacun, et le statu quo 25 %. Les marginales d'une trajectoire ne sont donc pas les probabilités de
+`calculer` ; la sortie publie l'écart au premier pas (`ecart_marginales_pas1`) et le signale au-delà de
+`delta_discriminant`. **Estimande (0.7.14)** : le noyau donne la probabilité qu'un événement soit **le
+premier** changement — formule exacte pour des horloges indépendantes tronquées à un changement. Il ne
+représente pas les changements simultanés : `masse_simultanee_pas1` publie la masse que des horloges
+indépendantes de mêmes marginales leur donneraient (37,5 % sur la démonstration), et que le noyau reporte
+sur les états à un seul changement. **`moteur.py noyau`** (0.7.14) construit, sur une **frontière** de 2 à
+10 événements déclarés, la loi jointe d'un pas dont les marginales sont exactement les p de `calculer`
+(entropie maximale sous ces contraintes : indépendance, sauf paires déclarées exclusives par
+`--exclusion`), et publie pour chaque événement les deux estimandes — `p_horizon` (réalisé à l'échéance)
+et `p_premier` (premier changement) —, la masse « aucun / exactement un / deux ou plus » et les
+configurations. Il ne change aucun p ; il n'estime aucune dépendance. Une distribution jointe explicite sur quelques événements liés, dont les
+marginales découleraient, reste à construire (`apports-theoriques.md` §17).
 Le niveau ρ de chaque branche hérite de toutes les estimations entrant dans la normalisation.
 Les apparitions candidates couvrent les strates présentes et celles examinées par `--strates`.
 Un nouveau mot est f : aucun fait nouveau ne l'ancre. Les liaisons invalidées par un retrait sont

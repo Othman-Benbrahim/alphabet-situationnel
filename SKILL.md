@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.12'
+  version: '0.7.14'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.12. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.14. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -95,6 +95,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… scorer J.jsonl` | validation du journal, score des questions et épisodes |
 | `… sceller J.jsonl` | empreinte à publier avant échéance ; ne prouve pas seul la prépublication |
 | `… sceller-jugement --question Q --evenement E --p 0.3 --date AAAA-MM-JJ [--origine jugement]` | empreinte de votre propre probabilité, à calculer **avant** le moteur ; à recopier dans `jugement_scelle` ; l'événement est validé (texte libre seulement avec `--origine jugement`), la date ne peut pas être future |
+| `… noyau --etat "…" --evenement E1 --evenement E2 [--exclusion "E1 ; E2"] --temporalite generique` | loi jointe d'un pas sur 2 à 10 événements, marginales = `calculer` ; masse « aucun / un / deux ou plus », `p_horizon` et `p_premier` ; aucune dépendance estimée (`simulation.md` §3) |
 | `… conservativite --base B [--sortie F] [--contre F \| --empreinte H]` | clôture : toutes les conséquences à un pas de la base et leur empreinte ; avec `--contre`, vérifie qu'une modification ne change aucune probabilité (sortie non nulle sinon) ; placebo, horizons longs et composés hors clôture (`validation.md` §9) |
 | `… manifeste` | régénère `SHA256SUMS` (empreinte de chaque fichier livré), à lancer en dernier avant livraison |
 | `… audit` / `… autotest` / `… parametres` | intégrité / tests / table documentaire générée ; l'audit vérifie la forme et les recoupements internes, pas la justesse du contenu |
@@ -216,7 +217,7 @@ ne déplacent pas p, le dire, car la question ne teste alors que l'inertie (pers
 disparitions sans base, notamment). Sans cas réel actif, la sortie met la paire « sans cartes → avec
 cartes » en tête (`resultat_principal`) : c'est elle qu'on lit, p n'en est qu'un dérivé. Recopier la
 **bande d'horizon** (p à 1, 3 et 6 fenêtres) et, s'il est levé, le drapeau « homologie indiscernable du
-hasard » (0.7.12).
+hasard » (0.7.12), ainsi que les **variantes de codage** (p si les mots f étaient absents, 0.7.13).
 
 **8. Horizon et proxémie.** Choisir présence finale, occurrence au moins une fois ou persistance
 continue. Comparateur au même horizon. Trajectoires seulement si utiles, avec leur masse abandonnée.
@@ -308,6 +309,17 @@ et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les q
   le skill n'a pas de sémantique logique des événements et ne voit pas une incohérence entre questions
   imbriquées.
 - Un seul changement par pas en trajectoire ; ni simultanéité ni distribution de trajectoires calibrée.
+  Événements isolés et trajectoires sont **deux modèles** : les marginales d'une trajectoire ne sont pas
+  les p de `calculer`, et l'écart se publie (0.7.13). Le noyau répond à « quel changement arrive en
+  premier », `calculer` à « est-il réalisé à l'échéance » ; `noyau` réunit les deux sous une même loi
+  d'un pas, sans dépendance estimée (0.7.14).
+- Le produit des λ est une pseudo-vraisemblance (matrice non symétrique), non un rapport de
+  vraisemblance ; objets, rôles et six types de liaisons ne sont pas lus par le calcul (`modele`,
+  `graphe.md` §2.1).
+- La matrice n'a que des multiplicateurs ≥ 1 : elle ne peut qu'augmenter une probabilité d'apparition,
+  jamais représenter un mécanisme inhibiteur ; seuls les homologues peuvent la faire baisser.
+- F et f ont le même effet sur les multiplicateurs ; leur écart se lit dans les variantes de codage.
+- Une forte inertie représente une persistance, pas une hystérésis (`graphe.md` §2.4).
 - L'accord κ et la vérification scientifique des sources/résolutions restent humains.
 - La strate 12 est un registre de longue durée, pas un domaine (décision d'auteur, `strates.md`) : un
   fait n'y entre que si sa signification dépend d'une période de plus d'un siècle.

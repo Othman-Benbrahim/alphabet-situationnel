@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.12
+> Version : 0.7.14
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -365,7 +365,8 @@ dont trois de conception.
 4. **Taux constant et hystérésis.** La note écrit que le modèle « nie la mémoire » de SEUIL et de
    TRACE·MÉMOIRE. C'est confondre la dépendance au chemin de la **situation** — portée par l'état, son
    inertie et ses arêtes — avec la dépendance à l'**âge** d'un mot, seule absente. Une chaîne de Markov
-   représente l'hystérésis : c'est l'inertie de 0,97.
+   représente l'hystérésis : c'est l'inertie de 0,97. *[Corrigé en 0.7.13, §17 : l'inertie représente une
+   persistance, non une hystérésis ; la note avait raison sur ce point.]*
 5. **Ce que teste le placebo.** La note en fait le test de l'échangeabilité de la classe. Il teste
    l'inverse : que la classe **diffère** du reste de la strate. Un apport nul est ce que prédirait une
    strate entièrement échangeable ; l'échangeabilité interne à la classe reste postulée (`graphe.md`
@@ -693,3 +694,106 @@ Trois revendications, chacune vérifiable dans le paquet et chacune réfutable :
 Et une comparaison de statut, pas de théorie : la cliodynamique (Turchin, lettre à *Nature*, 2010) a une
 prédiction datée et publique ; l'alphabet n'en a aucune. Le test à trois bras (`validation.md` §8) est ce
 qui changerait cela.
+
+---
+
+## 17. Audit comparatif avec cinq projets open source (0.7.13)
+
+Audit versé par l'auteur le 31 octobre 2026, lu sur le commit `3acde1d` (0.7.12), comparant le skill à
+PyCIB (analyse d'impacts croisés), FCMpy (cartes cognitives floues), pgmpy (modèles graphiques
+probabilistes), EMA Workbench (exploration sous incertitude profonde) et Metaculus `forecasting-tools`.
+Sa thèse : le mode LIRE est défendable comme méthode qualitative ; PRÉVOIR exploite une version appauvrie
+de la lecture, et ses justifications mathématiques sont à corriger. Chaque point revérifié sur le code.
+**Aucune probabilité ne change** (clôture identique à la 0.7.9).
+
+### 17.1 Vérifié et retenu
+
+| Point | Vérification | Ajouté ou corrigé | Où |
+|---|---|---|---|
+| F et f ont le même effet numérique | juste : sans base, 10,2079 % dans les deux cas | `variantes_codage` : p si chaque mot f, puis tous, étaient absents (exploration de codages plausibles, à la manière d'EMA Workbench, plutôt qu'un poids arbitraire) ; sur la démonstration, 6 à 22 % | `simulation.md` §1, `SKILL.md` |
+| Trajectoires et événements isolés ne viennent pas d'un même modèle | juste : deux événements à 50 % reçoivent 37,5 % chacun, le statu quo 25 % | `ecart_marginales_pas1` et drapeau ; écrit : deux modèles | `simulation.md` §3, `SKILL.md` Limites |
+| de Finetti ne donne pas la forme Beta-binomiale | juste : mélange de Bernoulli ; la bêta est un choix de modélisation | corrigé | `graphe.md` §3.3 |
+| f et la révision utilisent les mêmes transitions | juste | écrit : lissage bayésien empirique en deux étapes ; intervalle trop étroit, surtout sur une strate pauvre | `graphe.md` §4 |
+| Une inertie de 0,97 n'est pas une hystérésis | juste ; la 0.7.5 avait corrigé à tort la note qui le disait (§11.2, point 4) | corrigé : persistance, pas hystérésis ; le paramètre de contrôle n'est pas dans l'état | `graphe.md` §2.4, §11.2 |
+| La matrice ne peut qu'augmenter une apparition | juste : λ = 3, 1,8, 1,2, tous > 1 | écrit en limite ; inhibitions en décision d'auteur | `SKILL.md` Limites |
+| Analogie mathématique, définition formelle et transfert sont confondus | juste dans les fiches (involution, homotopie) | les trois séparées en tête des cartes | `cartes.md` |
+| La décision 1b se lit comme un résultat | juste | reformulée en politique de recherche sous P1 ; deux voies exigées | `equivalences.md` §3 |
+
+### 17.2 Ce qui attend (décisions d'auteur, `feuille-de-route.md` §1)
+
+| Proposition | Pourquoi pas dans cette version |
+|---|---|
+| Distribution jointe sur quelques événements liés (pgmpy, extension probabiliste de PyCIB) | change le modèle des trajectoires et demande des dépendances que rien ne fournit encore |
+| Influences défavorables (impacts négatifs de CIB, poids négatifs des cartes cognitives floues) | changerait des p : version séparée (règle de l'auteur, 0.7.3) ; et il faudrait des arêtes inhibitrices sourcées, pas inventées (`graphe.md` §2.1) |
+| Similarité relationnelle (objets, rôles, liaisons typées) | même point que Gentner (§16.3) ; change la sélection des homologues, donc des p |
+| Définition abstraite commune par carte, et conservation par traduction | travail de fond carte par carte ; c'est la condition de toute promotion d'une case Vide d'une strate sans agents |
+
+### 17.3 Nuancé
+
+Les comparateurs ne sont pas des concurrents au même titre que Wardley ou Cynefin : ce sont des
+**cadres de calcul** qui ne disent rien de la vérité des modèles construits avec eux, l'audit le note
+lui-même. Leur apport est de rendre les hypothèses et leurs conséquences explicites, ce qui est l'objet du
+§17.1. La comparaison confirme aussi que le vocabulaire commun est à la fois l'apport propre de l'alphabet
+et sa charge : CIB et les cartes cognitives choisissent leurs variables par domaine, l'alphabet doit
+prouver ce qu'une carte conserve d'un domaine à l'autre. Les dépôts cités sont nommés par l'audit ; leur
+contenu n'a pas été relu ici, sauf l'existence de PyCIB.
+
+---
+
+## 18. Unifier représentation, inférence et dynamique (0.7.14)
+
+Note de conception versée par l'auteur le 31 octobre 2026, mesurée sur la 0.7.13. Elle propose un objet
+unique — un **générateur markovien sur un espace d'états déclaré** — dont la représentation fixe le
+support, l'inférence lit une marginale, et la dynamique déroule la loi ; et un ordre en quatre temps
+(Déclarer, Joindre, Signer, Structurer), contraint par la règle de l'auteur : une version qui change un p
+est une version séparée. Ses mesures ont été refaites : réciprocité de la matrice 12 / 8 / 46 sur 66 ;
+identité logistique (p₀ = 10,2079 %) ; masse simultanée au premier pas 37,5 % ; liaisons lues : trois
+types sur neuf. Toutes exactes. **Aucune probabilité ne change** (clôture identique à la 0.7.9).
+
+### 18.1 Ce qui est souhaitable, et pourquoi
+
+L'objet proposé est le bon pour ce projet, pour une raison que la note donne et qui tranche : **la
+matrice est asymétrique par thèse** (le retour d'un SEUIL est fermé). Un champ d'équilibre exigerait de la
+symétriser ; un générateur hors équilibre la garde. Le temps, levier le plus fort du calcul, y devient un
+paramètre. Les comparateurs de l'audit précédent ne conviennent pas comme cadre : un réseau bayésien exige
+l'acyclicité (or les rétroactions sont l'objet de l'alphabet), une carte cognitive floue ne produit pas de
+probabilités. Le chantier est donc retenu **comme direction**, et réalisé ici dans sa seule partie qui ne
+change aucun nombre.
+
+### 18.2 Appliqué
+
+| Proposition | Ce qui est fait | Où |
+|---|---|---|
+| Nommer l'objet, l'estimande et le quotient (§5.1) | bloc `modele` dans `calculer --json` ; drapeau pour toute liaison sans effet | `moteur.py`, `graphe.md` §2.1 |
+| Table « lu / non lu » (§5.3) | publiée, dans les termes du skill | `graphe.md` §2.1 |
+| Lecture en pseudo-vraisemblance ; ne pas symétriser (§2.2, §3.2) | écrite, avec l'identité logistique vérifiée | `graphe.md` §2.1 |
+| Deux estimandes (§2.4, §6.3) | le noyau de `trajectoires` nommé (« premier changement ») ; `masse_simultanee_pas1` | `simulation.md` §3 |
+| Noyau joint d'un pas (§6.1) | **ajouté à côté**, pas à la place : `moteur.py noyau`, frontière de 2 à 10 événements, marginales = `calculer` à 10⁻¹², exclusions déclarées par IPF, `p_horizon` et `p_premier` | `simulation.md` §3 |
+| Gabarit (P, G, I) (§4) | défini, avec le critère descriptif / local / transversal, et SEUIL en exemple | `cartes.md` |
+
+### 18.3 Corrigé ou nuancé
+
+1. **Numéro.** La note place « Déclarer » en 0.8.0. La feuille de route réserve 0.8 aux étapes 2 et 3, et
+   l'audit V34 recommandait de ne pas l'ouvrir avant le test à trois bras : 0.7.14.
+2. **« Le noyau double chaque probabilité. »** À préciser : il double à peu près la masse des états **à un
+   seul changement** (72,9 % contre 35,4 %), parce qu'il y reporte la masse simultanée ; la probabilité de
+   chaque événement y est au contraire **plus basse** que dans `calculer` (6,0 % contre 10,2 % pour
+   SEUIL@7). Les deux constats sont justes ; ils ne disent pas la même chose.
+3. **Remplacer le noyau de `trajectoires`** et ne plus écrire `f` sur un mot simulé (§5.4) changent les
+   probabilités des trajectoires : différé, décision d'auteur (« Joindre »). En attendant, les deux
+   noyaux coexistent et la sortie dit lequel répond à quoi.
+4. **Le diagnostic « champ moyen »** (§5.2) n'est pas assez spécifié pour être publié (sur quels nœuds,
+   avec quelles bₖ hors de la frontière ?) : non ajouté. Le noyau joint en tient lieu sur la frontière.
+5. **Invariance au découpage** (§2.5, §6.4) : la limite est déjà écrite (`graphe.md` §2.3, 10,2 % contre
+   10,4 %) ; le pont exact par générateurs à deux états la lèverait, il entre avec « Joindre ».
+
+### 18.4 Ce qui attend (feuille de route, chantier formel)
+
+Signer (θ < 0, `manque` et `conflit` lus) ; Structurer (objet dans le mot, H1.7 par raffinage de couleurs,
+Weisfeiler et Leman 1968, condition nécessaire et non suffisante d'isomorphisme) ; Mélange (codage latent,
+poids mesurés par `accord`) ; hystérésis représentée (variable de contrôle mesurée, deux seuils, un sens),
+seulement là où une grandeur de contrôle est sourcée ; Estimer (régression autologistique, matrice en a
+priori). Les cinq critères de réfutation de la note (§13) se reprennent tels quels : un écart sous 1 point,
+une masse simultanée sous `seuil_affichage`, des θ tous compatibles avec zéro, une H1.7 qui ne change
+aucune classe ou des estimandes indiscernables diraient que l'étape correspondante est inutile — et
+chacun se calcule déjà, ou se calculera avec les instruments de la 0.7.14.

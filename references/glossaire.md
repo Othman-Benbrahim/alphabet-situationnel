@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.12
+> Version : 0.7.14
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -84,6 +84,11 @@
 | Statut d'une question | ouverte, partielle, résolue (avec la réponse) ou présupposé invalidé, chacun avec la preuve qui l'a fait changer | `base-de-cas.md` §2 |
 | Passage | localisation, dans la source, du fait d'ancrage et relation à ce fait (soutient, partiel, contredit, absent de la pièce, non soutenu) ; F exige un passage qui soutient le fait tel qu'il est écrit | A6 |
 | Indépendance | ce qui rend deux pièces corroborantes indépendantes : origine, producteur ou chaîne de transmission distincts ; sans elle, l'accord ne protège que des erreurs de transcription | A6 |
+| Quotient | ce que l'état calculé ne distingue pas (objets, rôles, positions *tient*, six types de liaisons) ; déclaré dans `modele.quotient` : un quotient non déclaré est une affirmation implicite | `graphe.md` §2.1 |
+| Pseudo-vraisemblance | lecture exacte du produit des λ : conditionnelles log-linéaires sans loi jointe garantie (matrice non symétrique) | `graphe.md` §2.1 |
+| Estimande | ce que p mesure : `p_horizon` (réalisé à l'échéance, `calculer`) ou `p_premier` (premier changement, trajectoires) ; non interchangeables | `simulation.md` §3 |
+| Frontière | événements déclarés d'une question sur lesquels `noyau` construit une loi jointe d'un pas | `simulation.md` §3 |
+| Gabarit (P, G, I) | prédicat, générateur, invariant d'une carte ; critère d'un équivalent descriptif, local ou transversal | `cartes.md` |
 | Clôture | `moteur.py conservativite` : toutes les conséquences à un pas d'une base (chaque état, chaque carte de ses strates), et leur empreinte ; deux versions sont conservatrices si aucune ne change | `validation.md` §9 |
 | État de travail | résumé révisable d'un dossier long, séparé des pièces et des prévisions scellées, au contenu minimal fixé ; un index, jamais une preuve | `simulation.md` §7 |
 | Dossier de lecture | fichier JSON d'une lecture en mode PRÉVOIR (état, candidates par strate et rejets, pièces de chaque F, questions, événements déclarés), contrôlé par `moteur.py dossier` avec les mêmes règles qu'une fiche, et scellé avant le calcul (`calculer --dossier`) ; contrôle la forme, pas la justesse | `SKILL.md` |

@@ -2096,9 +2096,62 @@ def compose(etat,typ,cible,base,opts,resolution):
 
 # ───────────────────────── trajectoires ─────────────────────────
 
+LIAISONS_INFERENTIELLES=('transfert','inclusion','renforcement')
+
+
+def modele_declare(result,typ,sem,liaisons):
+    """0.7.14 (note « unifier représentation, inférence et dynamique », §5). Ce que p est, et ce que le
+    calcul ne lit pas. p₀ a la forme exacte d'une conditionnelle log-linéaire à paires,
+    logit p₀ = logit f + Σ ln λ ; mais la matrice n'est pas symétrique (12 entrées réciproques à intensité
+    égale sur 66), donc ces conditionnelles ne dérivent d'aucune loi jointe garantie : une
+    **pseudo-vraisemblance** (Besag 1975), pas un rapport de vraisemblance. Le quotient nomme ce que l'état
+    calculé ne distingue pas : deux situations qui ne diffèrent que par là sont le même état pour le moteur."""
+    ap=result.get('a_priori') or {}
+    non_lues=sorted({t for _,t,_ in liaisons or [] if t not in LIAISONS_INFERENTIELLES})
+    return {'estimande':{'apparait':'P(carte@strate présente à l’horizon | état, même fenêtre)','persiste':'P(carte@strate encore présente | état)',
+                         'disparait':'P(carte@strate absente | état)'}.get(typ)+f' · sémantique {sem}',
+            'lecture':'conditionnelle de pseudo-vraisemblance (logit p₀ = logit f + Σ ln λ) ; aucune loi jointe garantie, matrice non symétrique',
+            'quotient':['objets','rôles','positions tient','liaisons '+'|'.join(x for x in ('conflit','tension','appui','reproduction','indépendance','écho'))],
+            'champ':{'produit_lambda':ap.get('LR'),'plafonne':ap.get('LR_plafonne')},
+            'liaisons_non_inferentielles':non_lues}
+
+
+def noyau_joint(evenements,marginales,exclusions=()):
+    """0.7.14 (même note, §6). Loi jointe d'un pas sur une **frontière** de 2 à 10 événements, de
+    marginales imposées égales aux p de `calculer` : la loi d'entropie maximale sous ces contraintes,
+    restreinte au support déclaré (paires mutuellement exclusives retirées). Sans exclusion, c'est le
+    produit (horloges indépendantes) ; avec exclusions, ajustement proportionnel itératif depuis
+    l'uniforme sur le support. Ne change aucun p : il dit comment la masse se répartit entre les
+    configurations, simultanéités comprises, ce que le noyau concurrent de `trajectoires` ne représente pas."""
+    k=len(evenements);exiger(2<=k<=10,'noyau : 2 à 10 événements (2^k configurations énumérées)')
+    ex=[(evenements.index(a),evenements.index(b)) for a,b in exclusions]
+    cells=[c for c in range(1<<k) if not any((c>>i)&1 and (c>>j)&1 for i,j in ex)]
+    w={c:1./len(cells) for c in cells};conv=False;err=None
+    for it in range(20000):
+        for j,pj in enumerate(marginales):
+            m1=sum(v for c,v in w.items() if (c>>j)&1)
+            if (m1==0 and pj>0) or (m1==1 and pj<1):break
+            for c in w:w[c]*=(pj/m1 if (c>>j)&1 else (1-pj)/(1-m1)) if 0<m1<1 else 1
+        err=max(abs(sum(v for c,v in w.items() if (c>>j)&1)-pj) for j,pj in enumerate(marginales))
+        if err<1e-12:conv=True;break
+    n_=lambda c:bin(c).count('1')
+    pn=lambda n:sum(v for c,v in w.items() if n_(c)==n)
+    H=sum(-math.log1p(-min(x,1-1e-12)) for x in marginales)
+    premier=[(1-math.exp(-H))*(-math.log1p(-min(x,1-1e-12)))/H if H else 0. for x in marginales]
+    conf=sorted(([' + '.join(evenements[j] for j in range(k) if (c>>j)&1) or 'aucun',v] for c,v in w.items()),key=lambda x:-x[1])
+    shown=[x for x in conf if x[1]>=P['seuil_affichage']]
+    return {'evenements':evenements,'marginales':marginales,'exclusions':[[a,b] for a,b in exclusions],
+            'convergence':conv,'ecart_marginal_max':err,
+            'faisable':conv,'configurations':shown,'reste':sum(x[1] for x in conf if x[1]<P['seuil_affichage']),
+            'p_aucun':pn(0),'p_exactement_un':pn(1),'p_deux_ou_plus':max(0.,1-pn(0)-pn(1)),
+            'p_premier':dict(zip(evenements,premier)),'p_horizon':dict(zip(evenements,marginales)),
+            'hypothese':'entropie maximale sous les marginales : indépendance hors exclusions déclarées ; aucune dépendance n’est estimée',
+            'lecture':'p_horizon : l’événement est réalisé à l’échéance (marginale, égale à calculer) ; p_premier : il est le premier changement (noyau de trajectoires) ; deux estimandes, une loi'}
+
+
 def trajectoires(etat,h,base,opts,strates_sup=()):
     exiger(all(type(s) is int and 1<=s<=NS for s in strates_sup),f'strates supplémentaires hors 1–{NS}')
-    branches=[(1.,etat,[],0)];elague=0.;rho_el=0
+    branches=[(1.,etat,[],0)];elague=0.;rho_el=0;ecarts=[];masse_simul=0.
     for step in range(h):
         new=[]
         for weight,e,path,rho in branches:
@@ -2114,11 +2167,16 @@ def trajectoires(etat,h,base,opts,strates_sup=()):
                         candidates.append(('apparait',k,calculer(e,'apparait',k,base,**op)))
             # This competing-risk kernel is exploratory. Normalization depends on ALL candidates.
             hazards=[-math.log1p(-min(x[2]['p'],1-1e-12)) for x in candidates];H=sum(hazards)
+            if step==0:masse_simul=1-math.exp(-H)*(1+H)
             sq=math.exp(-H);rr=max([rho]+[x[2]['rho'] for x in candidates])
             new.append((weight*sq,e,path+['statu quo'],rr,sq))
             for (t,k,r),haz in zip(candidates,hazards):
                 q=(1-sq)*haz/H if H else 0
                 new.append((weight*q,appliquer(e,t,k),path+[k+' '+t],rr,q))
+                # 0.7.13 (audit comparatif, point 4) : au premier pas, la probabilité qu'un événement reçoit
+                # dans le noyau concurrent n'est pas sa probabilité isolée (deux événements à 50 % y reçoivent
+                # 37,5 % chacun, le statu quo 25 %). L'écart se publie : ce sont deux modèles, pas un.
+                if step==0:ecarts.append({'evenement':f'{k} {t}','p_isole':r['p'],'p_trajectoire':q,'ecart':q-r['p']})
         keep=[]
         for x in new:
             if x[4]<P['seuil_affichage']:elague+=x[0];rho_el=max(rho_el,x[3])
@@ -2135,8 +2193,18 @@ def trajectoires(etat,h,base,opts,strates_sup=()):
     rare=sum(v['p'] for v in merged.values() if v['p']<P['seuil_affichage'])
     total=sum(x['p'] for x in shown)+rare+elague
     exiger(abs(total-1)<1e-8,'perte de masse dans les trajectoires')
+    ecarts.sort(key=lambda x:-abs(x['ecart']))
+    em=max((abs(x['ecart']) for x in ecarts),default=0.)
     return {'trajectoires':shown,'R1':rare,'R2':elague,'rho_R2':rho_el,'somme':total,
+            # 0.7.14 : l'estimande du noyau, nommé ; et la masse que des horloges indépendantes de mêmes
+            # marginales donneraient à deux changements ou plus au premier pas, que le noyau ne représente pas.
+            'estimande':'premier changement parmi les candidats, un au plus par pas (horloges indépendantes tronquées)',
+            'masse_simultanee_pas1':masse_simul,
+            'ecart_marginales_pas1':{'max_absolu':em,'evenements':ecarts[:10],
+                'lecture':'probabilité au premier pas dans le noyau concurrent − probabilité isolée (calculer) : un seul changement par pas, '
+                          'aucune réalisation simultanée ; les deux ne dérivent pas d’une même distribution jointe'},
             'drapeaux':['Noyau exploratoire : un seul changement par pas ; calculer fait foi pour un événement isolé.']+
+            ([f'Écart aux marginales : jusqu’à {em*100:.1f} points entre le premier pas et le calcul isolé ; ne pas lire une trajectoire comme la probabilité d’un événement.'] if em>=P['delta_discriminant'] else [])+
             (['Masse abandonnée > 30 % : distribution non représentative.'] if elague>P['alerte_R2'] else [])}
 
 # ───────────────────────── journal et score ─────────────────────────
@@ -2791,7 +2859,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -3010,7 +3078,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.12','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.14','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3206,6 +3274,9 @@ def afficher(result,as_json=False):
     bh_=result.get('bande_horizon')
     if bh_:print('Bande d’horizon ('+bh_['semantique']+') : '+' · '.join(f"{h} × {bh_['fenetre']} : {pct(v['p'])} (sans cartes {pct(v['p_sans_cartes'],False)})"
                                        for h,v in bh_['pas'].items() if v)+" — l’horizon est la question, pas une incertitude")
+    vc_=result.get('variantes_codage')
+    if vc_ and vc_['plage']:print(f"Variantes de codage (mots f retirés, un par un puis tous) : p de {pct(vc_['plage'][0],False)} à {pct(vc_['plage'][1])} — "
+                                 "un ancrage f pèse ici autant qu’un F ; c’est cette plage qui dit ce qu’il coûte")
     # 0.6.13 (audit 0.6.12, m4) : en sortie, le nom canonique (grammaire.md) ; l'abréviation reste dans le JSON.
     ev=result['evenement'];k_,t_=ev.split(' ',1) if ' ' in ev else (ev,'')
     try:c_,s_=k_.split('@');ev=f"{NOMS[c_]}@{s_} {t_}".strip()
@@ -3327,7 +3398,7 @@ def main():
     ds=subs.add_parser('dossier');ds.add_argument('--fichier',required=True);ds.add_argument('--json',action='store_true')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
-    for name in ('calculer','trajectoires','sonde'):
+    for name in ('calculer','trajectoires','sonde','noyau'):
         c=subs.add_parser(name);c.add_argument('--base');c.add_argument('--etat',required=True)
         c.add_argument('--date-information');c.add_argument('--liaison',action='append',default=[])
         c.add_argument('--bouge',action='append',default=[]);c.add_argument('--manque',action='append',default=[])
@@ -3339,6 +3410,7 @@ def main():
         c.add_argument('--sans-cartes',action='store_true')
         c.add_argument('--temporalite',choices=TEMPORALITES,default=None)
         if name in ('calculer','sonde'):c.add_argument('--evenement',required=True)
+        if name=='noyau':c.add_argument('--evenement',action='append',required=True);c.add_argument('--exclusion',action='append',default=[])
         if name=='calculer':c.add_argument('--dossier')
         if name=='sonde':c.add_argument('--tirage',choices=('aretes','intensites','inerties'),default='aretes');c.add_argument('--tirages',type=int)
     a=parser.parse_args()
@@ -3530,6 +3602,28 @@ def main():
         print('! Base fictive : la sonde décrit la mécanique du calcul, pas la valeur de la matrice. Un seul événement, un seul état.' if a.demo else
               '! Un seul événement, un seul état : répéter sur plusieurs cibles avant toute conclusion sur la matrice.')
         return
+    if a.cmd=='noyau':
+        exiger(a.pas==1,'noyau : un pas (frontière jointe d’un pas ; plusieurs pas : version ultérieure)')
+        exiger(a.temporalite=='generique','noyau : --temporalite generique (les événements programmés ou à durée de vie propre se calculent un par un)')
+        evs_=[];ps_=[]
+        for ev_ in a.evenement:
+            cible_,typ_=evenement_lire(ev_);exiger(typ_ in ('apparait','persiste','disparait'),'noyau : événements simples seulement')
+            exiger(cible_ not in [x.split()[0] for x in evs_],f'noyau : {cible_} figure deux fois (un événement par mot)')
+            sem_='continue' if typ_=='persiste' else 'au-moins-une-fois' if typ_=='disparait' else 'presence'
+            ps_.append(horizon_result(etat,typ_,cible_,active,opts,1,sem_)['p']);evs_.append(f'{cible_} {typ_}')
+        exs_=[]
+        for x_ in a.exclusion:
+            pa_=[y.strip() for y in x_.split(';')];exiger(len(pa_)==2,'--exclusion « E1 ; E2 »')
+            pa_=[' '.join(evenement_lire(y)) for y in pa_];exiger(all(y in evs_ for y in pa_),'--exclusion : événements de la frontière seulement')
+            exs_.append(tuple(pa_))
+        r=noyau_joint(evs_,ps_,exs_);r['contexte']=metadata(base,asof,a.demo)
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        print('Noyau joint d’un pas · '+str(len(evs_))+' événements · marginales = calculer'+('' if r['faisable'] else ' · NON FAISABLE : exclusions incompatibles avec les marginales'))
+        for ev_,pp in zip(evs_,ps_):print(f"  {ev_} : à l’échéance {pct(pp)} · premier changement {pct(r['p_premier'][ev_])}")
+        print(f"Aucun {pct(r['p_aucun'])} · exactement un {pct(r['p_exactement_un'])} · deux ou plus {pct(r['p_deux_ou_plus'])}")
+        for c_,v_ in r['configurations'][:12]:print(f"  {pct(v_)} · {c_}")
+        print('! '+r['hypothese'])
+        return
     if a.cmd=='trajectoires':
         # 0.6.11 : l'option était acceptée et sans effet. Les trajectoires reposent sur les taux génériques
         # de toutes les cartes à la fois ; une échéance programmée ou une durée de vie propre ne s'y déclare pas.
@@ -3606,6 +3700,27 @@ def main():
                         bh[str(h_)]={'p':horizon_result(etat,typ,cible,active,opts,h_,sem)['p'],
                                      'p_sans_cartes':horizon_result(etat,typ,cible,active,dict(opts,sans_cartes=True),h_,sem)['p']}
                     except ValueError:bh[str(h_)]=None
+                # 0.7.13 (audit comparatif, point 2) : un mot f a le même effet numérique qu'un mot F (λ vient de la
+                # matrice). Plutôt qu'un poids arbitraire, on explore les codages plausibles : chaque mot f retiré,
+                # puis tous ; même question, même horizon. Aucun p publié ne change.
+                fs=[cle(m_) for m_ in etat['mots'] if m_['i']=='f' and cle(m_)!=cible]
+                vc=[]
+                for k_ in fs:
+                    try:vc.append({'retire':[k_],'p':horizon_result(appliquer(etat,'disparait',k_),typ,cible,active,opts,a.pas,sem)['p']})
+                    except ValueError:pass
+                if len(fs)>1:
+                    e_=etat
+                    for k_ in fs:e_=appliquer(e_,'disparait',k_)
+                    try:vc.append({'retire':fs,'p':horizon_result(e_,typ,cible,active,opts,a.pas,sem)['p']})
+                    except ValueError:pass
+                ps_=[x['p'] for x in vc if x['p'] is not None]
+                result['variantes_codage']=None if not fs else {'mots_f':fs,'variantes':vc,
+                    'plage':None if not ps_ else [min(ps_+[result['p']]),max(ps_+[result['p']])],
+                    'lecture':'un mot f est un ancrage incertain : p si chaque mot f, puis tous, étaient absents'}
+                result['modele']=modele_declare(result,typ,sem,links)
+                if result['modele']['liaisons_non_inferentielles']:
+                    result.setdefault('drapeaux',[]).append('Liaisons sans effet sur p : '+', '.join(result['modele']['liaisons_non_inferentielles'])
+                        +' (seules transfert, inclusion et renforcement entrent dans le calcul) ; elles restent une lecture.')
                 result['bande_horizon']={'pas':bh,'fenetre':etat['fenetre'],'semantique':sem,
                                          'lecture':'même question à 1, 3 et 6 fenêtres : l’horizon choisi change p plus que les variantes de modèle'}
                 pieces=None
@@ -4517,6 +4632,38 @@ def autotest():
             self.assertEqual(r['resultat_principal']['p_avec_cartes'],r['p']);self.assertEqual(r['resultat_principal']['p_sans_cartes'],r['p_sans_cartes'])
             self.assertEqual(sorted(r['bande_horizon']['pas']),['1','3','6']);self.assertAlmostEqual(r['bande_horizon']['pas']['1']['p'],r['p'])
             self.assertIs(r['homologie_discernable'],False);self.assertTrue(any('indiscernable' in x for x in r['drapeaux']))
+        def test_ecart_marginales(self):
+            # 0.7.13 : le noyau concurrent ne reproduit pas les marginales ; l'écart est publié.
+            e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[f]')
+            r=trajectoires(e,1,[],{})
+            em=r['ecart_marginales_pas1'];self.assertTrue(em['evenements'])
+            x=em['evenements'][0];self.assertAlmostEqual(x['ecart'],x['p_trajectoire']-x['p_isole'])
+            self.assertTrue(all(x_['p_trajectoire']<=x_['p_isole']+1e-12 for x_ in em['evenements']))   # concurrence : jamais au-dessus
+        def test_variantes_codage(self):
+            import subprocess
+            cmd=[sys.executable,__file__,'calculer','--demo','--base',str(RACINE/'assets/base-de-cas.exemple.jsonl'),'--etat',
+                 '[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[f]','--evenement','SEUIL@7 apparait','--temporalite','generique','--json']
+            r=json.loads(subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8').stdout)
+            v=r['variantes_codage'];self.assertEqual(v['mots_f'],['CTR@6']);self.assertEqual(len(v['variantes']),1)
+            self.assertTrue(v['plage'][0]<=r['p']<=v['plage'][1])
+        def test_noyau_joint(self):
+            # 0.7.14 : marginales = p à 1e-12 ; sans exclusion, produit ; exclusions respectées ; masses publiées.
+            r=noyau_joint(['A','B'],[.5,.5])
+            self.assertAlmostEqual(r['p_aucun'],.25);self.assertAlmostEqual(r['p_deux_ou_plus'],.25);self.assertAlmostEqual(r['p_premier']['A'],.375)
+            r=noyau_joint(['A','B','C'],[.1,.15,.3],[('A','B')])
+            self.assertTrue(r['faisable']);self.assertLess(r['ecart_marginal_max'],1e-12)
+            self.assertFalse(any('A + B' in c for c,_ in r['configurations']))
+            self.assertFalse(noyau_joint(['A','B'],[.7,.6],[('A','B')])['faisable'])                 # 0,7 + 0,6 > 1 : impossible
+            with self.assertRaises(ValueError):noyau_joint(['A'],[.5])
+            t=trajectoires(lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]'),1,[],{})
+            self.assertTrue(0<t['masse_simultanee_pas1']<1);self.assertIn('premier changement',t['estimande'])
+        def test_modele_declare(self):
+            import subprocess
+            cmd=[sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]',
+                 '--liaison','CONTRAINTE@6 echo POLARITÉ@7','--evenement','SEUIL@7 apparait','--temporalite','generique','--json']
+            r=json.loads(subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8').stdout)
+            self.assertAlmostEqual(r['modele']['champ']['produit_lambda'],2.16);self.assertEqual(r['modele']['liaisons_non_inferentielles'],['écho'])
+            self.assertTrue(any('sans effet sur p' in x for x in r['drapeaux']))
         def test_rejets_audit(self):
             d=self._dossier();f=feuille_rejets(d)
             self.assertEqual(sorted(f['tirage']),['HIE@6','SEU@7']);self.assertNotIn('motif',json.dumps(f,ensure_ascii=False).lower().replace('motif du rejet',''))

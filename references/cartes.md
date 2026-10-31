@@ -1,9 +1,27 @@
 # Alphabet situationnel — Les 16 cartes (noyau transversal candidat)
 
-> Version : 0.7.12
+> Version : 0.7.14
 
 > **Statut 0.4.0.** Les rapprochements mathématiques ci-dessous guident la lecture ; ils ne prouvent
 > ni universalité ni transfert des probabilités. La bibliographie du noyau ne valide pas les équivalents locaux.
+> **Précisé en 0.7.13.** Trois choses distinctes : l'**analogie** mathématique (une forme qui guide la
+> lecture), la **définition formelle** (un objet défini sur la situation, avec ses opérations), et
+> l'**hypothèse de transfert** (les propriétés de l'objet valent pour la situation). Les fiches donnent la
+> première, jamais les deux autres : deux camps ne définissent pas une involution pertinente sur toute
+> une situation ; une transformation progressive avec un invariant n'est pas une homotopie formalisée ;
+> SEUIL a la forme d'une hystérésis sans que le moteur la représente (`graphe.md` §2.4). Aucune propriété
+> d'un objet mathématique ne se transfère à une situation sans démonstration propre.
+>
+> **Gabarit (P, G, I), proposé en 0.7.14** (`apports-theoriques.md` §18). Une carte a trois composants :
+> **P**, le *prédicat* (ce qu'un état doit exhiber pour que le mot soit ancré : A6, marqueur local) ;
+> **G**, le *générateur* (les transitions que la carte rend plus ou moins probables, avec mécanisme et
+> signe : la matrice) ; **I**, l'*invariant* (ce qu'une traduction d'une strate à l'autre doit conserver,
+> et que l'homologie doit préserver). L'analogie mathématique n'est aucun des trois. Exemple, SEUIL —
+> P : franchissement après lequel le retour par le même chemin est fermé ; G : → TRACE·MÉMOIRE (F),
+> → TRANSFORMATION (M), aucun retour ; I : l'aller et le retour ne basculent pas au même point. Critère
+> pour une strate : si seul P se traduit, l'équivalent est **descriptif** (aucun λ, aucun emprunt) ; si P et
+> G se traduisent sans I, il est **local** (emprunt T4 interdit) ; les trois, il est transversal. Les
+> quinze autres fiches sont à écrire (décision d'auteur 11) ; aucune n'est réécrite ici.
 > **Origine.** Fiches reprises de NEXUS-ARCHÊ v0.4.2 sans modification de fond ; seuls les renvois
 > vers des fichiers absents de ce skill ont été remplacés.
 > Ce fichier est la source de vérité du **noyau transversal candidat** des cartes (couche 1) : définition,

@@ -454,7 +454,7 @@ def controle_passage(k, item, force, requis):
         elif r == 'non_soutenu':
             err.append(f'{k} : la source ne soutient pas le fait : retirer l’ancrage ou réécrire le fait ; signaler au journal des lacunes si le fait venait d’un résumé')
         elif r == 'insuffisant':
-            err.append(f'{k} : « insuffisant » confond deux cas aux remèdes opposés : absent_de_la_piece (élargir la lecture) ou non_soutenu (retirer l’ancrage)')
+            err.append(f'{k} : un passage qui ne permet pas de conclure n’ancre rien : corriger le fait, chercher une autre pièce, ou ne pas ancrer ; « insuffisant » confond deux cas aux remèdes opposés (0.7.11) : absent_de_la_piece (élargir la lecture) ou non_soutenu (retirer l’ancrage)')
     if err:
         return err
     soutiens = sum(1 for x in ps if x['relation'] == 'soutient')
@@ -3045,11 +3045,15 @@ EXCLUS_MANIFESTE = {'SHA256SUMS'}
 
 
 def fichiers_livres():
-    """Fichiers du paquet, chemins relatifs POSIX triés (hors .git, __pycache__, *.pyc, manifeste)."""
+    """Fichiers du skill, chemins relatifs POSIX triés (hors manifeste, __pycache__, *.pyc).
+    0.7.15 : hors fichiers et dossiers cachés (`.gitattributes`, `.gitignore`, `.github/`, `.git/`).
+    Ce sont des fichiers du dépôt, pas du skill ; plusieurs canaux d'installation ne les transmettent
+    pas, et un manifeste qui les listait faisait échouer `audit` sur un paquet par ailleurs intact.
+    Présents ou absents, ils ne comptent plus."""
     out=[]
     for p in sorted(RACINE.rglob('*')):
         r=p.relative_to(RACINE).as_posix()
-        if p.is_dir() or r in EXCLUS_MANIFESTE or r.startswith('.git/') or '__pycache__' in r or r.endswith('.pyc'):continue
+        if p.is_dir() or r in EXCLUS_MANIFESTE or any(x.startswith('.') for x in r.split('/')) or '__pycache__' in r or r.endswith('.pyc'):continue
         out.append(r)
     return out
 
@@ -3078,7 +3082,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.14','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.15','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -4664,6 +4668,12 @@ def autotest():
             r=json.loads(subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8').stdout)
             self.assertAlmostEqual(r['modele']['champ']['produit_lambda'],2.16);self.assertEqual(r['modele']['liaisons_non_inferentielles'],['écho'])
             self.assertTrue(any('sans effet sur p' in x for x in r['drapeaux']))
+        def test_manifeste_sans_fichiers_caches(self):
+            # 0.7.15 : un paquet installé sans .gitattributes, .gitignore ni .github/ passe audit.
+            fl=fichiers_livres()
+            self.assertFalse(any(x.startswith('.') for r in fl for x in r.split('/')))
+            self.assertIn('SKILL.md',fl);self.assertIn('scripts/moteur.py',fl)
+            self.assertFalse(any('.github' in l or '.gitignore' in l for l in manifeste_texte().splitlines()))
         def test_rejets_audit(self):
             d=self._dossier();f=feuille_rejets(d)
             self.assertEqual(sorted(f['tirage']),['HIE@6','SEU@7']);self.assertNotIn('motif',json.dumps(f,ensure_ascii=False).lower().replace('motif du rejet',''))

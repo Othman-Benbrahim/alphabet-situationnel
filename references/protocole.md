@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.14
+> Version : 0.7.15
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -212,7 +212,7 @@ fait se lit (`localisation`) et ce que ce passage fait au fait (`relation`) :
 | `contredit` | il établit le contraire | contre-observation (A7), pas ancrage |
 | `absent_de_la_piece` | la pièce lue ne contient pas le fait ; une autre pièce, ou une autre partie de la même, le contiendrait peut-être (fenêtre trop étroite) | n'ancre rien : **élargir la lecture** ; l'absence dans cette pièce ne réfute pas le fait |
 | `non_soutenu` | la source ne soutient pas le fait : rien ne le contient, le fait a pu être composé | n'ancre rien : **retirer l'ancrage** ou réécrire le fait ; au journal des lacunes s'il venait d'un résumé |
-| `insuffisant` | (avant 0.7.11) « ne permet pas de conclure » | refusé : choisir l'une des deux valeurs précédentes |
+| `insuffisant` | il ne permet pas de conclure | n'ancre rien : corriger le fait, chercher une autre pièce ou ne pas ancrer — **depuis 0.7.11**, valeur refusée par le moteur : choisir `absent_de_la_piece` ou `non_soutenu` |
 
 **Deux diagnostics, deux remèdes (0.7.11).** « Ne permet pas de conclure » confondait une lecture trop
 étroite et un fait sans source ; un outil qui les rapporte sous un même mot envoie chaque correction au
@@ -569,7 +569,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.14"` |
+| `version` | `"0.7.15"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

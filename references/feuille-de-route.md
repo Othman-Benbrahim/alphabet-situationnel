@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.14
+> Version : 0.7.15
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,7 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.15 (faite) | Manifeste du skill | fichiers cachés du dépôt hors de `SHA256SUMS` : `audit` ne dépend plus du canal d'installation | — |
 | 0.7.14 (faite) | Déclarer l'objet | bloc `modele` (estimande, pseudo-vraisemblance, quotient) ; table lu / non lu ; estimande et masse simultanée des trajectoires ; `noyau` (loi jointe d'un pas, marginales = `calculer`) ; gabarit (P, G, I) amorcé sur SEUIL ; clôture identique à la 0.7.9 | — |
 | Chantier formel (note du 31 oct.) | Unifier | **Joindre** : remplacer le noyau de `trajectoires` par le noyau joint et ses deux estimandes, recodage sans force inventée — trajectoires seules changent ; **Signer** : θ < 0, `manque` et `conflit` dans le calcul — p change ; **Structurer** : objet dans le mot, homologie H1.7 par raffinage de couleurs — p change par la classe ; **Mélange** : codage latent pondéré par `accord` ; **Estimer** : θ par pseudo-vraisemblance, matrice en a priori | chaque étape : version séparée, décision d'auteur ; Mélange et Estimer : 20 cas actifs |
 | 0.7.13 (faite) | Représentation, inférence, dynamique : dire où elles divergent | variantes de codage des mots f ; écart aux marginales des trajectoires ; de Finetti, hystérésis et lissage en deux étapes corrigés ; analogie, définition et transfert séparés ; décision 1b reformulée ; clôture identique à la 0.7.9 | — |
@@ -358,7 +359,8 @@ Les étapes mesurées se lisent dans `bilan`.
 | 2026-10-31 | — | Audit V34 trié (0.7.12, `apports-theoriques.md` §16) : quatre sorties ajoutées sans changer aucune probabilité (clôture identique), sept décisions d'auteur ouvertes, trois points de l'audit corrigés |
 | 2026-10-31 | — | Audit comparatif trié (0.7.13, `apports-theoriques.md` §17) : deux sorties ajoutées, quatre justifications corrigées, quatre décisions d'auteur ouvertes ; aucune probabilité ne change |
 | 2026-10-31 | — | Note « unifier représentation, inférence et dynamique » triée (0.7.14, `apports-theoriques.md` §18) : temps « Déclarer » appliqué, « Joindre » ajouté à côté sans remplacer, quatre temps planifiés ; numéro 0.7.14, la 0.8 restant réservée |
-| 2026-10-31 | 0 | À faire : installer la 0.7.14 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) ; mesurer la répétabilité dès les premiers cas codés en solo |
+| 2026-10-31 | 0 | Signalé : `audit` échouait sur un skill installé sans fichiers cachés ; corrigé en 0.7.15 |
+| 2026-10-31 | 0 | À faire : installer la 0.7.15 ; compléter la provenance amont d'EnVrai? (`LICENCES-TIERS.md`) ; mesurer la répétabilité dès les premiers cas codés en solo |
 
 ---
 

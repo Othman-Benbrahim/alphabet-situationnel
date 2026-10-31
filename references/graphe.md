@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.14
+> Version : 0.7.15
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -186,7 +186,11 @@ Aucun intervalle multi-pas : propager seulement les bornes d'une composante igno
 **Hypothèse de taux constant (0.7.5).** Le modèle est une chaîne de Markov d'ordre 1 sur l'état codé,
 à taux constant : l'inertie est ramenée à la fenêtre par inertie^(durée / 91,3125 j), et la persistance
 continue vaut r^h (loi géométrique, analogue discret de l'exponentielle). La probabilité qu'un mot
-disparaisse ne dépend donc pas du nombre de pas où il est déjà présent. **Corrigé en 0.7.13** : une inertie
+disparaisse ne dépend donc pas du nombre de pas où il est déjà présent. *Formulation de la 0.7.5,
+conservée telle quelle :* « Ce n'est **pas** une négation de l'hystérésis de SEUIL ni de la dépendance
+au chemin de TRACE·MÉMOIRE : celles-ci portent sur la *situation* et sont portées par l'état lui-même
+(une inertie de 0,97, les arêtes qui suivent SEUIL, une carte TRACE·MÉMOIRE qui inscrit le passé dans
+l'état). » **Corrigé en 0.7.13** : une inertie
 de 0,97 représente une **persistance**, pas une hystérésis. L'hystérésis demande que l'aller et le retour
 basculent à des valeurs **différentes** d'un paramètre de contrôle ; l'état codé ne contient pas ce
 paramètre, et aucune règle de transition ne distingue l'aller du retour. Le modèle **ne représente donc pas**
@@ -262,7 +266,9 @@ cas au hasard dans la strate et la fenêtre ; si `apport_homologie` ≈ 0, la st
 comme une seule classe échangeable pour cet événement, et l'homologie n'est pas pertinente ; s'il
 s'écarte nettement de la plage des tirages, la classe est une sous-population distincte. Le théorème
 de représentation de de Finetti suppose une suite infinie échangeable *a priori* ; la classe est finie,
-petite et choisie après observation. **Corrigé en 0.7.13** : le théorème justifie, sous ces hypothèses,
+petite et choisie après observation. *Formulation de la 0.7.5, conservée telle quelle :* « il donne la
+**forme** Beta-binomiale de l'estimateur (§4), pas sa validité, qui reste une hypothèse empirique. »
+**Corrigé en 0.7.13** : le théorème justifie, sous ces hypothèses,
 une représentation des issues comme **mélange de lois de Bernoulli** ; il ne donne pas la forme
 Beta-binomiale. Le choix d'une loi bêta pour ce mélange est une **hypothèse de modélisation
 supplémentaire**, retenue pour sa conjugaison et sa simplicité (§4). La validité de l'ensemble reste une

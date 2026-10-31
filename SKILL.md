@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.14'
+  version: '0.7.15'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.14. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.15. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -268,7 +268,8 @@ trajectoires ; `exemples.md` ; `dynamiques.md` au-delà de la fiche concernée ;
 candidates ; `apports-theoriques.md`. **Ne jamais abandonner** : l'état daté, la ligne A6, l'anti-résonance
 A7, les questions qui départagent, la définition de la résolution, ni la mention de ce qui n'a pas été
 chargé. Une lecture partielle se déclare ; elle ne se présente pas comme complète. Deux strates lues et
-contrôlées valent mieux que sept survolées : ce qui se mesure, c'est **chaque ancrage, un par un** — la
+contrôlées valent mieux que sept survolées : c'est la couverture qui est mesurée, pas le nombre de
+fichiers ouverts. *Précisé en 0.7.11 :* ce qui se mesure, c'est **chaque ancrage, un par un** — la
 pièce effectivement lue qui le soutient, et aucun fait décisif écarté par étroitesse de lecture —, ni un
 taux de couverture ni le nombre de fichiers ouverts. Un taux agrégé monte quand on lit plus, pas quand on
 lit juste.

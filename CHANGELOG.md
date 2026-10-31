@@ -1,9 +1,27 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.14
+> Version : 0.7.15
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.15 — 2026-10-31 · manifeste du skill, pas du dépôt
+
+**Corrigé** : `SHA256SUMS` listait `.gitattributes`, `.gitignore` et `.github/workflows/ci.yml`. Ce sont des
+fichiers du dépôt ; un skill installé par un canal qui ne transmet pas les fichiers cachés les perdait,
+et `audit` échouait (« absent du paquet ») sur un paquet par ailleurs intact. `fichiers_livres` exclut
+désormais tout chemin dont un élément commence par un point : présents ou absents, ils ne comptent plus.
+Le manifeste passe de 50 à 47 fichiers. Les fichiers cachés restent dans le dépôt et dans le zip ; la CI
+continue de vérifier `sha256sum -c SHA256SUMS`. **Aucune probabilité ne change** (clôture identique à la
+0.7.9). 149 autotests (148 + 1).
+
+**Restauré** : cinq passages que les versions 0.7.11 à 0.7.13 avaient **réécrits au lieu de les conserver**
+reviennent mot pour mot, la correction restant à leur suite : l'énoncé de la décision 1b
+(`equivalences.md` §3) ; la phrase « c'est la couverture qui est mesurée » (`SKILL.md`) ; la ligne
+`insuffisant` du protocole (A6) ; les formulations de la 0.7.5 sur l'hystérésis et sur de Finetti
+(`graphe.md` §2.4 et §3.3), citées comme telles ; le remède d'origine dans le message d'erreur du moteur.
+Vérification mot à mot contre la 0.7.9 (`f7ec000`) et la 0.7.14 (`1ecde34`) : aucun passage de quatre mots
+ou plus n'est retiré, hors numéros de version.
 
 ## 0.7.14 — 2026-10-31 · déclarer l'objet calculé
 

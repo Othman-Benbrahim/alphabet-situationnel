@@ -1,6 +1,6 @@
 # Alphabet situationnel — Équivalents par strate (index, couche 1)
 
-> Version : 0.7.14
+> Version : 0.7.15
 
 > Les équivalents locaux des 16 cartes sont rangés **par strate**, un fichier par strate :
 > `equivalences/strate-01.md` à `equivalences/strate-13.md`. Raison : la procédure va des faits vers les
@@ -85,9 +85,10 @@ soutiennent pas la carte : la case **devient Vide**, ses lectures comptées comm
 (`recherches : N — …`), puis close à trois. CROISSANCE@7 est dans ce second cas (Choucri 2017 et Altman
 2017 lus, carte non soutenue) : rétrogradation à faire par l'auteur, avec la troisième recherche.
 
-**Décision 1b (27 octobre 2026) : les cartes à agents sont traitées comme universelles.** La question
-ouverte ci-dessus est tranchée **comme politique de recherche** : leurs cases Vides sont des lacunes à
-combler, pas des absences établies. *Précisé en 0.7.13* (audit comparatif) : c'est une hypothèse de
+**Décision 1b (27 octobre 2026) : les cartes à agents sont universelles.** La question ouverte ci-dessus
+est tranchée : leurs cases Vides sont des lacunes de recherche, à combler. *Lecture précisée en 0.7.13 :*
+la décision vaut **politique de recherche** — les cases Vides sont des lacunes à combler, pas des
+absences établies. *Précisé en 0.7.13* (audit comparatif) : c'est une hypothèse de
 travail sous P1, pas un résultat. Une définition qui exige un contre-transfert **obligé** (RÉCIPROCITÉ)
 ne se transpose pas d'elle-même à une interaction physique ; pour qu'une case Vide d'une strate sans
 agents passe Documenté, il faudra soit une définition abstraite commune à toutes les strates et, pour

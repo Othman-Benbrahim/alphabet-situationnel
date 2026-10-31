@@ -1,6 +1,6 @@
 # Alphabet situationnel — Glossaire
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Un terme, un sens. Le mot « niveau » est réservé à trois usages, toujours qualifiés : *niveau de
 > risque* (ρ), *niveau d'homologie* (H1–H3), *niveau 2* de la taxonomie (disciplines). La force d'un
@@ -84,6 +84,8 @@
 | Statut d'une question | ouverte, partielle, résolue (avec la réponse) ou présupposé invalidé, chacun avec la preuve qui l'a fait changer | `base-de-cas.md` §2 |
 | Passage | localisation, dans la source, du fait d'ancrage et relation à ce fait (soutient, partiel, contredit, absent de la pièce, non soutenu) ; F exige un passage qui soutient le fait tel qu'il est écrit | A6 |
 | Indépendance | ce qui rend deux pièces corroborantes indépendantes : origine, producteur ou chaîne de transmission distincts ; sans elle, l'accord ne protège que des erreurs de transcription | A6 |
+| Support, exigence | support : rapport de vraisemblance positif d'un indicateur (λ en tient lieu, postulé) ; exigence : sa rareté quand la propriété est absente (spécificité / (1 − spécificité)), ni déclarée ni mesurée ici | `graphe.md` §2.1 |
+| Agnosticisme structuré | engagements explicites, crédences révisées, probabilités plutôt que verdicts, sensibilité publiée comme telle (Chandaria et al. 2026) | `constitution.md` §1 |
 | Forme de la pièce | prospective, rétrospective (décrit le fait à travers son issue), attribuée (rapporte sans assumer) ou inclassable (non datable) ; seule une pièce prospective soutient F | A6 |
 | Directeur | entité capable de fixer un événement programmé et engagée à le faire (Copley 2009) ; sans elle, l'événement n'est pas `programmee` | `simulation.md` §4 |
 | Inertie (deux sens) | dans le moteur, une probabilité de persistance par fenêtre (0,40 à 0,97) ; en sémantique du futur (Dowty 1979, Copley 2009), un principe qui retient les mondes où les choses suivent leur cours. Même mot, deux objets | `graphe.md` §2.2 |

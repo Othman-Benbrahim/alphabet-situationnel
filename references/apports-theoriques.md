@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -853,3 +853,57 @@ confondre serait l'erreur déjà refusée pour λ. Un champ `directeur` dans l'�
 présuppose, pas ce que la situation contient — d'où un champ de l'**événement déclaré**. Une quatrième
 valeur de `temporalite` pour la rétrospection : elle décrit la pièce, non l'événement. Le chapitre 4
 (conditionnels) : non lu, et le skill n'a pas de liaisons conditionnelles.
+
+---
+
+## 20. Évaluer une propriété sans étalon : le Digital Consciousness Model et Chandaria et al. (0.7.17)
+
+Note versée par l'auteur le 31 octobre 2026 sur deux textes de 2026 qui évaluent probabilistiquement la
+conscience des systèmes d'IA : Shiller, Duffy, Muñoz Morán, Moret, Percy et Clatterbuck, *Initial results
+of the Digital Consciousness Model* (arXiv:2601.17060) ; Chandaria, Muñoz Morán, Rosas, Seth, Shevlin et
+al., *From cacophony to hierarchy: a principled framework for assessing AI consciousness*
+(arXiv:2609.35618). Les deux références existent (vérifié le 31 octobre) ; la note dit avoir lu le premier
+jusqu'à sa section 4 et du second le résumé, la section 1 et le plan. Ce ne sont pas des concurrents : ils
+ne prévoient rien. Leur intérêt est **structurel** — agréger des indicateurs dont la valeur probante
+dépend de théories que personne ne tranche, sans vérité terrain. **Aucune probabilité ne change**
+(clôture identique à la 0.7.9).
+
+### 20.1 Retenu
+
+| Point | Vérification | Ajouté | Où |
+|---|---|---|---|
+| Un indicateur a un support **et** une exigence | juste : définitions du DCM vérifiées sur le texte (support = sensibilité / (1 − spécificité) ; exigence = spécificité / (1 − spécificité)) | distinction écrite ; règle de mesure par arête **fixée avant les cas** | `graphe.md` §2.1 |
+| Le DCM met à jour sur les **absences** | juste (vérifié : « the model updates on indicators or features that are observed to be absent ») ; le moteur ne le fait jamais | écrit en limite | `graphe.md` §2.1, `SKILL.md` |
+| Un modèle de langage est anthropomimétique | juste comme argument de mécanisme (Chandaria et al., §1.4) | raison de l'exigence d'un codeur humain (A4) ; bras « modèle seul » comparateur, jamais juge | protocole A4, `validation.md` §1 |
+| Problème de spécificité (Shevlin 2021, *Mind & Language*, vérifié) | juste : c'est la question du statut Proposé | nommé | `equivalences.md` §2 |
+| Contraintes orthogonales à une hiérarchie | juste comme terme | note terminologique | `cartes.md` |
+| Agnosticisme structuré | juste comme description ; le placebo d'homologie va plus loin que les deux textes | écrit, sans valeur de preuve | `constitution.md` §1 |
+
+### 20.2 Corrigé dans la note
+
+1. **La formule de mesure de l'exigence est fausse.** La note propose « p(événement | carte absente) /
+   p(événement | carte présente) ». C'est une inversion du risque relatif, donc une mesure du **support**,
+   pas de l'exigence. L'exigence porte sur l'indicateur quand la propriété est absente :
+   P(i absent | j n'apparaît pas) / P(i présent | j n'apparaît pas). La règle écrite en `graphe.md` §2.1
+   suit les définitions du DCM.
+2. **« Sans exigence, une arête ne peut pas être défavorable » : non.** Un rapport de vraisemblance
+   inférieur à 1 s'écrit avec un seul paramètre — le DCM a des rapports de 0,04 à 1. Ce qui interdit
+   l'inhibition ici, c'est la grille λ ≥ 1 (déjà en limite depuis 0.7.13, décision d'auteur 9) ; ce qui
+   manque en propre, c'est la mise à jour sur l'absence d'une carte.
+3. **« Les marqueurs ne sont ni nécessaires ni suffisants (A5) : identique. »** Inexact : les tests de preuve
+   (0.7.0) distinguent le cerceau (nécessaire) et le pistolet (suffisant). Le skill admet des preuves
+   nécessaires ou suffisantes, à condition de les déclarer ; le DCM n'en admet aucune.
+4. **« Un κ élevé entre un humain et un modèle ne mesure pas la fiabilité » :** juste, à une nuance près —
+   il mesure un accord, qui n'est pas rien ; ce qu'il ne prouve pas, c'est que la lecture a eu lieu. D'où
+   « se publie à part », et non « ne compte pas ».
+5. **Liens.** La note renvoie à `analyse-alphabet-situationnel.md` et `concurrents-directs.md`, absents du
+   dossier versé.
+
+### 20.3 Refusé
+
+Décomposer λ en deux paramètres dans le moteur : changerait tous les p (version séparée, et seulement
+une fois l'exigence mesurée sur cas réels). Des indicateurs nombreux par propriété (206 pour une
+propriété dans le DCM) : aggraverait le déséquilibre que l'audit V34 reproche déjà. Un prior uniforme
+commun à toutes les questions : le skill a une fréquence de base par événement. La plage 0,01–0,8 des
+deux textes comme résultat : leurs auteurs la donnent pour une sensibilité aux hypothèses, non pour une
+fourchette empirique.

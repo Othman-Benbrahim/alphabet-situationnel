@@ -1,6 +1,6 @@
 # Alphabet situationnel — Équivalents par strate (index, couche 1)
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Les équivalents locaux des 16 cartes sont rangés **par strate**, un fichier par strate :
 > `equivalences/strate-01.md` à `equivalences/strate-13.md`. Raison : la procédure va des faits vers les
@@ -22,6 +22,13 @@
 ---
 
 ## 2. Statuts (règle A3)
+
+**Le problème que le statut Proposé nomme (0.7.17).** Une carte est décrite à partir de corpus situés ; dans
+une strate dont l'organisation n'est pas celle de ces corpus, on ne sait pas quels traits du marqueur sont
+critériels et lesquels sont contingents. C'est le **problème de spécificité** (Shevlin 2021, « Non-human
+consciousness and the specificity problem », *Mind & Language*), repris pour les systèmes d'IA par
+Chandaria et al. (2026). Le statut Proposé et le plafond de force qui l'accompagne y répondent : la
+correspondance est tenue pour candidate tant qu'un texte de la strate ne dit pas ce qui y est critériel.
 
 **Un équivalent est un objet-frontière, pas une traduction (0.6.0).** Il doit être reconnaissable par
 un praticien de la strate qui ne connaît pas la carte. Une référence de théorie générale qui *parle

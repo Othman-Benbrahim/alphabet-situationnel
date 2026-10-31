@@ -1,6 +1,6 @@
 # Alphabet situationnel — Les 16 cartes (noyau transversal candidat)
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > **Statut 0.4.0.** Les rapprochements mathématiques ci-dessous guident la lecture ; ils ne prouvent
 > ni universalité ni transfert des probabilités. La bibliographie du noyau ne valide pas les équivalents locaux.
@@ -11,6 +11,11 @@
 > une situation ; une transformation progressive avec un invariant n'est pas une homotopie formalisée ;
 > SEUIL a la forme d'une hystérésis sans que le moteur la représente (`graphe.md` §2.4). Aucune propriété
 > d'un objet mathématique ne se transfère à une situation sans démonstration propre.
+>
+> **Orthogonalité (0.7.17).** Une carte n'est pas une strate de plus : elle traverse les strates sans en
+> constituer une, comme les contraintes de réalisabilité de Chandaria et al. (2026) opèrent
+> orthogonalement à leur hiérarchie de niveaux sans former un niveau. Le terme dit le rapport ; il ne
+> prouve pas que la carte se transporte (P1, T4).
 >
 > **Gabarit (P, G, I), proposé en 0.7.14** (`apports-theoriques.md` §18). Une carte a trois composants :
 > **P**, le *prédicat* (ce qu'un état doit exhiber pour que le mot soit ancré : A6, marqueur local) ;

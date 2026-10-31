@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -70,6 +70,25 @@ conditionnellement à l'état, sans loi jointe garantie. **L'asymétrie n'est pa
 symétriser pour obtenir un champ détruirait l'irréversibilité. La lecture cohérente avec l'asymétrie est
 celle d'un **générateur** de transitions hors équilibre, qui n'a pas à être réversible
 (`apports-theoriques.md` §18).
+
+**Support et exigence (0.7.17, d'après le Digital Consciousness Model, Shiller et al. 2026).** Un
+indicateur a deux propriétés distinctes : son **support** (le rapport de vraisemblance positif,
+sensibilité / (1 − spécificité) : à quel point il est plus fréquent quand la propriété est là) et son
+**exigence** (*demandingness*, spécificité / (1 − spécificité) : à quel point il est rare quand elle n'est
+pas là). Un indicateur que presque tous les cas portent ne dit rien par sa présence, beaucoup par son
+absence. Transposé à une arête i → j (apparition de j) : sensibilité = P(i présent | j apparaît),
+spécificité = P(i absent | j n'apparaît pas). λ tient lieu du **support**, postulé. Deux choses manquent,
+et elles se distinguent : (1) le moteur **n'utilise jamais l'absence d'une carte comme preuve** — seules
+les cartes présentes sont des sources, alors que le DCM met à jour sur les absences (rapport
+(1 − sensibilité) / spécificité) ; (2) l'exigence d'une arête n'est ni déclarée ni mesurée. Ce n'est pas
+cette absence qui empêche une arête défavorable : un rapport de vraisemblance inférieur à 1 s'écrit avec
+un seul paramètre ; c'est la grille λ ≥ 1 qui l'interdit (décision d'auteur 9).
+**Règle de mesure, fixée avant les cas.** Dès qu'une arête i → j compte au moins `n_min_ancrage`
+transitions où j apparaît et autant où il n'apparaît pas, sur cas réels actifs, on publie pour elle
+sensibilité, spécificité, rapport positif, rapport négatif et exigence, avec leurs intervalles de Wilson ;
+une arête dont le rapport positif est compatible avec 1 est déclarée **sans support mesurable**, quelle que
+soit son intensité postulée. Ces mesures ne remplacent pas λ dans le calcul : les y faire entrer
+changerait des p (version séparée, étape « Estimer » de la feuille de route).
 
 **Portée des cartes.** Les multiplicateurs ne s'appliquent qu'aux **apparitions**. Sans base de cas,
 la probabilité d'une persistance ou d'une disparition ne dépend que de l'inertie de la carte : une

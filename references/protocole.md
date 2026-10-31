@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.16
+> Version : 0.7.17
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -95,7 +95,12 @@ bibliographie du noyau ne valide pas automatiquement chaque traduction locale. L
 stipuler F sans valeur empirique ; leurs chiffres restent réservés au mode `--demo`.
 
 **A4 · Accord entre codeurs.** Au moins 20 cas par strate et 20 % des cas de cette strate sont
-codés indépendamment par deux codeurs distincts, dont au moins un humain. Le moteur contrôle les
+codés indépendamment par deux codeurs distincts, dont au moins un humain. *Pourquoi un humain (0.7.17)* :
+un modèle de langage est **anthropomimétique** (Chandaria et al. 2026) — entraîné à produire les produits
+observables de la lecture humaine, il les produit que la lecture ait eu lieu ou non. Un accord élevé entre
+un humain et un modèle mesure au mieux la convergence de deux producteurs de lectures plausibles, au pire
+l'imitation par le modèle de ce qu'un codeur aurait écrit ; il ne prouve pas la fiabilité de la lecture.
+L'accord qui compte est celui de deux humains ; celui d'un humain et d'un modèle se publie à part. Le moteur contrôle les
 identités déclarées, les attestations d’indépendance et les effectifs ; il ne certifie pas l’indépendance
 réelle ; depuis 0.7.9, `moteur.py accord` calcule l'accord d'une carte à partir de sa table 2×2 et lit
 `kappa_min`, `kappa_rapportable` et `fnr_max` ; le calcul depuis deux fiches d'un même cas reste différé. Repères (0.7.5) : `kappa_min` 0,67, seuil des conclusions provisoires, et `kappa_rapportable` 0,80, seuil d'une
@@ -594,7 +599,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.16"` |
+| `version` | `"0.7.17"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

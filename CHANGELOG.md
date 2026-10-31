@@ -1,9 +1,26 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.17 — 2026-10-31 · évaluer sans étalon
+
+Digital Consciousness Model et Chandaria et al. (2026) triés (`apports-theoriques.md` §20). **Documentation
+seule ; aucune probabilité ne change, vérifié par clôture** : empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à la 0.7.9. 151 autotests.
+Aucun texte retiré : ajouts seulement.
+
+- **Support et exigence** d'une arête distingués ; règle de mesure (sensibilité, spécificité, rapports
+  positif et négatif, exigence, intervalles de Wilson) fixée avant les cas, hors du calcul de p.
+- **Limites écrites** : l'absence d'une carte n'est jamais une preuve ; un accord humain-modèle ne prouve
+  pas la fiabilité d'une lecture.
+- **A4** : pourquoi un codeur humain (modèle anthropomimétique) ; accord humain-modèle publié à part.
+- **Nommés** : problème de spécificité (statut Proposé), orthogonalité des cartes aux strates,
+  agnosticisme structuré.
+- **Corrigé dans la note** : formule de l'exigence (elle mesurait le support) ; cause de l'absence
+  d'inhibition (la grille λ ≥ 1, non un paramètre manquant).
 
 ## 0.7.16 — 2026-10-31 · sémantique du futur
 

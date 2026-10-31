@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.16'
+  version: '0.7.17'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.16. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.17. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -323,6 +323,10 @@ et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les q
   jamais représenter un mécanisme inhibiteur ; seuls les homologues peuvent la faire baisser.
 - F et f ont le même effet sur les multiplicateurs ; leur écart se lit dans les variantes de codage.
 - Une forte inertie représente une persistance, pas une hystérésis (`graphe.md` §2.4).
+- L'absence d'une carte n'est jamais une preuve : seules les cartes présentes sont des sources, et
+  l'exigence d'une arête (sa rareté hors de l'événement) n'est ni déclarée ni mesurée (`graphe.md` §2.1).
+- Un accord entre un humain et un modèle ne prouve pas la fiabilité d'une lecture : un modèle de langage
+  produit des lectures plausibles qu'il ait lu ou non (A4).
 - L'accord κ et la vérification scientifique des sources/résolutions restent humains.
 - La strate 12 est un registre de longue durée, pas un domaine (décision d'auteur, `strates.md`) : un
   fait n'y entre que si sa signification dépend d'une période de plus d'un siècle.

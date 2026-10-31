@@ -1,6 +1,6 @@
 # Alphabet situationnel — Constitution
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Les neuf principes priment sur toutes les règles de `protocole.md`. Une règle qui en contredit un
 > est nulle et doit être corrigée, pas appliquée.
@@ -17,6 +17,15 @@ même structure, et en déduit les suites probables. Chaque suite est un **pari*
 Il dérive de NEXUS-ARCHÊ v0.4.2, dont il reprend l'ancrage par les faits, l'anti-résonance et le
 résultat nul. Il s'en sépare sur un point : **NEXUS-ARCHÊ ne prévoit pas ; cet outil prévoit.**
 NEXUS-ARCHÊ reste un skill distinct, inchangé.
+
+**Agnosticisme structuré (0.7.17).** L'expression vient de Chandaria et al. (2026), à propos d'une autre
+propriété sans étalon (la conscience des systèmes d'IA) : rendre les engagements théoriques explicites,
+réviser les crédences à mesure que les preuves s'accumulent, publier des probabilités agrégées plutôt que
+des verdicts. C'est ce que font ici P1 (cartes candidates), les paramètres déclarés, le bloc `modele`, ρ
+(provenance) et les bandes de sensibilité, publiées comme sensibilité aux hypothèses et non comme
+fourchette empirique. Le skill y ajoute un test que ces travaux n'ont pas : le placebo d'homologie, qui
+dit sur son propre exemple que la sélection des cas ne fait pas mieux que le hasard. Le terme décrit une
+posture ; il ne prouve rien de la justesse.
 
 ---
 

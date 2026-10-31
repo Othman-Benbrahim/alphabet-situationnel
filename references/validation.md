@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.16
+> Version : 0.7.17
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -297,7 +297,10 @@ Forecasting Research Institute), les meilleurs modèles sont annoncés en 2026 a
 superprévisionnistes, sous réserve d'un ajustement de difficulté discuté : la barre n'est plus « un humain
 sans méthode ». Avec `p_sans_cartes` (le moteur sans multiplicateurs ni homologues), cela fait trois bras
 pour une même question — modèle seul, inertie seule, alphabet complet — et c'est la seule comparaison qui
-dise ce que **les cartes** ajoutent, d'une part, et ce que **le skill** ajoute, d'autre part.
+dise ce que **les cartes** ajoutent, d'une part, et ce que **le skill** ajoute, d'autre part. Le
+même argument que pour A4 vaut ici, en sens inverse : un modèle produit des probabilités plausibles qu'il
+ait ou non une prise sur la question ; c'est pourquoi le bras « modèle seul » est un **comparateur**
+scoré, jamais un juge de la lecture (0.7.17).
 
 **Second codeur (0.7.8).** `export-codeur` donne les faits, sources et dates d'un cas, mélangés, sans le
 premier codage ni les strates. Chaque codeur déclare `signe_suffisant` avant de coder : la déclaration

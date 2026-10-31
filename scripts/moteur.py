@@ -2881,7 +2881,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('apports-theoriques.md','19'):'Copley', ('simulation.md','4'):'Rédiger', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('apports-theoriques.md','19'):'Copley', ('apports-theoriques.md','20'):'Digital Consciousness Model', ('constitution.md','1'):'Ce qu', ('simulation.md','4'):'Rédiger', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -3104,7 +3104,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.16','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.17','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)

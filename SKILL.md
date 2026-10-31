@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.15'
+  version: '0.7.16'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.15. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.16. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -156,6 +156,7 @@ option avant, option après : un fait qui ne change l'espace d'action de personn
 0.7.10), un « contredirait » qui pourrait annuler la carte (différent de l'attendu, sans nommer la carte),
 le **passage** lu qui soutient le fait tel qu'il est écrit (localisation ; « peut être activé » ne
 soutient pas « a été activé » ; un soutien partiel donne f, une pièce qui contredit va en A7 ; une pièce
+dans une pièce rétrospective, attribuée ou non datable ne soutient pas F, 0.7.16 ; une pièce
 qui ne contient pas le fait se dit `absent_de_la_piece` — élargir la lecture — et un fait qu'aucune
 source ne soutient `non_soutenu` — retirer l'ancrage) ;
 équivalent Vide : au plus f. Lister les équivalents Proposés dans « À vérifier auprès de vous ». Ne
@@ -179,7 +180,8 @@ ne voit pas ici » (`angles-morts.md`), coût du codage (faits écartés, candid
 réponse** (s'il est absent, prendre la réponse la plus prudente et la déclarer) :
 1. « Cet événement est-il fixé par un calendrier (scrutin, proclamation, échéance), ou le phénomène
    a-t-il une durée de vie propre (ouragan, grève, session), ou ni l'un ni l'autre ? » → `--temporalite`,
-   obligatoire dans `calculer`.
+   obligatoire dans `calculer`. Si fixé : qui a la capacité de le fixer, et quel texte montre qu'il s'y
+   est engagé ? Sans réponse, il n'est pas programmé (`programmation` au dossier, 0.7.16).
 2. « La source de résolution mesure-t-elle bien [marqueur local], ou un phénomène voisin ? » → si
    voisin, reformuler la question ou justifier `ecart_marqueur`. Le marqueur local se lit **avant** tout
    calcul avec `moteur.py equivalences --carte NOM` ; le `marqueur_local` du calcul sert ensuite à

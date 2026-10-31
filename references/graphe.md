@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.15
+> Version : 0.7.16
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -180,6 +180,17 @@ Soient a l'apparition par pas et r la persistance par pas. Sources et paramètre
 `--semantique presence`, `continue` ou `au-moins-une-fois`, selon l'événement. Défauts : presence
 pour apparition, continue pour persistance, au-moins-une-fois pour disparition. À un pas, le modèle
 observe les états aux bornes ; il ne détecte pas un changement transitoire à l'intérieur de la fenêtre.
+**Lecture aspectuelle (0.7.16).** Les trois valeurs suivent la propriété de sous-intervalle (Bennett et
+Partee 1978, reprise par Copley 2009, p. 5-7) : `continue` est un **état** évalué sur tout l'intervalle
+(vrai sur chacun de ses sous-intervalles) ; `presence` un état évalué à l'échéance ; `au-moins-une-fois`
+un **événement**, vrai sur l'intervalle sans l'être sur ses parties. Les défauts en découlent : une
+apparition est un événement, qui ne se constate qu'après coup et se lit donc à l'échéance (`presence`) ;
+une persistance, un état (`continue`) ; une disparition, un événement (`au-moins-une-fois`). C'est une
+correspondance qui **justifie** les défauts, non une démonstration qu'ils sont les seuls possibles : le
+moteur admet les autres combinaisons, et elles posent d'autres questions. Deux questions de sémantique
+différente ne se comparent pas au score sans le dire. *Non retenu* : exiger une sémantique constante
+dans une classe d'homologues — les cas codés ne portent pas de sémantique, ce sont des transitions d'un
+pas, et la sémantique ne s'applique qu'à la composition sur l'horizon, après leur sélection.
 La fréquence de base est propagée avec **la même formule** ; si une composante de référence manque,
 le comparateur est non évaluable. Le niveau ρ hérite des composantes réellement utilisées.
 Aucun intervalle multi-pas : propager seulement les bornes d'une composante ignorerait les autres.

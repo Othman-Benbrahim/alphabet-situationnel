@@ -415,6 +415,11 @@ def controle_corroboration(k, item, independance_requise=False):
 
 
 RELATIONS_PASSAGE = ('soutient', 'partiel', 'contredit', 'absent_de_la_piece', 'non_soutenu', 'insuffisant')
+# 0.7.16 (Copley 2009, « fate-in-hindsight », et sa transposition au français) : forme de la pièce.
+# prospective : antérieure à l'issue, ou datée et sans récit de l'issue ; retrospective : décrit le fait à
+# travers son issue (« il devait devenir roi ») ; attribuee : rapporte sans assumer (conditionnel de
+# reprise, « selon », discours rapporté) ; inclassable : non datable. Facultatif ; contrôlé s'il est fourni.
+FORMES_PIECE = ('prospective', 'retrospective', 'attribuee', 'inclassable')
 
 
 def controle_passage(k, item, force, requis):
@@ -439,6 +444,9 @@ def controle_passage(k, item, force, requis):
         r = x.get('relation')
         if r not in RELATIONS_PASSAGE:
             err.append(f'{k} : passage.relation = {", ".join(RELATIONS_PASSAGE)}'); continue
+        fo = x.get('forme')
+        if fo is not None and fo not in FORMES_PIECE:
+            err.append(f'{k} : passage.forme = {", ".join(FORMES_PIECE)} (ou champ absent)'); continue
         e = x.get('extrait')
         if e is not None and not (isinstance(e, str) and e.strip() and len(e) <= 300):
             err.append(f'{k} : passage.extrait = court extrait (300 caractères au plus) ; sinon la seule localisation')
@@ -457,8 +465,15 @@ def controle_passage(k, item, force, requis):
             err.append(f'{k} : un passage qui ne permet pas de conclure n’ancre rien : corriger le fait, chercher une autre pièce, ou ne pas ancrer ; « insuffisant » confond deux cas aux remèdes opposés (0.7.11) : absent_de_la_piece (élargir la lecture) ou non_soutenu (retirer l’ancrage)')
     if err:
         return err
-    soutiens = sum(1 for x in ps if x['relation'] == 'soutient')
-    if force == 'F' and not soutiens:
+    soutiens = sum(1 for x in ps if x['relation'] == 'soutient' and x.get('forme') in (None, 'prospective'))
+    exclus = [x.get('forme') for x in ps if x['relation'] == 'soutient' and x.get('forme') not in (None, 'prospective')]
+    if force == 'F' and not soutiens and exclus:
+        motif = {'retrospective': 'la pièce contient le fait mais le raconte à travers son issue : chercher une source antérieure',
+                 'attribuee': 'la pièce attribue le fait sans l’établir : remonter à la source primaire',
+                 'inclassable': 'source non datable : le motif est la date, pas le fait'}
+        err.append(f'{k} : F exige un passage qui soutient le fait dans une pièce prospective (0.7.16) ; '
+                   + ' ; '.join(sorted({motif[f] for f in exclus})) + ' ; à défaut, f')
+    elif force == 'F' and not soutiens:
         err.append(f'{k} : F exige un passage qui soutient le fait tel qu’il est écrit ; un soutien partiel donne f')
     if force == 'F' and item.get('corroboration') == 'independantes' and soutiens < 2:
         err.append(f'{k} : corroboration « independantes » : deux passages qui soutiennent, un par source')
@@ -1298,6 +1313,13 @@ def dossier_valider(d):
                    'dossier.evenements.semantique : presence, au-moins-une-fois ou continue')
             exiger(x.get('temporalite') in TEMPORALITES,
                    'dossier.evenements.temporalite : '+', '.join(TEMPORALITES)+' (mêmes valeurs que calculer --temporalite)')
+            # 0.7.16 (Copley 2009, ch. 2 : un futur « programmé » présuppose un directeur capable de fixer
+            # l'événement et affirme son engagement). Sans eux, l'événement n'est pas programmé.
+            if x['temporalite']=='programmee':
+                pg=x.get('programmation')
+                exiger(isinstance(pg,dict) and all(isinstance(pg.get(c),str) and pg[c].strip() for c in ('qui','engagement')),
+                       'dossier.evenements.programmation {qui, engagement} requis pour « programmee » : qui a la capacité de fixer '
+                       'l’événement, et à quoi voit-on qu’il s’y est engagé (texte, calendrier publié) ; sans réponse, l’événement n’est pas programmé')
             texte_requis(x.get('resolution'),'dossier.evenements.resolution')
             # 0.7.5 : la fenêtre est le levier le plus fort du calcul (inertie^(durée/91,3 j)) ; rien ne la
             # reliait à la durée du phénomène. Facultatif : une durée en jours, vérifiable contre une source.
@@ -2859,7 +2881,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('apports-theoriques.md','19'):'Copley', ('simulation.md','4'):'Rédiger', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -3082,7 +3104,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.15','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.16','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -4674,6 +4696,22 @@ def autotest():
             self.assertFalse(any(x.startswith('.') for r in fl for x in r.split('/')))
             self.assertIn('SKILL.md',fl);self.assertIn('scripts/moteur.py',fl)
             self.assertFalse(any('.github' in l or '.gitignore' in l for l in manifeste_texte().splitlines()))
+        def test_forme_piece(self):
+            # 0.7.16 : une pièce rétrospective, attribuée ou non datable ne soutient pas F ; f reste possible.
+            ok={'localisation':'p. 2','relation':'soutient'}
+            self.assertEqual(controle_passage('POL@7',{'passage':dict(ok,forme='prospective')},'F',True),[])
+            for fo,mot in (('retrospective','antérieure'),('attribuee','source primaire'),('inclassable','non datable')):
+                e=controle_passage('POL@7',{'passage':dict(ok,forme=fo)},'F',True);self.assertTrue(e and mot in e[0],(fo,e))
+                self.assertEqual(controle_passage('POL@7',{'passage':dict(ok,forme=fo)},'f',False),[])
+            self.assertTrue(controle_passage('POL@7',{'passage':dict(ok,forme='futur')},'f',False))
+            two=[dict(ok,forme='retrospective'),dict(ok,localisation='p. 5')]
+            self.assertEqual(controle_passage('POL@7',{'passage':two},'F',True),[])                   # une pièce prospective suffit
+            self.assertTrue(controle_passage('POL@7',{'passage':two,'corroboration':'independantes'},'F',True))
+        def test_programmation(self):
+            d=self._dossier();d['evenements'][0]['temporalite']='programmee'
+            with self.assertRaises(ValueError):dossier_valider(d)
+            d['evenements'][0]['programmation']={'qui':'la commission électorale','engagement':'calendrier publié au Journal officiel'}
+            self.assertTrue(dossier_valider(d)['conforme'])
         def test_rejets_audit(self):
             d=self._dossier();f=feuille_rejets(d)
             self.assertEqual(sorted(f['tirage']),['HIE@6','SEU@7']);self.assertNotIn('motif',json.dumps(f,ensure_ascii=False).lower().replace('motif du rejet',''))

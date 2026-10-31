@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.15
+> Version : 0.7.16
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -797,3 +797,59 @@ priori). Les cinq critères de réfutation de la note (§13) se reprennent tels 
 une masse simultanée sous `seuil_affichage`, des θ tous compatibles avec zéro, une H1.7 qui ne change
 aucune classe ou des estimandes indiscernables diraient que l'étape correspondante est inutile — et
 chacun se calcule déjà, ou se calculera avec les instruments de la 0.7.14.
+
+---
+
+## 19. Sémantique du futur : Copley (2009) et le critère de rétrospection en français (0.7.16)
+
+Deux documents versés par l'auteur le 31 octobre 2026 : une note de lecture de B. Copley, *The Semantics
+of the Future*, Routledge, 2009 (ISBN 978-0-415-97116-4, vérifié), lue intégralement sauf le chapitre 4,
+survolé ; et un document de méthode qui en transpose au français le critère dit *fate-in-hindsight*. Le
+livre est de sémantique formelle : il établit ce qu'**engage** une phrase sur le futur, par jugements
+d'acceptabilité, sans mesure ni chiffre. Il ne dit rien de ce qui va arriver. **Aucune probabilité ne
+change** (clôture identique à la 0.7.9).
+
+### 19.1 Retenu
+
+| Point | Vérification | Ajouté | Où |
+|---|---|---|---|
+| Le futur générique au passé entraîne la réalisation ; une pièce peut raconter l'issue au lieu de la précéder | juste chez Copley (p. 87-88, d'après Binnick 1971), régularité forte et non loi (sa note 23) ; en français, le conditionnel est d'abord une **reprise**, d'où deux contrôles et non un | `passage.forme` ; F refusé sur pièce rétrospective, attribuée ou non datable, avec trois motifs distincts | protocole A6, `controle_passage` |
+| Un événement programmé présuppose un directeur et affirme son engagement | juste (ch. 2 : « # It rains tomorrow » est inacceptable faute de directeur, non faute de probabilité) | `programmation` {qui, engagement} exigé au dossier pour `programmee` | `simulation.md` §4, `dossier_valider` |
+| `programmee` / `generique` ↔ futurate / futur générique inertiel | juste terme à terme ; `duree_de_vie` sans correspondant | correspondance écrite, avec le trou | `simulation.md` §4 |
+| Les trois sémantiques temporelles suivent la propriété de sous-intervalle | juste comme correspondance | écrite en `graphe.md` §2.4 | `graphe.md` §2.4 |
+| La confiance dans le futur n'est pas portée par l'ancrage | juste ; appuie la règle de 0.7.10 | une phrase à F/f | protocole A6 |
+| « Inertie » : même mot, deux objets | juste | entrée de glossaire | `glossaire.md` |
+| Le critère doit être éprouvé avant usage | juste, et dit par la note elle-même | épreuve d'accord sur 30 phrases au banc | `validation.md` §9 |
+
+### 19.2 Corrigé
+
+1. **« Copley explique pourquoi c'est la seule combinaison possible » (§5.2 de la note).** Trop fort : le
+   moteur admet `presence` et `au-moins-une-fois` pour une apparition, `presence` et `continue` pour une
+   persistance. La propriété de sous-intervalle **justifie les défauts**, elle ne les rend pas uniques.
+2. **Règle de comparabilité « `semantique` constante dans une classe d'homologues » : refusée.** Les cas
+   codés ne portent aucune sémantique (aucun champ `semantique` dans le schéma de fiche) : ce sont des
+   transitions d'un pas, et la sémantique ne s'applique qu'à la composition sur l'horizon, après la
+   sélection des homologues. La règle porte sur un objet qui n'existe pas.
+3. **Le tiers exclu.** Il vaut pour le *futurate* (direction présupposée), non pour tout énoncé de futur :
+   les futurs génériques admettent le milieu. Il appuie donc l'exigence d'une résolution tranchée pour un
+   événement **programmé**, pas pour tout événement ; l'exigence générale reste justifiée par la
+   décidabilité du score (S1).
+4. **Pièce rétrospective ≠ pièce postérieure.** En mode CODER, les sources sont souvent postérieures à
+   l'issue (historiens) : refuser F sur toute pièce postérieure fermerait le codage historique. Le refus
+   porte sur la pièce qui décrit le fait **à travers son issue** ; une pièce postérieure qui le décrit sans
+   la présupposer reste `prospective` (tardive). Les champs `antecedente` et `ecart_jours` proposés ne sont
+   pas ajoutés : la date de la pièce est déjà contrôlée (`disponible_le`, B1).
+5. **Facultatif, pas obligatoire.** La note demande `antecedente` obligatoire ; le critère n'a ni accord
+   mesuré ni exemples relus par des locuteurs natifs, et l'imparfait narratif comme `devait` + infinitif
+   sont indiscernables par la forme. Champ facultatif tant que l'épreuve du §9 n'est pas faite.
+6. **Liens.** La note renvoie à `analyse-alphabet-situationnel.md` et `concurrents-directs.md`, absents du
+   dossier versé.
+
+### 19.3 Refusé
+
+Les futurs ramifiés de Thomason et l'opérateur de quantification sur les mondes d'engagement dans le
+moteur : quantifier sur des mondes est une opération sémantique, p est une fréquence sur des cas ; les
+confondre serait l'erreur déjà refusée pour λ. Un champ `directeur` dans l'état : c'est ce que la phrase
+présuppose, pas ce que la situation contient — d'où un champ de l'**événement déclaré**. Une quatrième
+valeur de `temporalite` pour la rétrospection : elle décrit la pièce, non l'événement. Le chapitre 4
+(conditionnels) : non lu, et le skill n'a pas de liaisons conditionnelles.

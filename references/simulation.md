@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.15
+> Version : 0.7.16
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -154,7 +154,15 @@ calendrier, et partagent le même angle mort. **Durée de vie propre (0.6.10)** 
 rien à voir avec la fenêtre de référence de 3 mois (test Polo : un cyclone, ÉMERGENCE@11, « persiste »
 à 96,75 % sur 7 jours par l'inertie trimestrielle générique, et se dissipe le quatrième jour) :
 `--temporalite duree_de_vie`, puis une référence de domaine (durée de vie des cyclones du bassin) ou
-pas de chiffre. Une réponse « non estimée » se journalise comme abstention (`validation.md` §1) :
+pas de chiffre. **Lecture sémantique (0.7.16, Copley 2009).** `programmee` correspond à ce que la
+sémantique du futur appelle un *futurate* : la phrase présuppose un **directeur** capable de fixer
+l'événement (l'autorité qui fixe la date du scrutin) et affirme qu'il s'y est engagé ; `generique`, à un
+futur générique ordonné par l'inertie, où le cours normal du monde suffit, sans directeur. Test : y a-t-il
+quelqu'un dont on peut nommer la capacité à fixer l'événement, et un texte qui montre son engagement ?
+Sinon, l'événement n'est pas programmé. Un dossier qui déclare `programmee` porte
+`programmation` {qui, engagement}. `duree_de_vie` n'a **pas** de correspondant chez Copley (la distance
+entre l'énoncé et l'événement est une question qu'elle laisse ouverte) : c'est une catégorie propre au
+skill, à justifier par elle-même. Une réponse « non estimée » se journalise comme abstention (`validation.md` §1) :
 elle compte, sans score. Ne pas non plus le coder comme la disparition d'INCERTITUDE : la proclamation lève une
 incertitude, pas la structure ; recours et contestations peuvent la prolonger. La structure qui porte
 un calendrier est PÉRIODICITÉ.

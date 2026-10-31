@@ -1,9 +1,26 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.15
+> Version : 0.7.16
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.16 — 2026-10-31 · sémantique du futur
+
+Copley (2009) et le critère de rétrospection en français triés (`apports-theoriques.md` §19). **Aucune
+probabilité ne change, vérifié par clôture** : empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à la 0.7.9. 151 autotests
+(149 + 2). Aucun texte retiré : ajouts seulement.
+
+- **`passage.forme`** (facultatif) : `prospective`, `retrospective`, `attribuee`, `inclassable` ; un passage
+  qui soutient dans une pièce non prospective ne compte pas pour F, avec trois motifs distincts (chercher
+  une source antérieure ; remonter à la source primaire ; source non datable). f reste possible.
+- **`programmation`** {qui, engagement} exigé au dossier pour un événement `programmee`.
+- **Écrit** : correspondance `programmee` / `generique` ↔ futurate / futur générique, `duree_de_vie` sans
+  correspondant ; lecture aspectuelle de `semantique` ; appui de Copley à « F n'est pas un probablement » ;
+  « inertie », deux sens ; épreuve d'accord sur 30 phrases au banc.
+- **Refusé** : sémantique constante par classe d'homologues (les cas n'ont pas de sémantique), futurs
+  ramifiés dans le moteur, champ `directeur` dans l'état.
 
 ## 0.7.15 — 2026-10-31 · manifeste du skill, pas du dépôt
 

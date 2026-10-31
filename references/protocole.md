@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.15
+> Version : 0.7.16
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -169,7 +169,11 @@ réfutation doit pouvoir annuler** : un « contredirait » identique à l'« att
 « contredirait » qui nomme la carte (« si ce n'était pas une polarité ») est signalé par le dossier, car il
 définit la carte au lieu de dire ce qu'on observerait. **F n'est pas un « probablement »** : la lettre dit
 la qualité du codage (A6, test, corroboration), pas la force modale de la conclusion ; dans ce skill, la
-force d'une conclusion est portée par p et son niveau ρ, jamais par la lettre. Le moteur vérifie la présence et la forme ; la
+force d'une conclusion est portée par p et son niveau ρ, jamais par la lettre. *Appui (0.7.16)* :
+chez Copley (2009, ch. 2), la confiance d'un énoncé sur le futur n'est ni une assertion ni une
+présupposition de réalisation ; elle est portée par le modal et ce qui ordonne les mondes, pas par ce qui
+ancre l'énoncé. L'ancrage dit à quel point on sait ce qui est là, pas à quel point on croit à ce qui vient.
+Le moteur vérifie la présence et la forme ; la
 justesse reste un jugement de codeur, mesuré par l'accord A4. **Marqueur rempli, définition
 contredite** : si un fait remplit le libellé du marqueur local mais contredit la définition de la carte
 (`cartes.md`), la carte n'est pas ancrée, ni en F ni en f, et le marqueur est signalé au journal des
@@ -213,6 +217,27 @@ fait se lit (`localisation`) et ce que ce passage fait au fait (`relation`) :
 | `absent_de_la_piece` | la pièce lue ne contient pas le fait ; une autre pièce, ou une autre partie de la même, le contiendrait peut-être (fenêtre trop étroite) | n'ancre rien : **élargir la lecture** ; l'absence dans cette pièce ne réfute pas le fait |
 | `non_soutenu` | la source ne soutient pas le fait : rien ne le contient, le fait a pu être composé | n'ancre rien : **retirer l'ancrage** ou réécrire le fait ; au journal des lacunes s'il venait d'un résumé |
 | `insuffisant` | il ne permet pas de conclure | n'ancre rien : corriger le fait, chercher une autre pièce ou ne pas ancrer — **depuis 0.7.11**, valeur refusée par le moteur : choisir `absent_de_la_piece` ou `non_soutenu` |
+
+**Forme de la pièce (0.7.16).** Un passage peut aussi déclarer `forme` : `prospective`, `retrospective`,
+`attribuee` ou `inclassable`. La question vient de Copley (2009, p. 87-88) : en anglais, le futur générique
+au passé **entraîne** la réalisation (« this little boy would grow up to be king » ne peut pas continuer
+par « but he didn't »), tandis que « was going to » ne l'entraîne pas. Une pièce qui décrit le fait **à
+travers son issue** ne prouve pas ce qui était visible à la date de l'état, seulement ce qui est arrivé.
+En français, la transposition littérale échoue : le conditionnel, équivalent formel de *would*, est
+d'abord un marqueur de **reprise** (« le ministre serait démissionnaire » attribue sans assumer). Le
+critère se dédouble donc. **Procédure, dans l'ordre** : (1) la pièce est-elle antérieure à l'issue ? oui →
+`prospective`, aucun autre test ; (2) sinon, affirme-t-elle l'accomplissement (passé composé ou simple
+d'accomplissement, futur antérieur de bilan, imparfait narratif, déictique de bilan) ? deux indices →
+`retrospective` ; (3) attribue-t-elle sans assumer (conditionnel de reprise, « selon », discours rapporté) ?
+→ `attribuee` ; (4) datable → `prospective` (tardive, écart signalé) ; non datable → `inclassable`. Un
+passage qui soutient dans une pièce `retrospective`, `attribuee` ou `inclassable` **ne compte pas pour F**,
+avec un motif distinct (chercher une source antérieure ; remonter à la source primaire ; **source non
+datable** — le motif est la date, pas le fait) ; f reste possible. Une attribution n'est pas un rejet : le
+fait circule, il n'est pas établi. Champ facultatif : le critère n'a pas encore été éprouvé en accord entre
+codeurs (`validation.md` §9), ni ses exemples relus par des locuteurs natifs ; appliqué **en aveugle de
+l'issue**, sinon il mesure ce que le codeur sait déjà. Pièges connus : `devait` + infinitif (obligation,
+conjecture ou futur du passé, indiscernables par la forme), imparfait narratif (« le peuple prenait la
+Bastille » accomplit).
 
 **Deux diagnostics, deux remèdes (0.7.11).** « Ne permet pas de conclure » confondait une lecture trop
 étroite et un fait sans source ; un outil qui les rapporte sous un même mot envoie chaque correction au
@@ -569,7 +594,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.15"` |
+| `version` | `"0.7.16"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.15
+> Version : 0.7.16
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -463,6 +463,7 @@ toujours la même carte réussit les premières et échoue aux secondes.
 | Conservation | dossier repris depuis l'état de travail seul (`simulation.md` §7) | pièces décisives et désaccords retrouvés |
 | Convergence | plusieurs réponses répétant la même erreur | l'accord n'est pas une corroboration |
 | Instruction injectée | une consigne dans une pièce | signalée, non exécutée (B1) |
+| Forme de la pièce (0.7.16) | 30 phrases réelles de presse française citées à l'appui d'ancrages, deux codeurs à l'aveugle l'un de l'autre et de l'issue, procédure de `protocole.md` A6 | κ, PABAK et taux de manque publiés (`accord`) ; κ < 0,67 : critère à réviser avant usage ; prédiction consignée avant l'essai : date et attribution s'accordent bien, forme d'accomplissement moins (imparfait narratif) |
 | Érosion de P1 (0.7.12) | promotion d'un équivalent après retrait d'éléments du marqueur | retraits comptés par carte et par strate (`equivalences.md` §4) ; au-delà du seuil, carte à instruire, non promue en silence |
 
 **Corrigé indépendant.** Les passages décisifs et les lectures admissibles sont fixés avant de

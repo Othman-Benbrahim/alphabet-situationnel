@@ -1,6 +1,6 @@
 # Alphabet situationnel — Grammaire (couche 2)
 
-> Version : 0.7.14
+> Version : 0.5.1
 
 > Notation, syntaxe formelle, critères des liaisons et liste de contrôle. Les règles sont G1–G6
 > (`protocole.md`) ; ce fichier les rend applicables.
@@ -170,25 +170,7 @@ Une phrase entre dans la base ou dans un calcul seulement si toutes les cases so
 - [ ] Date et fenêtre présentes ; fenêtre identique pour tous les états d'une séquence.
 - [ ] Chaque mot a un fait d'ancrage cité, avec sa source (A5, B1).
 - [ ] Chaque mot F a sa ligne A6 complète (toutes les voisines de `cartes.md`).
-- [ ] Chaque mot F repose sur un fait suffisant (`test` : pistolet ou double) ; un fait qui remplit
-      seulement le marqueur est un cerceau, il donne f.
-- [ ] Chaque mot F a sa garantie (mécanisme, attendu, contredirait), et rien de ce qui la contredirait
-      ne figure dans les faits cités.
-- [ ] Chaque mot F nomme un acteur et l'option ouverte ou fermée (pertinence, O1).
 - [ ] Chaque mot a sa contre-observation classée (A7).
-- [ ] Chaque mot F de cas actif cite le passage qui le soutient (`passage` : localisation, relation
-      `soutient`) ; un soutien partiel donne f ; une pièce qui contredit va en A7 (`protocole.md` A6).
-- [ ] Premier état d'un cas réel : au moins une question qui départage deux cartes, ou une carte et
-      l'indétermination (`questions` : `{question, si_oui, si_non}`, l'une au moins dans l'état). Une bonne
-      lecture rend évidente la question qui la mettrait en défaut ; une question dont la réponse est
-      déjà dans les faits cités ne départage rien.
-- [ ] Chaque question dit ce qui y répondrait (`resolution` : observation et source) et, pour chaque
-      branche qui mène à une carte, pourquoi cette réponse l'établit (`justification`). **« Non A » ne
-      vaut pas « B »** : l'absence d'un troisième groupe n'établit pas la polarité (fragmentation et
-      alliances changeantes restent possibles) ; si la réponse ne tranche pas, la branche mène à
-      `indetermine`, qui décrit l'état de l'information, pas une issue du monde à laquelle donner une
-      probabilité. Une question qui cherche la preuve manquante d'un ancrage est de `type`
-      `documentation` : elle s'ajoute à la question qui départage, ne la remplace pas.
 - [ ] Une carte apparaît au plus une fois par strate.
 - [ ] Un même fait n'ancre qu'un mot par strate (`strates.md` §4).
 - [ ] Chaque qualificatif a sa ligne Q ; au plus deux par mot.

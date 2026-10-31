@@ -4,17 +4,6 @@ Ce skill (licence MIT, `LICENSE`) reprend, dans `references/sources-france.md`, 
 du projet EnVrai? (`docs/puits.md`, `backend/src/sensors/catalogue.ts`), distribué sous licence MIT.
 Sa notice est reproduite ci-dessous, comme la licence l'exige.
 
-**Provenance** (0.6.14)
-
-| Champ | Valeur |
-|---|---|
-| Projet amont | EnVrai? (licence MIT, copyright 2026 envrai) |
-| Fichiers repris | `docs/puits.md`, `backend/src/sensors/catalogue.ts` |
-| Fichier adapté ici | `references/sources-france.md` |
-| Date de reprise | 2026-10-26 (version 0.5.0 de ce skill) |
-| Dépôt, commit ou étiquette amont | **non relevés à la reprise** : à compléter par l'auteur ; sans eux, la révision exacte reprise ne peut pas être retrouvée |
-| Nature de l’adaptation | inventaire de sources officielles françaises, reformulé en Markdown |
-
 ---
 
 ```

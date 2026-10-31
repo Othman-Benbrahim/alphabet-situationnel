@@ -1,11 +1,10 @@
 # Alphabet situationnel — Exemples
 
-> Version : 0.7.14
+> Version : 0.5.1
 
 > Exemples 1–6 : démonstrations entièrement fictives du contrat courant. Exemples 7–10 : archives
 > critiques de versions antérieures, non revérifiées et exclues des calculs actuels. Ne jamais
-> mélanger ces deux catégories. Les valeurs **et le format de sortie** des exemples 1 et 3 ont été
-> régénérés avec le moteur 0.6.5 : c'est le format qui sert de contrat.
+> mélanger ces deux catégories. Les valeurs courantes ont été régénérées avec le moteur livré.
 
 | # | Mode | Objet |
 |---|---|---|
@@ -24,65 +23,22 @@
 ```bash
 python3 scripts/moteur.py calculer --demo --base assets/base-de-cas.exemple.jsonl \
  --etat "[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]" \
- --liaison "CONTRAINTE@6 echo POLARITÉ@7" --evenement "SEUIL@7 apparait" \
- --temporalite generique --json
+ --liaison "CONTRAINTE@6 echo POLARITÉ@7" --evenement "SEUIL@7 apparait" --json
 ```
 
 Les forces F sont **stipulées dans un univers fictif** pour tester le calcul ; elles ne promeuvent
 aucun équivalent réel. Date d'information 2026-09-01 ; échéance à un pas 2026-12-01.
 
-Sortie humaine complète pour SEUIL@7 (sans `--json`) :
-
-```
-⚠ Prévision · cet outil prend un risque déclaré.
-⚠ ρ1 · association · 10 cas distincts (H1) · p₀ 23 % · p ~22 % (large : 5–43) · échéance 2026-12-01 · journal [à attribuer]
-Événement : SEUIL@7 apparait · ρ = provenance du chiffre, pas sa fiabilité
-Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ; aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »
-Comparateur au même horizon : 12 %
-Sans cartes (inertie et fréquences seules) : 12 % — les cartes déplacent la probabilité de +10,0 points
-Sensibilité du modèle : 19–28 % sur 6 variantes (multiplicateurs d'un cran, inerties ± 0,05, fréquence par défaut × ½ et × 2)
-Trace : multiplicateur 2.16 · homologie H1 · c_A 10 · n_A 4.8 · n_E 1.0
-Résolution (S1) : la source doit mesurer le marqueur local « franchissement d'un seuil reconnu par les parties (…) » (Franchissement d'un seuil d'escalade, Documenté) ; sinon reformuler l'événement
-! DÉMONSTRATION FICTIVE — ne constitue ni une prévision réelle ni une preuve de calibration.
-! Modèle expérimental : multiplicateurs hypothétiques, performance prospective non établie.
-! Ancrage F sur équivalent non vérifié (Proposé) : CTR@6 — la lecture est tranchée, la correspondance reste à documenter (A3).
-```
-
-Quatre lignes portent les contrôles de 0.6 : le **barreau** (« association ») dans la ligne S5 et la
-**lecture** qui en découle ; la **sensibilité** (19–28 %), plus étroite ici que l'intervalle bêta
-(5–43 %) : sur ce calcul, le petit nombre de cas pèse plus que les hypothèses ; la **résolution**, qui
-renvoie au marqueur local de la strate 7, Documenté depuis 0.6.4. La ligne S5 est recopiée telle
-quelle (S5) ; le reste va dans le bloc analytique.
-
-| Événement | p non arrondi | Intervalle | ρ | Barreau | Comparateur à un pas | Sensibilité |
-|---|---|---|---|---|---|---|
-| POL@7 persiste | 0.829776 | [0.6382104700744335, 0.972781425124053] | ρ1 | A | 0.8372000588523011 | 82,0–83,9 % |
-| RES@6 apparait | 0.385858 | [0.16347417934298547, 0.6256057385536229] | ρ1 | A | 0.1468811573436136 | 36,7–41,6 % |
-| SEU@7 apparait | 0.220379 | [0.051526739939626254, 0.43107479601396903] | ρ1 | A | 0.1208719900885371 | 19,5–27,8 % |
-| HIE@7 apparait | 0.017164 | [2.898097861961586e-10, 0.05118650363637235] | ρ1 | A | 0.03343994985499495 | 1,0–3,0 % |
-
-Aucune bande ne traverse 50 % ni ne dépasse 30 points : les quatre résultats sont « identifiés »
-au sens du moteur, ce qui ne dit rien de la justesse de la matrice (`graphe.md` §2.3 : la
-sensibilité est paramétrique et globale, pas structurelle).
+| Événement | p non arrondi à l'entier | Intervalle | Niveau | Comparateur à un pas |
+|---|---|---|---|---|
+| POL@7 persiste | 0.829776 | [0.6382104700744335, 0.972781425124053] | ρ1 | 0.8372000588523011 |
+| RES@6 apparait | 0.385858 | [0.16347417934298547, 0.6256057385536229] | ρ1 | 0.1468811573436136 |
+| SEU@7 apparait | 0.220379 | [0.051526739939626254, 0.43107479601396903] | ρ1 | 0.1208719900885371 |
+| HIE@7 apparait | 0.017164 | [2.898097861961586e-10, 0.05118650363637235] | ρ1 | 0.03343994985499495 |
 
 Les quatre calculs retiennent H1 (10 cas distincts) : depuis 0.4.1, le niveau le plus strict qui
 atteint 3 cas. En 0.4.0, le moteur prenait le niveau le plus peuplé (H1.5 ou H2, 12 à 18 cas) ; les
 intervalles sont maintenant plus larges, c'est le prix d'une comparaison plus étroite.
-
-**Résultat non identifié.** Le même SEUIL@7, au moins une fois en trois pas (`--pas 3 --semantique
-au-moins-une-fois`, échéance 2027-06-01) :
-
-```
-⚠ ρ1 · association · 10 cas distincts (H1) · p₀ 23 % · p 53 % non identifié (variantes 48–62 % de part et d'autre de 50 %) · échéance 2027-06-01 · journal [à attribuer]
-Comparateur au même horizon : 32 %
-Sans cartes (inertie et fréquences seules) : 32 % — les cartes déplacent la probabilité de +20,6 points
-Sensibilité du modèle : 48–62 % sur 6 variantes (…) — non identifié : la bande traverse 50 %
-```
-
-La ligne S5 ne dit pas « 53 % » : selon les hypothèses non calibrées, la réponse penche d'un côté ou
-de l'autre. Le chiffre se journalise (non arrondi, avec `bande_sensibilite`), mais la restitution dit
-que le sens de la réponse n'est pas identifié. Une bande qui ne traverse pas 50 % mais dépasse 30
-points serait signalée « bande large » sur la ligne de sensibilité.
 
 À quatre pas, présence finale de SEUIL : p=0.61208500, comparateur=None,
 intervalle non estimé. Le comparateur est propagé au même horizon (2027-09-01).
@@ -113,39 +69,13 @@ différents, ne pas fabriquer les quatre issues par indépendance sans justifica
 Le scoreur regroupe toute partition et exige une seule issue réalisée. Les hypothèses fictives restent
 hors V4, même si les opérations arithmétiques sont exactes.
 
-Sortie du moteur (fichier de références fictif au format de `graphe.md` §2.2, disponible le
-2026-08-01 ; résolution chiffrée dans un fichier : grandeur, unité, comparaison, deux observations) :
-
-```bash
-python3 scripts/moteur.py calculer --etat "[2026-09 | 3 mois] POLARITÉ@7[F]" \
- --evenement "POLARITÉ@7 s'intensifie" --references R.json --resolution resolution.json \
- --temporalite generique
-```
-
-```
-⚠ Prévision · cet outil prend un risque déclaré.
-⚠ ρ3 · association · composé : persistance × référence conditionnelle · p 17 % [intervalle non estimé] · échéance 2026-12-01 · journal [à attribuer]
-Événement : POLARITÉ@7 intensifie · ρ = provenance du chiffre, pas sa fiabilité
-Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ; aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »
-Comparateur au même horizon : 17 %
-Résolution (S1) : la source doit mesurer le marqueur local « deux blocs, alignements exclusifs » (Système bipolaire, Documenté) ; sinon reformuler l'événement
-! P(composé)=P(persiste) × P(changement | persiste). Intervalle conjoint non estimé.
-```
-
-Un composé fondé sur deux références externes n'a **pas de ligne de sensibilité** : il ne dépend
-d'aucun multiplicateur ni d'aucune inertie du modèle, seulement des deux fréquences fournies. Son
-incertitude est celle des références ; l'intervalle conjoint n'est pas estimé. La persistance seule
-(`POLARITÉ@7 persiste`, même fichier) donne ρ3, p 85 %, bande 85–85 % : sans cas, les variantes du
-modèle n'ont rien à déplacer.
-
 ---
 
 ## Exemple 4 — LIRE, lecture positive (statut Descriptif)
 
 Une bibliothèque logicielle possède un graphe de dépendances documenté : RÉSEAU est une candidate.
-L'équivalent local livré est Proposé : un ancrage F reste possible si A6 et A7 sont satisfaits (et,
-pour un cas réel, garantie et option), signalé « équivalent non vérifié » (A3, depuis 0.4.1). Le
-statut de l'équivalent dit si la traduction est sourcée, pas si la lecture est sûre.
+L'équivalent local livré est Proposé, donc confiance f au maximum. Si une source spécifique est
+vérifiée et le référentiel révisé, puis A6/A7 satisfaits, un futur codage F devient possible.
 Un nouveau document peut faire passer f à F **sans nouveau lien dans le graphe**. Pour prévoir une
 intensification, définir une grandeur, par exemple le nombre de dépendances actives, avec ses limites.
 Le statut Descriptif demande les preuves prévues par A6/A7 ; il ne peut pas être obtenu par simple
@@ -157,7 +87,7 @@ renommage d'une case Proposé. La signature résume les faits sans les transform
 
 Le schéma complet courant est dans `base-de-cas.md` §2 ; il est construit à partir d'une fiche fictive
 validée, et `audit` vérifie à chaque exécution qu'il passe `valider` (depuis 0.4.3). `valider assets/base-de-cas.exemple.jsonl` : 40 actifs fictifs recevables.
-`valider assets/cas-reels.jsonl` : 4 archives (0.6.8), lisibles, exclues de tout calcul ;
+`valider assets/cas-reels.jsonl` : 4 propositions conformes, sources à vérifier, exclues des calculs ;
 le témoignage original est conservé, non réécrit, dans `assets/cas-reels-originaux.jsonl`. Un cas réel ne devient actif qu'après vérification des sources, fenêtres, objets et codage.
 
 ---

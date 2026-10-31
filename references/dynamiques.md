@@ -1,6 +1,6 @@
 # Alphabet situationnel — Dynamiques des cartes (couche 4, a priori)
 
-> Version : 0.7.14
+> Version : 0.5.1
 
 > Ce que chaque structure **tend à produire au pas suivant**, proposé comme hypothèse à partir de sa représentation structurelle.
 > Ces intensités **modulent** une fréquence de base (T2) : elles ne sont pas des probabilités. Valeurs
@@ -219,17 +219,6 @@
 - **Entrées** : PÉRIODICITÉ (cycles couplés), RÉSEAU (couplage).
 
 ---
-
-## Barreau des transitions (0.6.0)
-
-Chaque transition porte un barreau de l'échelle de Pearl : **A** association (co-occurrence observée
-ou supposée entre cartes), **I** intervention documentée (une action datée produit la carte d'arrivée,
-mécanisme établi par une source), **C** contrefactuel documenté. En 0.6.0, **toutes les transitions
-sont A** (`barreau` en §H : défaut A, aucune exception). Ce n'est pas un défaut de saisie : c'est la
-mesure exacte de ce qui manque au moteur pour répondre à une question causale. Une exception s'inscrit
-dans `parametres.json` (`"SRC>CIB": "I"`) seulement avec la source qui documente le mécanisme, et
-`audit` refuse toute autre valeur. Conséquence pratique : une transition A ne garantit pas son
-transport vers un contexte différent, ce que l'emprunt entre strates (T4, poids 0,5) reconnaissait déjà.
 
 ## Synthèse : matrice des transitions a priori
 

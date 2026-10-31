@@ -1,6 +1,6 @@
 # Alphabet situationnel — Sources françaises par thème et par strate
 
-> Version : 0.7.14
+> Version : 0.5.1
 
 > Où trouver, pour une situation française, les **faits** qui ancrent une carte (A5), la **source de
 > résolution** d'une prévision (S1) et les **séries chiffrées** qui servent de grandeur à « s'intensifie »
@@ -32,10 +32,6 @@
    organisateurs) se résout sur **une** des deux séries, nommée à l'avance.
 5. **Un document n'est pas une série.** Un rapport en PDF (Cour des comptes, COR, Haut Conseil pour le
    climat) peut ancrer un fait daté ; il ne fournit pas de fréquence de référence.
-6. **Chercher sans présupposer** (0.7.2, `protocole.md` A7) : requêtes sur le phénomène, l'objet et la
-   période, pas sur le nom d'une carte ; une requête d'observation, une de discrimination, une de
-   contradiction ; conserver la requête neutre avant toute reformulation. Un document pertinent qui
-   contredit la lecture reste au dossier.
 
 ---
 
@@ -128,14 +124,6 @@ Une série officielle donne la grandeur, l'unité et les dates exigées par une 
 | dépenses courantes de santé (% du PIB) | `hlth_sha11_hf` | % | 6 |
 | dépenses publiques d'éducation (% du PIB) | `gov_10a_exp` | % | 6 |
 | taux de risque de pauvreté | `ilc_li02` | % | 6 |
-
-**Avant de faire dire quelque chose à une série** (0.7.2) : qu'est-ce qui est compté (une série
-« engagements » peut mêler annonces, autorisations et réalisations) ; unité ; période et date de
-publication (disponible à la date d'information ?) ; périmètre géographique et institutionnel, et ses
-changements ; traitement des valeurs manquantes (un zéro n'est pas une absence de donnée) ; niveau
-d'agrégation ; révisions ultérieures. Lire la notice et quelques valeurs avant d'ancrer un marqueur
-ou de fixer une résolution. Une requête ou un calcul qui s'exécute sans erreur peut répondre à une
-autre question.
 
 Ces séries sont **annuelles** : elles conviennent à une fenêtre d'un an, pas à une semaine. Pour une
 crise d'ordre public à l'horizon de quelques jours, la grandeur se construit à partir de comptages

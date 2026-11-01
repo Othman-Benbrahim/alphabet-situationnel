@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.33
+> Version : 0.7.34
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1337,3 +1337,41 @@ goulot n'est plus la méthode mais **l'acquisition** du matériau (dossiers, cas
 
 **Retenu comme règle.** Pas d'interface web, pas d'API, pas de modèle de langage branché sur le moteur : chacun
 ouvrirait une surface d'attaque et affaiblirait la discipline hors ligne de l'outil.
+
+---
+
+## 14. Registre des tests, et gel (0.7.34)
+
+**Source.** Audit « Open Science » de la 0.7.33. Son verdict : un dispositif rigoureux autour d'une hypothèse encore
+vide, des probabilités non calibrées présentées comme des mesures, une taxonomie trop large pour être codée à deux,
+et une fuite en avant procédurale. Sa première recommandation : geler et mesurer. L'auteur l'a retenue.
+
+**Trois corrections.**
+1. **Affichage honnête.** Toute sortie humaine d'un p ajoute, juste après la ligne de signalement : « Non calibré :
+   multiplicateurs, inerties, k₀ et demi-vie sont posés à la main, non dérivés de données ; lire d'abord la bande et le
+   taux sans cartes, le chiffre ensuite. » Les paramètres ne changent pas : ce qui change, c'est qu'un chiffre n'a plus
+   l'air d'une mesure.
+2. **Périmètre réduit (décision L7).** Hors démonstration, la prévision chiffrée (`calculer`, `noyau`, `trajectoires`,
+   `attribuer`) est limitée aux strates de `strates_prevision`, aujourd'hui **la seule strate 7** (13 équivalents sur
+   16 sourcés). Les autres strates se lisent, sans chiffre. Une strate s'ajoute quand ses cartes ont un accord mesuré.
+   L'étude d'accord et V4 portent donc sur 16 cases, non sur 208. L'audit jugeait les équivalents « métaphoriques » à
+   partir de la strate 1 ; c'est la physique, où SEUIL est littéralement une transition de phase. Son objection vaut
+   en revanche pour l'étendue : 208 cases ne se codent pas à deux.
+3. **Docstring.** `moteur.py` annonçait 0.7.9 ; `audit` lit désormais aussi cette ligne.
+
+**Modes TEST et RÉSULTAT.** Chaque prévision journalisée produit une **fiche Markdown** :
+- `fiche-test` : question, événement, état, probabilité avec sa bande et le taux sans cartes, règle de résolution,
+  rappel « non calibré », empreinte, et la ligne JSON exacte du journal dans un bloc `alphabet-test` ;
+- `fiche-resultat`, après l'échéance : issue, preuve, date du constat, Brier de la question, et la ligne `score` dans
+  un bloc `alphabet-resultat` qui porte l'empreinte de la prévision ; un résultat constaté avant l'échéance est
+  refusé ;
+- `assets/registre-tests.md`, vide, reçoit les deux parties ; `ingerer` relit les blocs, refuse une prévision dont
+  l'empreinte a changé, reconstitue le journal (`--journal-sortie`) et score le registre.
+
+Le Markdown est le support lisible ; les blocs JSON sont la donnée. Pourquoi ce partage : un document Markdown seul se
+retouche sans trace, et un journal JSONL seul ne se lit pas. L'empreinte relie les deux parties d'un test, et les
+deux parties au journal. Un registre tenu par l'auteur seul **documente** ; il ne valide pas : pour V4, la partie
+TEST se publie aussi chez un tiers horodaté avant l'échéance (§11.9).
+
+**Gel.** Après cette version, plus de règle nouvelle ni d'outil nouveau sans données réelles. La prochaine version
+utile est celle qui contient un premier cas de la strate 7 codé à deux, ou les premières fiches du registre.

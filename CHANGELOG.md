@@ -1,9 +1,23 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.33
+> Version : 0.7.34
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.34 — 2026-11-01 · registre des tests, gel
+
+Audit Open Science de la 0.7.33 (`apports-theoriques.md` §33, `validation.md` §14). **Aucune probabilité ne change,
+vérifié par clôture.** Aucun texte retiré.
+
+- **Modes TEST et RÉSULTAT** : `fiche-test` et `fiche-resultat` produisent les deux parties Markdown d'un test, chacune
+  avec son bloc JSON et l'empreinte de la prévision ; `assets/registre-tests.md` (vide) les reçoit ; `ingerer` les relit,
+  refuse une prévision retouchée, reconstitue le journal et score.
+- **Affichage** : toute sortie humaine d'un p dit « non calibré » et donne la bande avant le chiffre.
+- **Périmètre (L7)** : hors démonstration, prévision chiffrée limitée à `strates_prevision` = [7].
+- **Docstring** de `moteur.py` à la version courante, contrôlée par `audit`.
+- **Gel** : plus de règle ni d'outil sans données réelles.
+- 158 autotests.
 
 ## 0.7.33 — 2026-11-01 · Druckman lu
 

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.33
+> Version : 0.7.34
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1468,3 +1468,13 @@ de Druckman ne peuvent donc servir ni de second codeur (B3) ni de faits : ce son
 | 75 % des conséquences sont désescalatoires ; une escalade est suivie d'une désescalade dans 20 séquences sur 25 (17 cas) | fréquences **par tournant**, non par fenêtre de 3 mois : unités incompatibles avec `calculer` (`frequences-externes.md`) ; corpus biaisé vers les négociations documentées, souvent conclues (médiation : 6 accords sur 9) | référence d'appui seulement, aucun chiffre versé |
 | Négociations sociales aériennes : escalades répétées avant accord, que l'auteur attribue au cadre légal américain | même forme de tournant, dynamique opposée selon le cadre institutionnel : un argument pour des fréquences par strate et pour l'abaissement entre strates | écrit ici |
 | L'auteur lui-même : la population des cas ne se définit que par les cas documentés, et l'on manque les cas non documentés ou classifiés (le « tiroir », Rosenthal 1984) | c'est le biais de troncature déclaré au §10 de `validation.md` | écrit ici |
+
+## 33. Audit Open Science de la 0.7.33 (0.7.34)
+
+**Verdict de l'audit.** Ingénierie et discipline remarquables, programme de recherche non testé ; un appareil statistique
+qui paraît plus scientifique que ses preuves. **Retenu** : l'affichage honnête des probabilités, le périmètre réduit à la
+strate 7, la docstring et son contrôle, et le gel (`validation.md` §14). **Corrigé chez l'audit** : les équivalents de la
+strate 1 (physique) ne sont pas des métaphores ; la strate 7 cite ses références. **Déjà reconnu par le skill** : base
+empirique nulle (`bilan`), paramètres posés à la main (`graphe.md` §2.1, « hypothèses de travail »). **Non retenu
+maintenant** : découper `moteur.py` en paquet ; le fichier unique sans dépendance est un choix de distribution du skill, et
+le découpage serait encore du travail sans mesure.

@@ -1,5 +1,5 @@
 {
- "version": "0.7.33",
+ "version": "0.7.34",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -84,6 +84,7 @@
  "v4_autocorrelation_max": 0.3,
  "v4_e_seuil_primaire": 20,
  "v4_effectif_equivalence": 0,
+ "strates_prevision": [7],
  "matrice": {
   "SEU": {
    "PER": "f",

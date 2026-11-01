@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.9 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.34 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -1901,6 +1901,57 @@ def graine_placebo(etat,typ,cible,asof):
     return int(hashlib.sha256(f'{texte(etat)}|{cible} {typ}|{asof}'.encode()).hexdigest()[:12],16)
 
 
+def fiche_test(prev,score_=None):
+    """0.7.34. Fiche Markdown d'une prévision journalisée (mode TEST) : lisible par un humain, et portant la ligne
+    JSON exacte du journal dans un bloc `alphabet-test`, avec son empreinte. Coller la fiche dans le registre ;
+    `ingerer` relira le bloc et vérifiera l'empreinte : une fiche retouchée à la main se détecte."""
+    e=empreinte_prevision(prev);p=prev.get('probabilite');res=prev.get('resolution') or {}
+    l=[f"## Test {prev['id']} · {prev.get('question','')}",'',
+       f"- Date de la prévision : {prev['date']} · échéance : {prev.get('echeance','?')} · règles {prev.get('version_regles','?')}",
+       f"- Événement : {prev.get('evenement','')} · état : {prev.get('etat_present','')}",
+       f"- Probabilité : {'non estimée (abstention)' if p is None else pct(p)+' — bande : '+bande_verbale(p)}"
+       +('' if prev.get('p_sans_cartes') is None else f" · sans cartes : {pct(prev['p_sans_cartes'])}"),
+       f"- Résolution : {res.get('critere','') if isinstance(res,dict) else res} · source : {res.get('source','') if isinstance(res,dict) else ''}",
+       '- Non calibré : paramètres posés à la main ; ce test sert à mesurer, non à conclure.','',
+       f"Empreinte de la prévision : `{e}`",'','```json alphabet-test',json.dumps(prev,ensure_ascii=False,sort_keys=True),'```','']
+    return '\n'.join(l)
+
+
+def fiche_resultat(prev,issue,preuve,date_constat,note=None):
+    """0.7.34. Fiche Markdown du résultat (mode RÉSULTAT) : l'issue constatée, sa preuve et sa date, liées à
+    l'empreinte de la prévision ; bloc `alphabet-resultat` (ligne `score` du journal)."""
+    exiger(issue is None or issue in (0,1),'issue : 0, 1, ou rien si non résolue');texte_requis(preuve,'preuve');date_iso(date_constat)
+    exiger(jour(date_constat)>=jour(prev.get('echeance',prev['date'])),'résultat constaté avant l’échéance de la prévision')
+    sc={'type':'score','id':prev['id'],'date':date_constat,'issue':issue,'preuve':preuve.strip(),'empreinte_prevision':empreinte_prevision(prev)}
+    if note:sc['note']=note
+    p=prev.get('probabilite')
+    b=None if p is None or issue is None else (p-issue)**2
+    l=[f"## Résultat {prev['id']}",'',f"- Constaté le {date_constat} · issue : {'non résolue' if issue is None else 'réalisée' if issue==1 else 'non réalisée'}",
+       f"- Preuve : {preuve.strip()}",
+       f"- Brier de cette question : {'—' if b is None else f'{b:.3f}'}"+('' if prev.get('p_sans_cartes') is None or issue is None else
+         f" · sans cartes : {(prev['p_sans_cartes']-issue)**2:.3f}"),
+       '- Un Brier isolé ne dit rien : seul le registre entier, scoré par `ingerer`, se lit.','',
+       '```json alphabet-resultat',json.dumps(sc,ensure_ascii=False,sort_keys=True),'```','']
+    return '\n'.join(l)
+
+
+def ingerer(texte_):
+    """0.7.34. Relit un registre Markdown : chaque bloc `alphabet-test` (une prévision) et `alphabet-resultat` (son
+    issue). Vérifie que l'empreinte déclarée dans chaque résultat est celle de la prévision relue, que les lignes
+    forment un journal valide, puis le score. Le Markdown est le support ; les blocs JSON sont la donnée."""
+    blocs=re.findall(r'```json alphabet-(test|resultat)\n(.*?)\n```',texte_,re.S)
+    tests=[json.loads(b) for k,b in blocs if k=='test'];res=[json.loads(b) for k,b in blocs if k=='resultat']
+    exiger(tests,'registre : aucun bloc alphabet-test')
+    emp={t['id']:empreinte_prevision(t) for t in tests}
+    for r_ in res:
+        exiger(r_.get('id') in emp,f"résultat {r_.get('id')} sans prévision dans le registre")
+        exiger(r_.get('empreinte_prevision')==emp[r_['id']],f"résultat {r_['id']} : empreinte différente, la prévision a été modifiée après coup")
+    journal=tests+[{k:v for k,v in r_.items() if k!='empreinte_prevision'} for r_ in res]
+    valider_journal(journal)
+    return {'previsions':len(tests),'resultats':len(res),'en_attente':sorted(set(emp)-{r_['id'] for r_ in res}),
+            'score':score_result(journal),'journal':journal}
+
+
 def depouiller(premier,second):
     """0.7.32 (audit DeepSeek, P1.4 ; A4 : « le calcul depuis deux fiches d'un même cas reste différé »). Deux
     codages indépendants des mêmes cas (fichiers JSONL, mêmes id, mêmes dates d'états) donnent, pour chaque carte,
@@ -3168,7 +3219,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3405,7 +3456,9 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.33','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.34','version du moteur et des paramètres différente')
+    # 0.7.34 (audit Open Science) : la docstring du moteur annonçait 0.7.9 sans que l'audit la lise.
+    exiger(f"Alphabet situationnel {P['version']} " in (__doc__ or ''),'docstring du moteur : version différente de parametres.json')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3606,6 +3659,11 @@ def afficher(result,as_json=False):
         print(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False));return
     print(OUVERTURE)
     print(ligne_signalement(result))
+    # 0.7.34 (audit Open Science) : un p affiché ressemble à une mesure. Tant qu'aucune calibration n'existe, la
+    # sortie dit d'abord que les paramètres sont posés à la main, et donne la bande avant le chiffre.
+    if result.get('p') is not None:
+        print(f"Non calibré : multiplicateurs, inerties, k₀ et demi-vie sont posés à la main, non dérivés de données ; "
+              f"lire d’abord la bande ({bande_verbale(result['p'])}) et le taux sans cartes, le chiffre ensuite")
     rp_=result.get('resultat_principal')
     if rp_:print(f"À lire d’abord : sans cartes {pct(rp_['p_sans_cartes'])} → avec cartes {pct(rp_['p_avec_cartes'])} "
                  "(aucun cas réel actif : arêtes non éprouvées, P8 ; p seul n’est qu’un dérivé de cette paire"
@@ -3731,6 +3789,10 @@ def main():
     sc.add_argument('--p',type=float,required=True);sc.add_argument('--aveugle',action='store_true')
     sc.add_argument('--vu',action='append',default=[]);sc.add_argument('--contexte',choices=CONTEXTES_COMPARATEUR,required=True)
     ex=subs.add_parser('export-codeur');ex.add_argument('--base',required=True);ex.add_argument('--cas',required=True)
+    ft=subs.add_parser('fiche-test');ft.add_argument('--journal',required=True);ft.add_argument('--id',required=True)
+    fr=subs.add_parser('fiche-resultat');fr.add_argument('--journal',required=True);fr.add_argument('--id',required=True)
+    fr.add_argument('--issue',type=int,choices=(0,1));fr.add_argument('--preuve',required=True);fr.add_argument('--date',required=True);fr.add_argument('--note')
+    ig=subs.add_parser('ingerer');ig.add_argument('registre');ig.add_argument('--journal-sortie');ig.add_argument('--json',action='store_true')
     dp=subs.add_parser('depouiller');dp.add_argument('--premier',required=True);dp.add_argument('--second',required=True);dp.add_argument('--json',action='store_true')
     rc=subs.add_parser('recolter');rc.add_argument('--carnet',required=True);rc.add_argument('--fait');rc.add_argument('--source');rc.add_argument('--source-url')
     rc.add_argument('--date');rc.add_argument('--disponible-le');rc.add_argument('--date-consultation');rc.add_argument('--classe-source')
@@ -3882,6 +3944,22 @@ def main():
             print('empreinte attendue : '+('identique' if ok_ else 'DIFFÉRENTE'))
             if not ok_:raise SystemExit(1)
         return
+    if a.cmd in ('fiche-test','fiche-resultat'):
+        data=charger(a.journal);valider_journal(data)
+        pr_=[x for x in data if x.get('type')=='prevision' and x.get('id')==a.id];exiger(pr_,f'prévision {a.id} absente du journal')
+        print(fiche_test(pr_[0]) if a.cmd=='fiche-test' else fiche_resultat(pr_[0],a.issue,a.preuve,a.date,a.note));return
+    if a.cmd=='ingerer':
+        r=ingerer(lire_texte(a.registre,'registre'))
+        if a.journal_sortie:
+            with open(a.journal_sortie,'w',encoding='utf-8',newline='\n') as f_:
+                for x in r['journal']:f_.write(json.dumps(x,ensure_ascii=False,sort_keys=True)+'\n')
+        s=r['score']
+        if a.json:print(json.dumps({k:v for k,v in r.items() if k!='journal'},ensure_ascii=False,indent=2));return
+        print(f"Registre : {r['previsions']} prévision(s), {r['resultats']} résultat(s), {len(r['en_attente'])} en attente · empreintes vérifiées")
+        print(f"Questions résolues {s['questions_resolues']} · éligibles V4 {s['questions_eligibles']} · statut : {s['statut']}")
+        cv=s.get('couverture') or {}
+        if cv.get('brier_avec_repli') is not None:print(f"Brier avec repli {cv['brier_avec_repli']:.3f} · taux de repli {cv['taux_de_repli']:.0%}")
+        print('! Un registre d’auteur sans prépublication publique reste hors V4 ; il documente, il ne valide pas.');return
     if a.cmd=='depouiller':
         r=depouiller(charger(a.premier),charger(a.second))
         if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
@@ -3958,6 +4036,14 @@ def main():
         exiger(m['i']!='F' or st.get((m['c'],m['s']))!='Vide',f'{cle(m)} : F impossible sur un équivalent Vide (A3)')
         exiger(st.get((m['c'],m['s']))!='Hors domaine',f'{cle(m)} : carte Hors domaine dans cette strate, aucun ancrage possible (A3)')
     active=base_active(base,asof,a.demo)
+    # 0.7.34 (décision d'auteur, L7) : hors démonstration, la prévision chiffrée est limitée aux strates de
+    # strates_prevision (la strate 7 : 13 équivalents sur 16 sourcés) tant qu'aucune autre n'a d'accord mesuré.
+    if not a.demo:
+        evs_cli=[a.evenement] if isinstance(getattr(a,'evenement',None),str) else list(getattr(a,'evenement',None) or [])
+        sts_=[int(k.split('@')[1].split()[0]) for k in evs_cli if '@' in k and k.split('@')[1].split()[0].isdigit()]
+        if a.cmd=='trajectoires':sts_+=[int(x) for x in a.strates.split(',') if x.strip().isdigit()]
+        exiger(all(s_ in P['strates_prevision'] for s_ in sts_),
+               f"prévision chiffrée limitée aux strates {P['strates_prevision']} (décision L7, 0.7.34) ; les autres strates se lisent (mode LIRE) sans chiffre")
     refs=lire_json(a.references,'--references') if a.references else {}
     if a.fref is not None:
         proba(a.fref,'fref');exiger(a.cmd=='calculer','--fref scalaire interdit pour plusieurs événements ; utiliser --references')
@@ -4464,8 +4550,11 @@ def autotest():
             r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@99 apparait','--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
             self.assertEqual(r.returncode,2);self.assertIn('erreur',json.loads(r.stdout))
             # 0.6.12 : sans --temporalite, la question est posée et le calcul refusé.
-            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09-26 | 7 jours] ÉMERGENCE@11[f]','--evenement','ÉMERGENCE@11 persiste','--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09-26 | 7 jours] ÉMERGENCE@7[f]','--evenement','ÉMERGENCE@7 persiste','--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
             self.assertEqual(r.returncode,2);self.assertIn('durée de vie propre',json.loads(r.stdout)['erreur'])
+            # 0.7.34 (L7) : hors démonstration, une prévision chiffrée hors de la strate 7 est refusée.
+            r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09-26 | 7 jours] ÉMERGENCE@11[f]','--evenement','ÉMERGENCE@11 persiste','--temporalite','generique','--json'],capture_output=True,text=True,stdin=subprocess.DEVNULL,encoding='utf-8')
+            self.assertEqual(r.returncode,2);self.assertIn('strates [7]',json.loads(r.stdout)['erreur'])
         def test_console_cp1252(self):
             # 0.7.1 (audit hacker.ai) : sortie Windows en cp1252, redirigée. Erreur JSON et sortie humaine.
             import subprocess
@@ -5317,6 +5406,15 @@ def autotest():
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
+        def test_registre_tests(self):
+            # 0.7.34 : fiche de test, fiche de résultat, ingestion avec contrôle d'empreinte.
+            p=forecast();t=fiche_test(p);self.assertIn('```json alphabet-test',t);self.assertIn('Non calibré',t)
+            r=fiche_resultat(p,1,'registre consulté','2026-04-02')
+            g=ingerer('# Registre\n\n'+t+'\n'+r);self.assertEqual((g['previsions'],g['resultats'],g['en_attente']),(1,1,[]))
+            with self.assertRaises(ValueError):ingerer(t.replace('"probabilite": 0.2','"probabilite": 0.3')+'\n'+r)   # prévision retouchée
+            with self.assertRaises(ValueError):fiche_resultat(p,1,'x','2026-01-02')        # avant l'échéance
+            self.assertEqual(ingerer(t)['en_attente'],[p['id']])
+            self.assertIn('Alphabet situationnel '+P['version']+' ',__doc__)
         def test_depouiller_recolter_grille(self):
             # 0.7.32 : deux codages des mêmes cas → tables par carte et groupée ; carnet ; grille A–F × 1–6.
             c1={'id':'X','strates':[7],'sequence':[{'date':'2026-01-01','etat':'[2026-01-01 | 3 mois] POLARITÉ@7[F]'}],

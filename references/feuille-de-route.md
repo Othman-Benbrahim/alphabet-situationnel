@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.33
+> Version : 0.7.34
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,7 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.34 (faite) | Registre des tests, gel | fiches Markdown TEST et RÉSULTAT, registre vide, `ingerer` ; affichage « non calibré » ; prévision chiffrée limitée à la strate 7 (L7) ; docstring contrôlée ; **gel** : plus de règle sans données réelles ; probabilités identiques à la 0.7.9 | — |
 | 0.7.33 (faite) | Druckman lu | le corpus des 34 négociations : cadre d'échantillonnage, unité = le cas ; correction du §26 (codes consensuels, aucun accord mesuré) ; faits à prendre dans les études Pew ; probabilités identiques à la 0.7.9 | — |
 | 0.7.32 (faite) | Acquérir le matériau | `recolter` (carnet de faits, brouillon de dossier) ; grille des sources A–F × 1–6, F exige A–C et 1–3 ; `depouiller` (κ depuis deux codages) ; test cp1252 étendu ; contenu exigé de la règle de résolution ; probabilités identiques à la 0.7.9 | — |
 | Rapport Markdown d'un calcul ; registre des sceaux chaîné ; rapport d'écarts (apparitions non atteignables) ; table ACH depuis le dossier ; import d'un CSV de fréquences (UCDP, MID) au schéma strict ; fichier de saisie des 34 négociations de Druckman, après lecture et double codage | après le premier cas réel | — |

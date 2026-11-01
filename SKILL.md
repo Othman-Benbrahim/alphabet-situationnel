@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.33'
+  version: '0.7.34'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.33. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.34. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -36,6 +36,11 @@ second teste les régressions. Aucun ne certifie les faits ou l'utilité scienti
 | **PRÉVOIR** | « que peut-il se passer d'ici… » | 0–5 et journal | événements définis, résultats du moteur ou non-estimation motivée |
 | **CODER** | « code ce cas historique » | 0–3 | fiche validée ou archive à revoir explicitement exclue |
 | **SCORER** | « voici ce qui s'est produit » | 6 | journal contrôlé, scores, exclusions, épisodes comparables |
+
+**TEST et RÉSULTAT (0.7.34)** : la sortie documentaire de PRÉVOIR et de SCORER. Chaque prévision journalisée donne une
+fiche Markdown (`fiche-test`) ; après l'échéance, son résultat donne la seconde partie (`fiche-resultat`) ; les deux se
+collent dans `assets/registre-tests.md`, que `ingerer` vérifie et score (`validation.md` §14). Hors démonstration, la
+prévision chiffrée est limitée à la strate 7 (`strates_prevision`, décision L7) ; les autres strates se lisent.
 
 ## Ce qu'il faut charger
 
@@ -86,6 +91,8 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… accord --a A --b B --c C --d D [--json]` | accord de deux codeurs sur une carte : κ (indéfini si pₑ = 1), PABAK, accords spécifiques, deux taux de manque, verdict (`base-de-cas.md` §6) |
 | `… accord … --repetabilite --ecart-jours N` | répétabilité : le même codeur, deux passes aveugles sur les mêmes cas ; non recevable sous `repetabilite_ecart_min_jours` ; publiée à part de κ |
 | `… attribuer --etat "…" --evenement "SEUIL@7 apparait" --temporalite generique` | attribution **dans le moteur** : Shapley exact par mot et interaction par paire (en logit), sur les 2ⁿ sous-ensembles de l'état ; explique le calcul, pas l'événement (`validation.md` §12) |
+| `… fiche-test --journal J.jsonl --id P-xxxx` puis, après l'échéance, `… fiche-resultat --journal J.jsonl --id P-xxxx --issue 0\|1 --preuve "…" --date J` | les deux parties Markdown d'un test, chacune avec son bloc JSON et l'empreinte de la prévision ; à coller dans `assets/registre-tests.md` (`validation.md` §14) |
+| `… ingerer assets/registre-tests.md [--journal-sortie J.jsonl]` | relit le registre, refuse une prévision retouchée, reconstitue le journal et le score |
 | `… recolter --carnet C.jsonl --fait "…" --source "…" --source-url URL --date J --disponible-le J --date-consultation J --classe-source contemporain [--fiabilite A-F --credibilite 1-6]` | carnet de faits datés et sourcés, avant tout codage ; `--jusqu-au J` liste les faits disponibles à une date (brouillon de dossier) (`base-de-cas.md` §2) |
 | `… depouiller --premier A.jsonl --second B.jsonl` | deux codages indépendants des mêmes cas : table 2×2 et `accord` par carte, et table groupée (A4 ; `validation.md` §11.10) |
 | `… accord … --llm` | répétabilité d'un modèle : deux exécutions en contextes séparés (ou une paraphrase, publiée à part) ; fiabilité, pas validité (`validation.md` §11) |

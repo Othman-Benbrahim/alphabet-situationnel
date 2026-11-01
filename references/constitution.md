@@ -1,6 +1,6 @@
 # Alphabet situationnel — Constitution
 
-> Version : 0.7.23
+> Version : 0.7.24
 
 > Les neuf principes priment sur toutes les règles de `protocole.md`. Une règle qui en contredit un
 > est nulle et doit être corrigée, pas appliquée.

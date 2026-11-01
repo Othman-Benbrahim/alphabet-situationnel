@@ -2833,19 +2833,28 @@ def v4_statut(dm):
     # d'équivalence déclaré. Barrière : si l'autocorrélation d'ordre 1 des épisodes dépasse v4_autocorrelation_max,
     # aucune des deux conclusions n'est émise. Le test du signe et le statut ci-dessus restent publiés, descriptifs.
     zt=NormalDist().inv_cdf(1-P['v4_alpha'])+NormalDist().inv_cdf(1-(1-P['v4_puissance'])/2)
-    de=P['v4_equivalence_delta'];n_eq=None if sd is None else max(P['v4_n'],math.ceil((zt*sd/de)**2))
+    # 0.7.24 : l'effectif d'équivalence se fixe une fois (après 20 épisodes, sur σ̂), puis se déclare dans
+    # v4_effectif_equivalence ; tant qu'il vaut 0, il est provisoire et aucune équivalence ne se conclut.
+    de=P['v4_equivalence_delta'];fixe=P['v4_effectif_equivalence']>0
+    n_eq=P['v4_effectif_equivalence'] if fixe else None if sd is None else max(P['v4_n'],math.ceil((zt*sd/de)**2))
     r1=dm.get('autocorrelation_1');barr=r1 is not None and r1>P['v4_autocorrelation_max']
     se_=dm.get('erreur_type');z1=NormalDist().inv_cdf(1-P['v4_alpha'])
     ic_eq=None if se_ is None else [dm['d_moyen']-z1*se_,dm['d_moyen']+z1*se_]
-    gain_ok=eg is not None and eg['e_max']>=P['v4_e_seuil_primaire']
-    eq_ok=ic_eq is not None and n_eq is not None and dm['episodes']>=n_eq and -de<ic_eq[0] and ic_eq[1]<de
-    if barr:concl='aucune conclusion : épisodes autocorrélés (ρ̂₁ > '+str(P['v4_autocorrelation_max'])+'), espacer les épisodes'
+    # 0.7.24 : aucune conclusion avant v4_n épisodes (la barrière d'indépendance a besoin d'épisodes) ; gain et
+    # équivalence à la fois : contradiction publiée, aucune conclusion ; l'équivalence exige un effectif fixé.
+    mur=dm['episodes']>=P['v4_n']
+    gain_ok=mur and eg is not None and eg['e_max']>=P['v4_e_seuil_primaire']
+    eq_ok=mur and fixe and ic_eq is not None and dm['episodes']>=n_eq and -de<ic_eq[0] and ic_eq[1]<de
+    if not mur:concl='non encore évalué : moins de '+str(P['v4_n'])+' épisodes'
+    elif barr:concl='aucune conclusion : épisodes autocorrélés (ρ̂₁ > '+str(P['v4_autocorrelation_max'])+'), espacer les épisodes'
+    elif gain_ok and eq_ok:concl='aucune conclusion : gain et équivalence à la fois (contradiction publiée)'
     elif gain_ok:concl='gain établi (e-processus ≥ '+str(P['v4_e_seuil_primaire'])+')'
     elif eq_ok:concl='aucun apport à ±'+str(de)+' (équivalence)'
-    elif n_eq is not None and dm['episodes']>=n_eq:concl='non établi : ni gain, ni équivalence à l’effectif d’équivalence'
+    elif fixe and dm['episodes']>=n_eq:concl='non établi : ni gain, ni équivalence à l’effectif d’équivalence (arrêt)'
+    elif not fixe:concl='non encore évalué : effectif d’équivalence non fixé (provisoire '+str(n_eq)+')'
     else:concl='non encore évalué'
     decision={'conclusion':concl,'gain_e_max':None if eg is None else eg['e_max'],'equivalence_intervalle':ic_eq,
-              'effectif_equivalence':n_eq,'autocorrelation_1':r1,'barriere':barr,
+              'effectif_equivalence':n_eq,'effectif_equivalence_fixe':fixe,'autocorrelation_1':r1,'barriere':barr,
               'regle':(f"gain : e_gain_v4 ≥ {P['v4_e_seuil_primaire']} ; aucun apport : intervalle à {1-2*P['v4_alpha']:.0%} de d̄ dans ±{de}, "
                        f"lu à épisodes ≥ max({P['v4_n']}, ⌈({zt:.2f}·σ̂/{de})²⌉) ; barrière ρ̂₁ > {P['v4_autocorrelation_max']} ; test du signe descriptif")}
     return {'statut':st,'episodes':dm['episodes'],'effectif_requis':req,'effectif_cible':cible,'d_moyen':dm['d_moyen'],
@@ -3250,7 +3259,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.23','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.24','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -5138,9 +5147,16 @@ def autotest():
             self.assertNotIn('decision',v4_statut(None))                    # aucun épisode : pas de décision
             dm={'episodes':60,'d_moyen':0.0,'sigma_d':.05,'erreur_type':.05/math.sqrt(60),'autocorrelation_1':.1,
                 'test_signe':None,'test_wilcoxon':None,'e_gain_v4':{'e_valeur':1,'e_max':2,'seuil':20,'franchi_a_l_episode':None}}
-            self.assertTrue(v4_statut(dm)['decision']['conclusion'].startswith('aucun apport'))
-            self.assertTrue(v4_statut(dict(dm,autocorrelation_1=.5))['decision']['conclusion'].startswith('aucune conclusion'))
-            self.assertTrue(v4_statut(dict(dm,e_gain_v4={'e_valeur':25,'e_max':25,'seuil':20,'franchi_a_l_episode':40}))['decision']['conclusion'].startswith('gain'))
+            self.assertIn('non fixé',v4_statut(dm)['decision']['conclusion'])                # 0.7.24 : effectif non déclaré
+            ancien=P['v4_effectif_equivalence'];P['v4_effectif_equivalence']=60
+            try:
+                self.assertTrue(v4_statut(dm)['decision']['conclusion'].startswith('aucun apport'))
+                self.assertTrue(v4_statut(dict(dm,autocorrelation_1=.5))['decision']['conclusion'].startswith('aucune conclusion'))
+                gain={'e_valeur':25,'e_max':25,'seuil':20,'franchi_a_l_episode':40}
+                self.assertIn('contradiction',v4_statut(dict(dm,e_gain_v4=gain))['decision']['conclusion'])
+                self.assertTrue(v4_statut(dict(dm,e_gain_v4=gain,d_moyen=-.05))['decision']['conclusion'].startswith('gain'))
+                self.assertTrue(v4_statut(dict(dm,episodes=30,e_gain_v4=gain))['decision']['conclusion'].startswith('non encore'))
+            finally:P['v4_effectif_equivalence']=ancien
         def test_abstention(self):
             # 0.6.11 (audit V22) : un calcul non estimé ne devient pas une prévision chiffrée.
             calc={'evenement':'SEU@7 apparait','p':None,'rho':4,'intervalle':None,'p_sans_cartes':None,

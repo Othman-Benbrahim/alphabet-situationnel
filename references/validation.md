@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.23
+> Version : 0.7.24
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -838,3 +838,25 @@ Un auteur qui code, juge et score ses propres cas reste une source de biais, mê
 test de leurres : le codage, le jugement des leurres et le score sont **exécutés ou audités par un tiers**, nommé
 avant le premier épisode, qui publie son propre rapport. Sans tiers, un résultat se publie « exécuté par
 l'auteur ».
+
+### 11.8 Marges fermées (0.7.24)
+
+Une troisième relecture a listé les endroits où une décision pouvait encore se prendre après coup. Chacun est
+fermé ici, avant le premier épisode.
+
+| Marge | Règle |
+|---|---|
+| **Exclure une question avant codage** | La liste des questions est tirée du banc par une règle publiée, et scellée avant tout codage. Une seule exclusion préalable est admise : une question qui se résout sur une série chiffrée, critère mécanique appliqué à la liste scellée. Toute autre question entre au journal ; si l'alphabet ne peut pas la coder (Hors domaine, état nul, question causale), c'est une abstention, avec repli (§11.4). Le codeur ne retire rien. |
+| **Moment de l'accord** | L'accord se mesure **avant** le premier épisode, sur des cas de la base, pas sur les épisodes de V4. La liste des cartes admises (verdict au moins `provisoire`) se publie avec son empreinte avant l'épisode 1 et ne change plus pendant l'étude. Un état de V4 qui ancre une carte hors liste rend l'épisode hors V4 (motif `codage`), compté. Aujourd'hui aucune carte n'a d'accord mesuré : **V4 ne peut pas commencer** avant cette étude. |
+| **Autocorrélation** | Estimateur : coefficient d'ordre 1 des différentiels d'épisode, centrés sur d̄, épisodes rangés par la date de leur première question (`differentiel`, `autocorrelation_1`). Il se lit au moment de la conclusion, sur tous les épisodes, et jamais avant `v4_n` épisodes. Au-delà de 0,3, « aucune conclusion » est **le résultat publié**, pas l'occasion de changer de test. |
+| **Paraphrases et versions (`accord --llm`)** | Trois paraphrases par dossier, rédigées par une personne autre que l'auteur selon une consigne publiée, scellées avant la première exécution. Les versions de modèle testées sont nommées avant. |
+| **PABAK et taux de manque** | La règle du code est la seule : PABAK ≥ 0,67, les deux taux de manque ≤ `fnr_max`, et le contrôle des absences quand la prévalence dépasse 0,5. Aucune exception n'est prévue, ni à écrire. |
+| **Dossier neutre** | Produit **mécaniquement** depuis le dossier scellé, par la règle d'`export-codeur` : faits, sources et dates, sans carte, sans strate, sans marqueur, ordre mélangé par empreinte. Le gabarit de présentation est figé et son empreinte publiée avant l'épisode 1. Il contient la même information, au vocabulaire de l'alphabet près. Limite déclarée : les faits sont ceux que le codeur de l'alphabet a retenus ; le contraste mesure donc les étiquettes et ce qu'elles organisent, pas la sélection des faits. |
+| **Issues des deux tests** | Écrites dans le code (`v4.decision`) : moins de `v4_n` épisodes, non évalué ; barrière franchie, aucune conclusion ; gain **et** équivalence, contradiction publiée, aucune conclusion ; gain seul, gain établi ; équivalence seule, aucun apport ; ni l'un ni l'autre à l'effectif d'équivalence, non établi, et l'étude s'arrête. |
+| **Arrêt et effectif** | L'étude s'arrête au premier de trois événements : gain établi après au moins `v4_n` épisodes ; effectif d'équivalence atteint, où l'équivalence se lit **une seule fois** ; date limite déclarée avant l'épisode 1. L'effectif d'équivalence se fixe **une fois** : hypothèse déclarée σ(d) = 0,10, soit 138 épisodes, puis recalcul unique sur σ̂ après 20 épisodes, publié dans `v4_effectif_equivalence` avant l'épisode 21. Tant que ce paramètre vaut 0, aucune équivalence ne se conclut. L'arrêt anticipé sur le gain ne lit pas l'équivalence ; l'équivalence n'est jamais lue avant son effectif. |
+| **Puissance** | 80 % (`v4_puissance`), valeur minimale déclarée. À 90 %, z vaut 3,29 et l'effectif environ 173 à σ(d) = 0,10. L'effectif augmente aussi si l'effet vrai n'est pas nul (0,01 par exemple) : c'est le risque accepté. |
+| **Leurres** | 40 situations, une lecture réelle et un leurre chacune : proportion nulle 1/2. Chaque situation est jugée par un juge tiré parmi au moins deux, qui connaît la situation. Critère : au moins 26 lectures réelles reconnues sur 40 (binomial exact unilatéral, p = 0,040 ; 25 donnerait 0,077). Les leurres sont rédigés par une personne autre que l'auteur, selon une consigne publiée, après production des lectures réelles. |
+| **Choix du tiers** | Nommé et publié avant l'épisode 1 (§11.7) ; un tiers nommé après les premiers résultats rend l'étude « exécutée par l'auteur ». |
+
+Ces valeurs sont des **décisions d'auteur** prises avant toute mesure. Une valeur changée après l'épisode 1 ouvre une
+nouvelle étude, sur des épisodes neufs.

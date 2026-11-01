@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.23
+> Version : 0.7.24
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1336,3 +1336,11 @@ partie). L'article de Cantó-Milà (2018) sur les formes chez Simmel, cité par 
 
 Le bras dossier neutre, la dispersion de p entre exécutions d'un modèle, le test de leurres et la confirmation
 humaine d'un état proposé par un modèle sur un dossier : des règles écrites, non calculées.
+
+### 29.4 Troisième relecture (0.7.24)
+
+amass, sans avoir pu lire le §11, a listé dix endroits où une décision pouvait se prendre après coup. Tous sont
+fermés au §11.8 ; deux ont demandé du code (`v4_effectif_equivalence`, fixé une fois ; issues de `v4.decision`
+complétées : contradiction, plancher de `v4_n` épisodes). **Corrigé dans le texte envoyé à amass** : le chiffre de
+125 épisodes venait de la seconde relecture, par un autre modèle, non d'amass ; le §29.2 l'attribue bien à la
+seconde relecture. **Constat** : aucune carte n'a d'accord mesuré, donc V4 ne peut pas commencer.

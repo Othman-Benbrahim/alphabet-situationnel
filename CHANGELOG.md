@@ -1,9 +1,24 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.23
+> Version : 0.7.24
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.24 — 2026-11-01 · marges fermées
+
+Dix marges de décision après coup, relevées par une troisième relecture, fermées avant le premier épisode
+(`validation.md` §11.8 ; `apports-theoriques.md` §29.4). **Aucune probabilité ne change, vérifié par clôture.** Aucun
+texte retiré.
+
+- **`scorer`, `v4.decision`** : aucune conclusion avant `v4_n` épisodes ; gain et équivalence à la fois →
+  contradiction, aucune conclusion ; l'équivalence exige un effectif fixé une fois, `v4_effectif_equivalence`
+  (0 = non fixé : hypothèse σ(d) = 0,10, soit 138 ; recalcul unique après 20 épisodes).
+- **`validation.md` §11.8** : exclusion préalable seulement mécanique (séries chiffrées) ; accord mesuré avant
+  l'épisode 1 et liste des cartes admises figée ; estimateur de l'autocorrélation ; paraphrases et dossier neutre
+  produits et figés d'avance ; arrêt ; puissance ; leurres (40 situations, 26 reconnues, p = 0,040) ; tiers
+  nommé avant. Constat : aucune carte n'a d'accord mesuré, V4 ne peut pas commencer.
+- 154 autotests.
 
 ## 0.7.23 — 2026-11-01 · règles de décision de V4
 

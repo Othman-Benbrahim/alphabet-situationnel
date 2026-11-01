@@ -1,6 +1,6 @@
 # Alphabet situationnel — Graphe de transitions (couche 4)
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Procédure expérimentale. Le moteur produit les chiffres et le JSON ; l'interprétation des sources
 > et des objets reste à vérifier. Règles : T1–T6 ; paramètres : `protocole.md` §H.
@@ -239,6 +239,18 @@ reste hors des bandes. Ce qui la relie à la durée du phénomène est `temporal
 la fenêtre (`ratio_duree_fenetre`) avec une temporalité générique est refusée sans justification.
 Composés : un pas seulement, sinon erreur explicite.
 
+**Ce que le multi-pas ne voit pas (0.7.18).** Les arêtes valent pour un pas (`transitions` : paires d'états
+consécutifs). Au-delà, `presence` suit une vraie récurrence de Markov à deux états sur la carte cible
+(q ← q·r + (1 − q)·a) ; `au-moins-une-fois` et `continue` supposent des pas indépendants. Dans tous les cas, les
+**autres cartes restent figées** à leur valeur initiale (la sortie le dit : « sources et probabilités supposées
+fixes sur l'horizon »). Un lien indirect, qui passe par une carte relais, n'y a aucun chemin : à partir de trois
+variables, l'amélioration de la prévision à un pas ne capte pas les liens indirects, qui n'apparaissent qu'à des
+horizons plus longs et exigent deux conditions au lieu d'une pour être exclus (Bruneau et Nicolaï 1994, système
+autorégressif stationnaire : l'analogie vaut pour la forme, non pour la formule). Le multi-pas est la prévision
+d'**une** carte, contexte figé, non celle du système ; les trajectoires (`simulation.md` §3) font bouger
+plusieurs cartes, sans dépendance estimée. Comparer, sur un cas connu, le p à trois pas contexte figé et le p
+obtenu en faisant bouger la carte relais dirait ce que coûte le gel ; ce test attend des cas.
+
 ---
 
 ## 3. Cas homologues (T3)
@@ -336,6 +348,41 @@ intensités permutées la placent au 83ᵉ centile, sans la départager du hasar
 base fictive : la sonde décrit la mécanique, pas la valeur. Elle est le seul test des paramètres
 exécutable avant le premier cas réel.
 
+**Centile du placebo (0.7.18).** Le drapeau `homologie_discernable` dit seulement si p tombe dans la plage à
+90 % des tirages ; le placebo publie aussi `centile_placebo`, calculé comme le centile de la sonde (ex æquo
+comptés pour moitié, résolution 1/200). C'est une p-value prédictive au sens de Gelman et al. (BDA3 §6.3),
+lue sous une nullité nommée : « la sélection des homologues ne fait pas mieux que des cas tirés au hasard ».
+Un centile proche de 0,5 dit que l'instrument ne trouve rien, non que tout va bien ; sur la démonstration,
+0,63. Deux p également « indiscernables » à 0,62 et 0,97 ne sont pas dans la même situation, et seul le
+centile s'agrège entre questions. La nullité de la sonde est autre (la matrice sans effet) : le code est le
+même, l'interprétation ne se transporte pas.
+
+**Voisins et unicité de la base (0.7.18, `moteur.py voisins`).** Avant toute prévision, une question
+préalable : la base contient-elle des répétitions ? Pour chaque transition, son meilleur voisin par la
+similarité du moteur, correspondances triviales exclues (même cas, ou fenêtres qui se recoupent, comme la
+zone d'exclusion de la matrice de profil de stumpy). Sur la démonstration : 69 transitions sur 78 ont un
+jumeau H1 exact, médiane du meilleur voisin 1,000, 73 sur 78 au-dessus de 0,7. La base est **saturée par
+construction** — peu de combinaisons de cartes, répétées —, ce qui explique `homologie_discernable = false` :
+un tirage au hasard contient lui aussi presque toujours des jumeaux. Sur une base réelle, une médiane à 1
+signalerait un vocabulaire trop pauvre, une médiane basse des cas singuliers. Le même diagnostic publie
+l'**unicité moyenne** ū de López de Prado (2018, ch. 4, l'inverse de la moyenne harmonique de la
+concurrence mensuelle) : 0,705 sur la démonstration, 42 transitions sur 78 partagent des mois avec celles
+d'un autre cas, concurrence maximale 4 — dans la plage d'un tirage aléatoire (médianes 0,6 et 0,7 chez la
+source). Le calcul de p n'en tient pas compte : le garde `1/counts` corrige les transitions d'un même cas,
+qui ne se recoupent jamais ici, non le recouvrement entre cas distincts. Pondérer par ū ramènerait p vers
+p₀ et élargirait l'intervalle (−31,6 % de poids effectif en démonstration, selon la note) : version séparée.
+
+**La décroissance est chronologique, contre l'avis de la source (0.7.18).** López de Prado (2018, §4.7)
+fait décroître les poids selon l'**unicité cumulée**, non le temps : « une décroissance chronologique
+réduirait les poids trop vite en présence d'observations redondantes ». Le moteur applique
+0,5^(âge/`demi_vie_ans`) avec un âge chronologique ; sur la démonstration, l'horloge d'unicité avancerait
+environ 30 % moins vite. Choix assumé, non oubli : `demi_vie_ans` est publié et entre dans la bande de
+classe ; changer d'horloge changerait sa sémantique et toutes les probabilités. Unicité et décroissance par
+unicité, si elles venaient, iraient en sens opposés sur le poids des cas anciens : jamais dans la même
+version. Et une précision de vocabulaire : le produit des λ est la forme d'une **pseudo-vraisemblance**
+(produit de conditionnelles, Besag 1975), non d'un champ moyen ; mais une pseudo-vraisemblance n'est
+consistante que si ses paramètres sont estimés, et ici ils sont stipulés (`feuille-de-route.md` §1, item 1.0).
+
 ---
 
 ## 4. Révision (T3)
@@ -372,6 +419,20 @@ Exiger des équivalents Documentés/Attestés des cartes sources **et de la cibl
 strates. Les équivalents non sourcés livrés en 0.4.0 ne permettent aucun emprunt. Après documentation,
 le poids w=0,5 reste une hypothèse à tester, et non une garantie de transportabilité. Un emprunt ne
 remplace pas une observation du domaine cible ; le signalement ρ2 est obligatoire.
+
+**Ce que vaut w = 0,5 (0.7.18).** Une **convention de repli**, non une estimation : le moteur donne le même poids
+à toute transition empruntée (H3), quelle que soit la distance entre la strate source et la strate cible. Or le
+passage d'un niveau à l'autre n'est pas une agrégation (Coleman 1990 : une interdépendance doit être modélisée ;
+deux règles du jeu, la transmission des conséquences et la dérivation des résultats, dont le skill n'a que la
+seconde), il peut aller du haut vers le bas (Bhaskar 1975 : le niveau supérieur fixe les conditions aux limites
+de l'inférieur), et une corrélation mesurée sur des ensembles peut avoir un signe opposé à celle des membres,
+d'autant plus forte que le regroupement est grossier (Boudon 1963, effet de groupement). Un scalaire ne peut pas
+suivre un biais qui croît avec l'écart : toute conclusion qui dépend d'un emprunt H3 est suspendue, et H3 est
+une **substitution**, non une parenté établie. La base d'exemple ne couvre que 2 strates sur 13, chacune avec les
+mêmes 40 cas (`moteur.py voisins`, répartition par strate) : partout ailleurs, l'emprunt ou l'a priori seul est
+le régime normal. Une émergence se teste par contrefactuel (Bhaskar) : le cours des choses diffère-t-il si la
+strate inférieure opérait seule ? Le skill prédit des événements de situation, non des comportements
+d'individus : une phrase qui nomme un acteur illustre, elle ne conclut pas.
 
 ---
 

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -907,3 +907,264 @@ propriété dans le DCM) : aggraverait le déséquilibre que l'audit V34 reproch
 commun à toutes les questions : le skill a une fréquence de base par événement. La plage 0,01–0,8 des
 deux textes comme résultat : leurs auteurs la donnent pour une sensibilité aux hypothèses, non pour une
 fourchette empirique.
+
+## 21. Les mathématiques expérimentales : quatre sortes d'expériences (0.7.18)
+
+**Source.** Borwein, J. M., Bailey, D. H., Calkin, N. J., Girgensohn, R., Luke, D. R., Moll, V. H. (2007),
+*Experimental Mathematics in Action*, Wellesley (MA), A K Peters ; référence vérifiée. La note de lecture
+a lu le chapitre 1 (p. 1-26) et une partie du chapitre 6 (p. 142-150).
+
+### 21.1 Retenu
+
+| Point de la note | Vérification | Versé | Où |
+|---|---|---|---|
+| Quatre formes d'expérience (Medawar, cité p. 5-6) ; seule la galiléenne, qui peut conclure non, rend la démarche sérieuse | juste comme cadre ; « peut conclure non » est le critère de la note | classement des instruments, corrigé (§21.2) | `validation.md` §9 |
+| « Étaler ses cartes sur la table » (p. 24) | juste ; c'est ce que font le dossier scellé, les sources du calcul, `garantie.support`, « non estimé » | une phrase | `constitution.md` §1 |
+| Aucun des rôles du calcul liés à la visualisation n'est exercé | juste : aucune figure | sortie de données pour figures, moteur sans dépendance | `feuille-de-route.md` §7 |
+| Le nombre de tests survécus est une donnée (p. 13) | juste ; rejoint la lecture séquentielle (0.7.12) | une phrase | `validation.md` §9 |
+| La certitude des mathématiques expérimentales ne se transpose pas : l'arithmétique est un oracle, la prévision n'en a pas | juste | phrase de frontière | `constitution.md` §1 |
+
+### 21.2 Corrigé dans la note
+
+1. **« Aucune expérience critique ne porte sur la lecture ; le second codeur et κ n'existent pas. »** Faux
+   sur le code : `accord` (0.7.9), `--repetabilite` (0.7.10), `rejets` (0.7.9), le banc d'essai
+   (`validation.md` §9) et le test à trois bras (0.7.12) sont des expériences galiléennes sur la lecture.
+   Le constat juste est plus dur : celles qui portent sur l'appareil ont été jouées, parce qu'elles
+   n'exigent aucun humain ; aucune de celles qui portent sur la lecture ne l'a été.
+2. **`conservativite` n'est pas une expérience** : c'est un contrôle de non-régression, comme `audit`.
+3. **« Les fréquences de base sont estimées sur des cas filtrés par homologie. »** Faux :
+   `frequence_de_base` porte sur toutes les transitions de la strate et de la fenêtre ; seule la révision
+   utilise les homologues ; `p_sans_cartes` vaut exactement f.
+4. **« L'apport des cartes est l'effet du conditionnement par homologie ; +0,7 point. »** Faux deux fois :
+   l'apport des cartes vaut +10,0 points sur la démonstration, décomposé en +1,8 (sélection des homologues,
+   p − p_placebo) et +8,2 (multiplicateurs et cas de la strate, p_placebo − p_sans_cartes) ; +0,7 est l'effet
+   de l'abaissement F → f. La leçon du chapitre 6 — conditionner change la population — est ce que mesure le
+   placebo (0.7.4).
+5. **Renvois.** Au moment du tri, la note citait des documents absents du dossier versé
+   (`modifications-substantielles.md`, `analyse-alphabet-situationnel.md`) ; ils sont versés depuis et triés
+   au §22.
+
+### 21.3 Refusé
+
+Revendiquer une certitude pratique : sans oracle, le skill garde ses intervalles. Un outil de visualisation
+dans le moteur : une sortie de données suffit.
+
+## 22. Dix notes de méthode : López de Prado, stumpy, Johnson, Hardt et Recht, Galaxy Zoo, Gelman et al., Chan, un cas agricole (0.7.18)
+
+**Sources des notes.** *Modifications substantielles* (López de Prado 2018, *Advances in Financial Machine
+Learning*, ch. 4, 7, 11, 12) ; *Le gabarit de formulation* ; *Lire le langage, prévoir l'événement*
+(révision 0.7.17) ; *Les concurrents directs* (révision 0.7.17) ; *Comprendre l'Alphabet situationnel*
+(vulgarisation) ; *Ce que les outils d'évaluation apportent* (stumpy, tsfresh, river, alibi-detect,
+giskard, promptfoo, RobustBench, ART ; Johnson 2002 ; `physics.data-an` ; Hardt et Recht 2022, ch. 8 ;
+Lintott et al. 2008 ; Gelman et al., *Bayesian Data Analysis*, 3ᵉ éd., ch. 6, 8, 9 ; Chan 2026, ch. 6, 8, 9 ;
+Patterson) ; *Un cas d'école mesuré : la production agricole indienne* ; et de nouvelles copies des notes
+Copley, rétrospection et DCM, qui reprennent les corrections des §19.2 et §20.2 sans apport nouveau.
+Chaque point a été vérifié sur le code avant d'être versé ; **aucune probabilité ne change**.
+
+### 22.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| La base a-t-elle des répétitions ? (stumpy, matrice de profil) | **mesuré** avec la similarité du moteur, correspondances triviales exclues : 69/78 jumeaux H1, médiane 1,000, 73/78 au-dessus de 0,7 — reproduit exactement les chiffres de la note | `moteur.py voisins`, test | `graphe.md` §3.4, `SKILL.md` |
+| Unicité moyenne ū (López de Prado, ch. 4) | **mesuré** : 0,705, médiane 0,5, minimum 0,25, 42/78 transitions, concurrence maximale 4 — identique à la note | publié par `voisins`, hors du calcul | `graphe.md` §3.4 |
+| Le placebo rend un tricolore là où la sonde rend un centile | **constaté** : `sonde_matrice` publie `centile_reel`, `placebo_homologie` non, avec les mêmes 200 tirages | `centile_placebo`, nullité nommée ; 0,63 sur la démonstration | `graphe.md` §3.4 |
+| Le centile est une p-value prédictive (BDA3 §6.3) et se lit sous une nullité nommée | juste : même formule ; un centile vers 0,5 dit que l'instrument ne trouve rien | une phrase | `graphe.md` §3.4 |
+| L'empreinte de clôture publiée ne se reproduit pas (`b8d346ea…` contre `b1a592c8…`) | **non reproduit** sous Linux, Python 3.8, 3.12, 3.13, 3.14 : `b1a592c8…` partout ; la note l'obtient sous Windows, Python 3.14.3. Cause non établie (bibliothèque mathématique probable) ; la note se trompait en l'imputant au journal, qui est juste sur la plateforme de référence | empreinte **portable** ajoutée, empreinte stricte inchangée | `validation.md` §9 |
+| Fiabilité n'est pas validité (Hardt et Recht) | juste : tous les instruments mesurent fiabilité, sensibilité ou intégrité | écrit | `validation.md` §10 |
+| Deux sens de « reproductible » ; banc d'essai déjà résolu (Johnson 2002) | juste | écrit | `validation.md` §10 |
+| Troncature et ignorabilité (BDA3 §8) | juste : l'inclusion dépend de l'issue | écrit ; compteur différé | `validation.md` §10, `feuille-de-route.md` §7 |
+| Deux multiplicités ; k déclaré ; ajuster les décisions, pas les lectures (López de Prado ch. 11 ; tsfresh : BY ; Gelman) | juste ; BY retenu parce que les variantes partagent λ, inerties et demi-vie | écrit, avec le seuil pour k = 12 | `validation.md` §10 |
+| Ordres de grandeur de résolution (Hardt et Recht ; Chan) | calculs refaits : √(log 12 / 10) ≈ 0,50 | écrit comme ordre de grandeur | `validation.md` §10 |
+| κ à 20 cas : les deux repères ne se distinguent pas (Chan) | calcul refait : SE 0,134 à κ = 0,80, pₑ = 0,5 | écrit | `protocole.md` A4 |
+| Effet Hawthorne sur la répétabilité ; refus de pondérer les codeurs par l'accord (Galaxy Zoo, +37 %) | juste, chiffres de la source | écrit | `protocole.md` A4 |
+| p est l'estimateur sous perte quadratique ; pas de fonction d'utilité | juste | écrit | `validation.md` §10 |
+| Contrôle positif manquant ; transformation neutre et mutation (Galaxy Zoo) | juste | écrit ; base plantée différée | `validation.md` §10, `feuille-de-route.md` §7 |
+| Décroissance chronologique déconseillée par la source (López de Prado §4.7) | juste ; `demi_vie_ans` est chronologique | écrite comme choix assumé, non changée | `graphe.md` §3.4, commentaire du moteur |
+| Produit des λ : pseudo-vraisemblance, non champ moyen ; pièges de l'estimation | juste | écrit | `graphe.md` §3.4, `feuille-de-route.md` §1 |
+| Lu 2025 : médiane contre moyenne | **vérifié sur le texte** (v2) : o3 0,1352 / 0,1362, experts 0,0225 / 0,1573 | précision ajoutée, sans retirer la phrase du §8 | `validation.md` §8 |
+| Gabarit de formulation en six questions | déduit des règles existantes (A5–A7, `temporalite`, `semantique`, `questions`, `passage.forme`) ; non éprouvé | liste facultative avant le mode PRÉVOIR | `SKILL.md` |
+| Différés : poids par unicité, purge, CPCV, verdict à quatre états, codeur disqualifié, compteur des cas non résolus, fiche de base, bootstrap par cas, résultats persistants, priorisation par dispersion | chacun attend des cas réels ou change p | lignes de feuille de route | `feuille-de-route.md` §7 |
+
+### 22.2 Corrigé dans les notes
+
+1. **« Inverser la séquence du journal et recalculer : le geste le plus rentable. »** Pas ici : les
+   probabilités sont scellées avant l'issue, et le gain moyen, le test du signe et la valeur finale de
+   l'e-processus (un produit) sont invariants par permutation des épisodes ; seuls le maximum et l'épisode
+   de franchissement changent. Recalculer les prévisions dans l'ordre inverse ferait entrer des cas
+   postérieurs. La critique du test en marche avant est écrite (`validation.md` §10) ; le test d'inversion
+   ne l'est pas.
+2. **« L'inertie est un paramètre, pas un concurrent évalué » (cas agricole).** Inexact : `p_sans_cartes`
+   est le comparateur inertiel, publié à chaque calcul et au journal ; c'est précisément le statu quo que
+   la note demande.
+3. **Décalage des notes et du code.** La note principale annonce « 151 autotests » et « 149 tests » à deux
+   endroits, la sonde au 98ᵉ centile quand `graphe.md` §3.4 dit 99ᵉ : chiffres d'exécutions différentes, à
+   relire sur la sortie du moteur.
+4. **« Exclure les homologues triviaux dans `valider_base`. »** Sans objet pour le calcul : les homologues
+   d'un état sont tirés de la base à la date d'information, l'état interrogé n'en fait pas partie, et deux
+   transitions d'un même cas ne se recoupent pas. L'exclusion vaut pour le diagnostic de la base, où elle est
+   appliquée (`voisins`).
+5. **La note DCM, nouvelle copie.** Son §7 et son §10 maintiennent encore que l'absence d'exigence explique
+   l'absence d'inhibition, corrigé au §20.2 (point 2) ; la correction est déjà versée.
+
+### 22.3 Refusé
+
+Embargo (López de Prado ch. 7) : inutile pour un journal chronologique. Décroissance par unicité cumulée :
+changerait la sémantique de `demi_vie_ans` et toutes les probabilités. Seuil de Jaccard adaptatif :
+change la classe, donc p (version séparée). MPdist sur les états : l'objet est catégoriel. Pondération des
+codeurs par leur accord (Galaxy Zoo) : mesurée défavorable par la source même. Un σ tiré d'un pourcentage
+d'accord : il ne tient que sous une nullité implicite. Mesures par gradient (ART) : le moteur n'a pas de
+gradient. Bootstrap naïf sur les transitions : 42 des 78 partagent leurs mois. Remplacer l'intervalle bêta
+par un bootstrap : ses quantiles sont exacts. Un instrument de validité : il n'existe pas de critère formel
+simple ; la validité s'écrit. Le vulgarisé *Comprendre l'Alphabet situationnel* : sans règle nouvelle.
+
+## 23. Causalité, lecture des causes et accord : dix notes du second lot (0.7.18)
+
+**Notes triées.** *L'accord entre codeurs* (Krippendorff 2011 ; Artstein et Poesio 2008 ; Bayerl et Paul 2011 ;
+Willett et al. 2013) ; *Les lois de la dynamique causale* (Coleman 1990, Ylikoski 2021, Bhaskar 1975) ; *La
+causalité humaine* (Aristote, Mackie 1965, Hart et Honoré 1959, Weber 1906 ; Fein et Vossekuil 1998 ; Grabo 2002) ;
+*Lire une causalité dans un texte* (Wüest 2023) ; *Le lien d'interprétation et le topos local* (Pires 1993, Mellet
+2003) ; *Mesurer un construit* (Croutsche 2002) ; *Le diagnostic du flou* (Verleyen et Swiggers 2006) ; *La fausse
+évidence du collectif* (Boudon 1963) ; *Causalité, causativité, transitivité* (Desclés et Guentchéva 1998) ; *L'échelle
+se monte par hypothèses* (Runge et al. 2023). Vérifiés sur le code ; **aucune probabilité ne change** (clôture
+identique, l'emprunt n'est pas touché).
+
+### 23.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| PABAK n'est pas sûr sous forte prévalence | **reproduit** : `accord --a 90 --b 5 --c 5 --d 0` rendait « rapportable » avec κ = −0,053 | contrôle des absences quand la carte est la valeur fréquente ; test | `moteur.py accord`, `protocole.md` A4 |
+| Publier aussi le coefficient à marges regroupées ; α de Krippendorff | exemple Meg et Owen reproduit (α = 0,095 pour 60 % d'accord brut) | π de Scott et α nominal publiés, hors verdict | `accord`, A4 |
+| 0,80 est un seuil de publication ; but de la mesure à déclarer ; liste en huit points | chiffres de la méta-analyse | écrit | A4 |
+| Pondération plafonnée (Galaxy Zoo 2) | juste : corrige le défaut mesuré au §22 | refus du §22 nuancé, non retiré | A4 |
+| Répartition des cas par strate (Boudon) | **mesurée** : la démonstration couvre 2 strates sur 13, 40 cas chacune | `voisins` par strate | `graphe.md` §5 |
+| `w_emprunt` : un poids unique pour toute distance (Coleman, Bhaskar, Boudon) | **constaté** : même poids pour toute strate source | écrit comme convention de repli ; poids par distance différé (change p) | `graphe.md` §5, `feuille-de-route.md` §7 |
+| Les cartes codent la cause formelle ; typologie de Pires ; pas de carte « intention » | juste ; `dynamiques.md` dit déjà que toutes les transitions sont au barreau A | écrit | `dynamiques.md` |
+| Loi de composition nommée : effets directs, monotones, sans interaction ; causation contemporaine | juste sur le code (logit additif, λ ≥ 1) | écrit | `dynamiques.md` |
+| Lire un « parce que » : affirmer n'est pas établir ; contenu, épistémique, acte de parole ; parataxe et topos ; pas de biunivocité mot → carte | juste ; `passage.relation` et `passage.forme` ne disent pas le type de rapport | règles de lecture en A5 ; champs différés | `protocole.md` A5, feuille de route |
+| Voulu, contrôlé, effectué (Desclés et Guentchéva, corrigeant Wüest) | juste : la paire volitif / non-volitif confond deux paramètres | écrit | A5 |
+| L'échelle se monte par hypothèses ; question sans estimand refusée ; sept défis | juste | écrit | `validation.md` §10 |
+| Contraintes contre sélection ; incomplétude ; régime formatif ; indicateur contre indication ; réflexivité | justes | écrits | `validation.md` §10 |
+
+### 23.2 Corrigé dans les notes
+
+1. **« Seize strates » (`nombre_strates` = 16)**, dans quatre notes : faux, il y en a **13** (`parametres.json`).
+   Le calcul de Boudon qui en découle (« 111 états sur 16 strates, environ 7 par strate ») ne vaut donc pas ; la
+   répartition réelle, mesurée, est pire : 2 strates couvertes sur 13.
+2. **« L1 multiplie les marginales ; elle surestime de 62 % la démission effective. »** Le calcul ne compose pas
+   des événements par produit : un composé est non estimé (« aucun produit de marginales »), et le noyau joint
+   n'estime aucune dépendance. L'arithmétique de la note est juste (0,170 contre 0,275) ; elle vaut contre une
+   décomposition que le skill ne fait pas. La leçon retenue : un événement à deux volontés se pose comme un
+   événement (`dynamiques.md`).
+3. **« Le dépôt renvoie toujours un p. »** Faux : état nul, composé, Hors domaine, calcul désarmé, abstention.
+   Ce qui manque est le refus d'une question de barreau I ou C ; il est écrit.
+4. **« Refuser PABAK dès que pₑ > 0,90. »** Briserait la faible prévalence, cas pour lequel PABAK a été retenu
+   (0.7.9) ; le contrôle retenu porte sur la valeur rare, quelle qu'elle soit.
+5. **« Une carte contestée pèse 1,5 fois plus » (`multiplicateur_bouge`).** Exact pour λ ; l'inertie de la cible
+   en position `bouge` est élevée à la puissance 1,5, elle n'est pas multipliée.
+6. **« 2/3 des auteurs avaient parlé de l'attaque »** est P(avoir parlé | avoir agi) ; la note le dit
+   elle-même ; aucun taux d'auteurs politiques n'en découle.
+
+### 23.3 Refusé
+
+Une carte INTENTION, MOBILE ou DUPLICITÉ : infalsifiable ou, pour les deux dernières, à arbitrer sur cas réels
+(l'accord baisse avec le nombre de catégories). Coder un acteur par ses attributs : aucun profil (Fein et
+Vossekuil). Les équations structurelles et les liens bidirectionnels : la base ne les estime pas. Une théorie
+du choix pour résoudre la sélection : un second dispositif. Détecter la parataxe par règles : le codeur reste
+l'instrument. Les méthodes de séries temporelles de Runge et al. (PCMCI, CCM) : elles supposent des variables
+continues et beaucoup d'observations.
+
+## 24. Causes des effets, rigueur et langage estimatif : dix notes du troisième lot (0.7.18)
+
+**Notes triées.** *Une recension et le livre qu'elle signale* (Couture 2007 sur McFalls 2006) ; *Un seul niveau de
+causes* (Rama 2025, Mayr 1961) ; *La causalité en médecine* (Académie des sciences 2017 : Hill, Koch, Mayr) ; *Ce qui a
+l'air rigoureux* (Zelik et al. 2007, Marrin 2013) ; *Des experts pas meilleurs qu'un modèle simple* (Salganik 2023 sur
+Grossmann et al.) ; *Le langage estimatif* (Van Puyvelde 2015, ODNI 203 ; Wong 2014) ; *La méthodologie de l'analyste*
+(synthèse de douze travaux, dont Ross et Tecuci et al.) ; *Le banc d'essai pour l'intuition* (Davies et al. 2021) ;
+*Les effets des causes et les causes des effets* (Musio et Dawid 2025 ; Schubert 2022 sur Seifert et al.) ; *Quatre
+hypothèses* (Gao et al. 2022). Vérifiés sur le code ; **aucune probabilité ne change**.
+
+### 24.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Confondant entre cartes : la co-occurrence n'était pas mesurée (demandée trois fois) | **mesurée** : 111 états, aucune paire toujours ensemble, CTR@6 et POL@7 au plus haut (Jaccard 0,44) | `voisins` publie la co-occurrence ; test | `validation.md` §10 |
+| Une bande verbale, pas seulement un point (ODNI 203) | la sortie texte donne p à une décimale, le JSON en flottant | `bande_verbale` (colonne « probabilité »), ligne en sortie ; test | `validation.md` §10 |
+| Effets des causes contre causes des effets ; bornes plutôt qu'un nombre ; médiateur contre confondant | juste ; la sortie dit déjà « ni effet d'une intervention ni ce qui se serait passé » | écrit ; bornes différées | `validation.md` §10 |
+| Quatre relations compatibles avec un λ ; régime observationnel ; trois obstacles | juste | écrit ; une ligne par arête différée | `validation.md` §10, feuille de route |
+| Hill comme guide de lecture, Koch comme critère du barreau I | juste | écrit | `validation.md` §10 |
+| Rigueur perçue contre justesse ; aucune preuve que l'appareil améliore les réponses | juste : V4, comparateur externe et test à trois bras jamais joués | écrit | `validation.md` §10 |
+| Banc d'essai pour l'intuition ; attribution ; contre-exemple construit | juste | écrit ; contre-exemples par arête différés | `validation.md` §10, feuille de route |
+| Postulats d'arrière-plan, présomption ; « 0 = absence de preuve » | « présomption » absent des références, vérifié ; l'inertie en est une | écrit | `validation.md` §10 |
+| McFalls (2006), seul titre sur la causalité en science politique | une recension seule | lecture à faire | `feuille-de-route.md` §7 |
+
+### 24.2 Corrigé dans les notes
+
+1. **« Publier une version simple à côté de la version complète » ; « un comparateur naïf manque ».** Le modèle
+   simple existe : `p_sans_cartes` (la fréquence seule) est publié à chaque calcul et au journal, et le placebo
+   tire des cas au hasard. Ce qui manque est de les avoir joués sur des questions résolues.
+2. **« La démonstration D6 (22 %, 52 %, 76 %) converge avec Grossmann : l'horizon long est plus exact. »** Non : la
+   bande d'horizon montre que p **monte** avec l'horizon (l'événement a plus de temps pour arriver) ; Grossmann
+   mesure une **erreur** qui baisse. Deux grandeurs ; aucune convergence.
+3. **« Le modèle de Toulmin : quatre termes sur cinq, le support (*backing*) est `attendu`, le qualificateur
+   manque. »** Le support est un champ depuis 0.7.10 (`garantie.support`) ; la question du qualificateur a été
+   tranchée alors : F n'est pas un modalisateur, la force de la conclusion est p et ρ (§14).
+4. **« Le dépôt publie trois décimales. »** La sortie texte donne une décimale de pourcentage ; le JSON garde le
+   flottant. La critique de la fausse précision vaut pour les écarts dérivés (§22).
+5. **Contradiction ouverte, non tranchée.** Bhaskar (deux niveaux, contrôle dual) et Rama (un seul niveau de
+   causes, deux types d'explication) sont incompatibles ; le skill ne choisit pas, il le déclare : les strates
+   distinguent au moins des **questions** ; qu'elles distinguent des **causes** n'est pas établi. Chez Mayr, la
+   distinction proximal / ultime est hiérarchisée, non neutre.
+
+### 24.3 Refusé
+
+Un score composite des critères de Hill. Une « probabilité de causation » comme nombre. « X a causé Y » dans une
+sortie. Générer des états synthétiques pour élargir la base (ils testeraient le générateur). Ajouter des paramètres
+pour améliorer la prévision (les modèles simples gagnent les tournois). Les techniques structurées promues comme
+méthode, ou la formation des codeurs présentée comme gage de justesse (elle produit de l'usage). PCMCI, CCM,
+Granger : variables continues et séries longues. Tirer un apport de la recension de McFalls.
+
+## 25. Horizon, prévision politique et validation par des experts : trois notes du quatrième lot (0.7.18)
+
+**Notes triées.** *L'horizon décide de la causalité* (Bruneau et Nicolaï 1994 ; recension de Michotte 1946) ; *Un
+prédicteur qui survit sur douze* (Mendenhall et Ingber 2024 ; Rosenfeld et Kraus 2018) ; *Combien de voix valident un
+vocabulaire ?* (Rindermann et al. ; Smith et Fieldsend 2021). Vérifiées sur le code ; **aucune probabilité ne change**.
+
+### 25.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Arêtes à un pas ; multi-pas mono-carte, contexte figé ; liens indirects sans chemin | **vérifié** : `transitions` (paires consécutives), `horizon_result` et `cumul` (récurrence sur la seule cible) ; le drapeau « sources et probabilités supposées fixes » existait déjà | écrit ; test du relais différé | `graphe.md` §2.4, `feuille-de-route.md` §7 |
+| La causalité perçue dépend de la présentation (Michotte, par recension) | juste comme avertissement ; recension seule | rejoint A5 (topos, parataxe) | — |
+| p prédit l'événement rapporté ; un prédicteur plausible sur douze survit | juste | écrit | `validation.md` §10 |
+| Modèle généralisé (pas d'attribut d'acteur dans λ) ; la règle de l'acteur plutôt que sa décision | **vérifié** : λ vient de la matrice seule | écrit | `validation.md` §10 |
+| 57 % comme ordre de grandeur sur la tâche la plus favorable ; « prédire jamais » | juste, tâches non comparables | écrit comme repère, non comme seuil | `validation.md` §10 |
+| Un panel porte sa composition ; reconnaissabilité ≠ justesse ; double herméneutique ; huit cas idiographiques | juste ; r = 0,55 sur un objet très politisé, non transposable tel quel | écrit | `protocole.md` A4 |
+
+### 25.2 Corrigé dans les notes
+
+1. **« Le taux de base de chaque carte doit être en tête de sortie ; il manque. »** Il y est : `p_sans_cartes` vaut
+   la fréquence de base et s'imprime d'abord (« À lire d'abord : sans cartes → avec cartes », 0.7.12) tant qu'aucun
+   cas réel n'est actif.
+2. **« Comparer au hasard, une phrase par sortie. »** Le placebo est ce comparateur et s'imprime avec sa plage et,
+   depuis 0.7.18, son centile.
+3. **« Trois décimales », « seize cartes et 111 états », « la variante à une carte ».** Une décimale en sortie texte ;
+   seize cartes mais treize strates ; la variante la plus simple est `p_sans_cartes`, toujours publiée.
+4. **Michotte « n'a pas été lu »** : la note le dit ; rien n'est versé qui repose sur un chiffre de Michotte.
+
+### 25.3 Refusé
+
+Modéliser pleinement l'acteur : il faudrait beaucoup de données par acteur. Un consensus d'experts comme preuve.
+Agréger des lectures idiographiques en probabilité. Ajouter des pas à `transitions` sans instrument : rien de plus
+ne serait mesuré.
+
+### 25.4 Bilan des quatre lots
+
+Trente-trois notes versées le 1er novembre 2026 ont été triées (§22 à §25), plus le tri des mathématiques
+expérimentales (§21). Ce qu'elles ont changé dans le moteur, sans effet sur p : `voisins` (meilleur voisin, unicité,
+répartition par strate, co-occurrence), centile du placebo, empreinte de clôture portable, contrôle des absences et
+coefficients π et α dans `accord`, bande verbale. Ce qu'elles ont écrit : `validation.md` §10 (ce que la validation
+mesure et ne mesure pas), A4 et A5, `dynamiques.md`, `graphe.md` §2.4, §3.4 et §5. Ce qu'elles ont différé : une
+vingtaine de lignes de `feuille-de-route.md` §7, dont trois changeraient p (poids par unicité, poids d'emprunt par
+distance, combinaison crédibilité × pertinence). La conclusion commune des quatre lots est celle du skill depuis
+0.7.7 : l'instrument est construit, la mesure n'a pas commencé ; les notes l'ont rendu plus exact sur ce qu'il
+mesure, non plus informé sur le monde.

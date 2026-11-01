@@ -1,9 +1,51 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.18 — 2026-11-01 · mesurer la base, nommer ce qu'on mesure
+
+Dix notes de méthode et le tri des mathématiques expérimentales (`apports-theoriques.md` §21, §22). **Aucune
+probabilité ne change, vérifié par clôture** : empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à la 0.7.9 ; empreinte portable
+`fa0c7bbccf61eadba21fff7d1fb26427d97fc5c939ae138b2f4ab60d5724df64`. 153 autotests (151 + 2). Aucun texte
+retiré : ajouts seulement.
+
+- **`moteur.py voisins`** : meilleur voisin non trivial de chaque transition et unicité moyenne ū de la base ;
+  sur la démonstration, 69/78 jumeaux exacts (base saturée), ū = 0,705. Sans effet sur p.
+- **Placebo** : `centile_placebo` à côté du drapeau `homologie_discernable` (0,63 sur la démonstration),
+  nullité nommée.
+- **Clôture** : empreinte portable (flottants à 10 décimales) et conséquences changées au-delà de l'arrondi ;
+  l'écart d'empreinte rapporté sous Windows n'est pas reproduit sous Linux (Python 3.8 à 3.14).
+- **Validation** (`validation.md` §10) : fiabilité et validité distinguées ; deux sens de « reproductible » ;
+  banc d'essai déjà résolu et troncature ; V4 en marche avant, et pourquoi l'inversion du journal n'y teste
+  rien ; deux multiplicités, k déclaré, Benjamini-Yekutieli sur les seules décisions ; ordres de grandeur de
+  résolution ; perte quadratique ; contrôles positifs ; statu quo. Classement des instruments selon Medawar
+  (§9). Lu 2025 précisé (médiane contre moyenne).
+- **A4** : ce que 20 cas établissent (κ ± 0,26 à 0,35) ; effet Hawthorne sur la répétabilité ; pas de
+  pondération des codeurs par l'accord.
+- **Graphe** : décroissance chronologique assumée contre López de Prado ; pseudo-vraisemblance et pièges de
+  l'estimation de λ (item 1.0).
+- **`SKILL.md`** : gabarit de formulation en six questions, facultatif, non éprouvé.
+- **Différés** (`feuille-de-route.md` §7) : poids par unicité et purge (version séparée), CPCV, contrôle
+  positif, verdict à quatre états, compteur des cas non résolus, fiche de base, bootstrap par cas,
+  résultats persistants, priorisation par dispersion, sortie pour figures.
+- **Second lot** (`apports-theoriques.md` §23) : `accord` contrôle les absences sous forte prévalence (le cas
+  κ = −0,05, PABAK = 0,80 n'est plus « rapportable ») et publie π de Scott et α de Krippendorff ; `voisins`
+  publie la répartition par strate (2 sur 13 dans la démonstration) ; A4 : repères 0,67 / 0,80 rapportés à un
+  biais de publication, but de la mesure déclaré ; A5 : lire un « parce que », voulu / contrôlé / effectué ;
+  `dynamiques.md` : causes et loi de composition nommées ; `graphe.md` §5 : `w_emprunt` convention de repli ;
+  `validation.md` §10 : question sans estimand refusée, contraintes et sélection, régime formatif, réflexivité.
+- **Troisième lot** (`apports-theoriques.md` §24) : `bande_verbale` en sept bandes (ODNI 203) dans la sortie de
+  `calculer` ; `voisins` publie la co-occurrence des cartes (aucune paire toujours ensemble sur la démonstration) ;
+  `validation.md` §10 : effets des causes contre causes des effets, régime observationnel, rigueur perçue contre
+  justesse, banc d'essai pour l'intuition, présomptions ; contradiction Bhaskar / Rama déclarée ouverte.
+- **Quatrième lot** (`apports-theoriques.md` §25) : `graphe.md` §2.4, le multi-pas est mono-carte à contexte figé
+  et ne voit aucun lien indirect ; `validation.md` §10, p prédit l'événement rapporté, modèle généralisé, repère des
+  57 % ; A4, un panel d'experts établit la reconnaissabilité, non la justesse, et se publie avec sa composition.
+  Bilan des quatre lots au §25.4.
 
 ## 0.7.17 — 2026-10-31 · évaluer sans étalon
 

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -394,6 +394,13 @@ aucune n'existe. La barre réelle est discutée : les bancs publics donnent des 
 superprévisionnistes (ForecastBench, 2026, après ajustement de difficulté), une évaluation sur 464 questions
 Metaculus des modèles meilleurs que la foule mais nettement derrière un groupe d'experts (Lu 2025,
 arXiv:2507.04562) : le chiffre à battre se mesure, il ne se présume pas.
+**Précision (0.7.18), vérifiée sur le texte (v2, tableaux 3, 6, 8 et 9).** « Nettement derrière » ne vaut
+que pour la **médiane** : sur l'ensemble principal, o3 a un Brier médian de 0,1352 (moyen 0,1362, 334
+questions), le groupe d'experts un Brier médian de 0,0225 mais **moyen de 0,1573** (157 questions) ; sur
+l'ensemble réservé, 0,1375 / 0,1392 (130) contre 0,0196 / 0,1222 (41). Les auteurs comparent les médianes.
+Une médiane très basse sur une distribution asymétrique (beaucoup de questions tranchées) ne dit pas que
+les experts sont six fois meilleurs ; la barre d'un modèle seul est vers 0,13, et la cible pertinente
+reste le **même modèle avec le même dossier** (bras externe, §1).
 
 1. Choisir une population, un domaine et des événements dont la résolution est vérifiable.
 2. Sourcer un sous-ensemble des équivalents, coder indépendamment et figer la version. Chaque
@@ -497,8 +504,204 @@ et chaque événement à un pas sur ses strates, p, l'intervalle, ρ et p sans c
 par calcul), les horizons de plus d'un pas, les composés. Un calcul refusé est compté « désarmé » ; au-delà
 de la moitié, la clôture n'établit rien. Une version qui annonce « aucune probabilité ne change » publie
 son empreinte de clôture sur la base d'exemple.
+**Empreinte stricte et empreinte portable (0.7.18).** L'empreinte hache les flottants au bit près. Une note
+de lecture exécutée sous Windows (Python 3.14.3) rend `b8d346ea…` pour la 0.7.15, quand Linux rend
+`b1a592c8…` sous Python 3.8, 3.12, 3.13 et 3.14 ; la même note compare directement deux versions du moteur
+sur la même machine et trouve zéro conséquence changée. Cause non établie (la bibliothèque mathématique de
+la plateforme est la plus probable : `exp`, `log` et `lgamma` ne sont pas garanties au dernier bit). Depuis
+0.7.18, la clôture rend aussi une **empreinte portable** (flottants arrondis à 10 décimales) et `--contre`
+compte les conséquences changées **au-delà** de cet arrondi. L'empreinte publiée au journal reste
+l'empreinte stricte ; la portable sert à comparer deux plateformes. Comparer deux versions se fait sur la
+même plateforme.
+
+**Quatre sortes d'expériences (0.7.18 ; Medawar, cité par Borwein et al. 2007, p. 5-6).** Seule
+l'expérience **galiléenne** — l'épreuve critique, qui peut conclure non — fait d'une démarche
+expérimentale une entreprise sérieuse. Classement des instruments du skill :
+- **galiléennes, jouées** : `placebo` (a conclu non sur la démonstration), `sonde`, `confronter` ;
+- **galiléennes, jamais jouées** : `accord`, `accord --repetabilite`, `rejets`, le présent banc d'essai, le
+  test à trois bras (§8), l'épreuve d'accord sur la forme des pièces (0.7.16) ;
+- **baconiennes** (on fait varier pour voir) : bandes de modèle et de classe, `variantes_codage`,
+  `bande_horizon`, `noyau`, `voisins` ;
+- **aristotélicienne** (démonstration) : `calculer --demo` ;
+- **vérifications**, non des expériences : `audit`, `autotest`, `conservativite`, `valider`.
+Celles qui portent sur l'appareil ont été jouées parce qu'elles n'exigent aucun humain ; aucune de celles
+qui portent sur la lecture ne l'a été. Le nombre d'épreuves survécues est une donnée (p. 13) : il se
+publie avec la conclusion.
 
 **Décision.** Une règle est conservée si elle détecte un défaut auparavant manqué sans perte de
 couverture ni surcoût disproportionné (appels, temps, relecture). Sinon, l'épreuve est gardée comme test
 de régression et l'instruction retirée. **Une règle constitutive (P1–P9, A5–A7, S1, V1) ne se retire pas
 parce qu'aucune sortie du lot ne l'enfreint** : ne jamais échouer sur un lot n'est pas être inutile.
+
+---
+
+## 10. Ce que la validation mesure, et ce qu'elle ne mesure pas (0.7.18)
+
+Règles écrites avant les cas ; aucune ne change une probabilité. Sources : `apports-theoriques.md` §22.
+
+**Fiabilité n'est pas validité** (Hardt et Recht 2022, ch. 8 ; Messick). La fiabilité est la constance de
+mesures répétées du même objet ; la validité, le fait que la procédure capture le construit visé. Tous les
+instruments du skill mesurent la **fiabilité** de la lecture (`accord`, `--repetabilite`, `rejets`, §9), la
+**sensibilité** du nombre (bandes, `sonde`, placebo) ou l'**intégrité** du calcul (`audit`, `autotest`,
+`conservativite`) ; aucun ne mesure la validité, pour laquelle « il n'existe pas de critère formel simple ».
+Un κ élevé établit qu'une procédure est reproductible, non qu'elle mesure ce qu'elle prétend : deux codeurs
+peuvent s'accorder sur une carte mal définie. La validité relève de l'expertise déclarée (A5, marqueurs
+locaux, `equivalences.md`) et se nomme comme le second critère de la mesure. Une définition d'événement
+mauvaise ne se corrige pas par des cas supplémentaires : ils rendent la mesure plus précise et aussi
+fausse. Il y a donc deux dettes, indépendantes : les cas (fiabilité, calibration) et la définition
+(validité) ; la seconde ne se paie pas en données. La validité **conséquentielle** — ce que produit l'usage
+d'un p à 22 % [5–43] — n'est exercée nulle part : une prévision de ce skill ne fonde ni décision ni
+prescription (`constitution.md` §5).
+
+**Deux sens de « reproductible »** (Johnson 2002, p. 5). Au sens strict : même code, mêmes entrées, même
+machine, mêmes nombres — c'est ce que contrôlent `conservativite` et `SHA256SUMS`, et c'est le moins
+informatif. Au sens large : un autre appareillage (un autre codeur, d'autres sources admissibles) soutient
+les mêmes conclusions — c'est celui qui fonde une conclusion, et il exige un second codeur. L'empreinte est
+un contrôle d'intégrité ; on ne lui demande pas de valeur scientifique (§9, empreinte portable).
+
+**Banc d'essai déjà résolu** (Johnson 2002, grief 4). Un cas n'entre dans la base qu'avec une issue
+documentée et sa source : toute mesure faite sur la base porte sur des situations dont l'issue était connue
+au moment du codage. Elle mesure la cohérence d'une lecture rétrospective, non la prévision. La date de
+codage (`codage.debut`, `usage_fige_le`) et la forme des pièces (`passage.forme`, 0.7.16) séparent ce qui
+peut l'être pièce par pièce ; le défaut de constitution demeure même quand toutes les dates sont propres.
+La base est en outre **tronquée** au sens de Gelman et al. (BDA3 §8.7) : les cas commencés et jamais résolus
+sont absents et leur nombre est inconnu ; le mécanisme d'inclusion dépend de l'issue, donc il n'est pas
+ignorable (§8.2), et le théorème qui autoriserait à l'ignorer exclut de toute façon les analyses de
+sensibilité et les contrôles prédictifs que le skill publie. Les compter (feuille de route §7) changerait
+une troncature en censure.
+
+**V4 est un test en marche avant** (López de Prado 2018, ch. 12). Un seul chemin historique, qui peut être
+sur-ajusté à la séquence. Ici, les probabilités sont scellées avant l'issue et ne sont pas réajustées sur
+le journal : le gain moyen, le test du signe et la valeur finale de l'e-processus (un produit) ne dépendent
+**pas** de l'ordre des épisodes ; seuls le maximum de l'e-processus et l'épisode de franchissement en
+dépendent. Inverser le journal ne teste donc rien d'autre que la règle d'arrêt, et recalculer les
+prévisions dans l'ordre inverse ferait entrer des cas postérieurs (fuite). Ce qui dépend vraiment de la
+séquence est la base disponible à chaque date ; l'autocorrélation des différentiels (§5) le décrit. La
+validation combinatoire purgée (CPCV) attend des cas et un choix de partition figé d'avance.
+
+**Deux multiplicités** (López de Prado 2018, ch. 11 ; tsfresh ; Gelman et al., BDA3 §6.3). L'e-processus
+(0.7.12) traite les regards répétés sur un même test ; il ne traite pas la **sélection entre variantes**.
+Règles : (1) le nombre `k` de variantes examinées se déclare, avec sa date, **avant** toute déclaration de
+V4 ou promotion d'une variante (`attenuation_w_f`, seuil de niveau) ; aucun arrêt au premier résultat
+satisfaisant (Johnson 2002, grief 17) ; (2) l'ajustement porte sur les **décisions**, jamais sur les
+**lectures** : lire une bande de sensibilité, c'est voir où le calcul casse, sans erreur de type I à
+contrôler ; promouvoir une variante sur k essais est une décision, ajustée par Benjamini-Yekutieli
+(valide sous dépendance arbitraire ; les variantes partagent λ, inerties et demi-vie), seuil α/(k·H(k)),
+H(k) = Σ 1/i — pour k = 12, 0,05/(12 × 3,103) ≈ 0,0013 ; (3) si les variantes ont été choisies après examen
+des résultats, BY est optimiste (Hardt et Recht 2022 : la pénalité adaptative croît comme √(k/n)) et on le
+dit. La meilleure des variantes ne se publie pas seule : `fragilite_niveau` publie un écart, non le niveau
+le plus flatteur (Johnson, grief 12).
+
+**Ordres de grandeur de résolution.** Avec n = c_A cas, k variantes fixées d'avance, l'écart détectable est
+de l'ordre de √(log k / n) : ±50 points à c_A = 10, ±25 à 40, ±10 à 250 (borne de Hoeffding, pessimiste
+d'un facteur deux à trois). Un apport de 1,8 point d'homologie sur dix cas est sous ce seuil ; il se lit
+avec son intervalle, et deux valeurs ne se comparent que si leurs intervalles ne se recouvrent pas
+(Johnson, grief 15 : pas plus de chiffres que la donnée n'en justifie). Un effet indétectable n'est pas un
+effet nul : un écart de niveaux faible n'autorise pas à fixer λ (BDA3 §9).
+
+**p est l'estimateur sous perte quadratique.** p est la moyenne a posteriori, optimale pour la perte
+quadratique (Brier) ; une décision binaire n'est pas sous cette perte, et un seuil à 0,5 est une convention.
+Le skill publie une probabilité, jamais une décision ; il n'a pas de fonction d'utilité, donc aucune
+valeur d'information au sens de BDA3 §9.3. L'écart p − p_sans_cartes dépend de la prévalence ; le produit
+des λ (LR) n'en dépend pas : un gain absolu faible sur un événement rare n'est pas un apport faible.
+
+**Contrôles positifs.** Le placebo est un contrôle négatif. Un contrôle positif manque : une base séparée,
+marquée `fictif`, où une carte précède toujours l'événement et une autre jamais ; le moteur doit retrouver
+le signal et le placebo cesser de dire « indiscernable ». Sans lui, on ne sait pas si le placebo est aveugle
+par honnêteté ou par construction ; la base de démonstration ne peut en tenir lieu (`voisins` : 88 % de
+transitions avec un jumeau exact, la sélection n'y a rien à discriminer). Pour la lecture, la forme la plus
+économique vient de Galaxy Zoo (Lintott et al. 2008) : recoder une fiche dont l'ordre des cartes est permuté
+(rien ne doit changer) et une fiche dont une carte certaine est remplacée par une voisine (la réponse doit
+changer).
+
+**Statu quo.** Un chiffre seul ne hiérarchise rien : un R² de 0,89 peut perdre contre « rien ne change »
+(`apports-theoriques.md` §22, cas agricole). Le skill a ce comparateur : `p_sans_cartes` est l'inertie
+seule (exemple 11) ; chaque V4 se publie contre lui, et contre le placebo. Deux scores ne se comparent que
+sur les **mêmes** questions (dessin apparié, Johnson 2002, suggestion 3) ; la bande de classe change les cas
+retenus, donc elle n'est pas appariée.
+
+**Une question sans estimand se refuse (lot 2, `apports-theoriques.md` §23).** On ne monte pas l'échelle de Pearl
+avec des données, on la monte avec des hypothèses (Runge et al. 2023 : une question d'intervention ou de
+contrefactuel exige des données de la même couche ou des hypothèses déclarées). Le moteur refuse déjà dans
+plusieurs cas : état nul, composé sans référence conditionnelle (« non estimé »), carte Hors domaine, calcul
+désarmé. Une question causale — « pourquoi le président a-t-il refusé ? », « que se passerait-il si… » — n'a
+pas d'estimand ici : elle se refuse, elle ne reçoit pas un p d'association lu comme une réponse. Toute sortie
+se lit avec trois lignes, à la manière du gabarit question-hypothèses-données : la question (l'événement
+déclaré), les hypothèses (barreau A, fenêtre, strate, emprunt, matrice postulée), les données (cas, c_A, n_A).
+Des sept défis de l'inférence causale en séries temporelles (causation contemporaine, médiation, rétroaction,
+confondant caché, non-linéarité, dépendance au régime, non-stationnarité), le skill mesure le dernier
+(`ratio_non_stationnarite`) et ne traite pas les six autres.
+
+**Contraintes, non sélection** (Verleyen et Swiggers 2006, d'après Hock 1991). Délimiter l'éventail des possibles
+n'est pas expliquer lequel est retenu. Le skill prédit une sélection à partir de contraintes mesurées sur d'autres
+cas, sans théorie de la sélection (ni acteur, ni préférence, ni décision) : il ne peut rien dire d'une option
+qu'aucun précédent ne soutient. Et toute explication est incomplète (Pires 1993, d'après Veyne : le hasard, la
+matière, la liberté ; on en laisse toujours deux) : le skill choisit la matière, et le déclare.
+
+**Régime de mesure.** Les mots constituent la carte (mesure **formative** au sens de Croutsche 2002) : retirer un
+mot change l'état. Un coefficient de cohérence interne entre mots n'a donc pas de sens ; l'accord se mesure carte
+par carte, entre codeurs (`accord`). Une liste de marqueurs est un **indicateur** fixé d'avance (Grabo 2002) ; ce
+qu'on trouve est une **indication** : le dossier publie les familles cherchées (A7) à côté de ce qu'elles ont
+donné, sans quoi une recherche infructueuse se lit comme une absence de signal.
+
+**Réflexivité.** Les auteurs des événements prévus peuvent lire les prévisions ; une prévision publiée avant
+l'issue change la distribution qu'elle mesure. Le sceau sans publication avant l'issue n'est donc pas seulement
+une garantie d'intégrité : c'est la condition d'une mesure non contaminée par sa propre existence.
+
+**Effets des causes, causes des effets (lot 3, `apports-theoriques.md` §24).** p répond à « si cet état, que se passe-t-il ? »
+(effets des causes). « Cet événement, qu'est-ce qui l'a produit ? » (causes des effets, la question d'une
+attribution de responsabilité) relève d'un autre cadre : la probabilité de causation n'est pas identifiable à
+partir des fréquences, elle s'encadre au mieux par des bornes, que resserre la connaissance des médiateurs (Musio
+et Dawid 2025). Aucune sortie n'écrit « X a causé Y ». p répond à « combien », non à « comment » (Rama 2025).
+Ignorer un médiateur élargit les bornes sans les fausser ; ignorer un confondant produit des inférences
+biaisées : les cartes d'un état sont corrélées entre elles, et `moteur.py voisins` publie leur co-occurrence (sur la
+démonstration, aucune paire n'est toujours présente ensemble ; la plus liée, CONTRAINTE@6 et POLARITÉ@7, Jaccard 0,44
+sur 111 états). Un λ est compatible avec quatre relations (A produit B, B produit A, une cause commune, rien) ;
+la matrice n'en représente qu'une. Le skill est en régime de preuve **observationnelle** : non aléatoire, non
+répétable, synchrone ; ses garanties sont moindres que celles d'une randomisation, et il dit lesquelles manquent.
+Les critères de Bradford Hill sont un guide de lecture d'une arête, jamais un score (« ils ne permettent pas de
+trier sans souci ») ; le critère de Koch donne celui du barreau I : est cause ce dont l'introduction produit la
+transition, non ce qui la précède ni ce qui y est nécessaire.
+
+**Rigueur perçue, rigueur effective** (Zelik et al. 2007 ; Marrin 2013). Cinq analystes professionnels sur neuf
+changent leur jugement de rigueur après avoir vu le processus : la rigueur se lit mal sur le produit, et un
+même indice se lit dans les deux sens. Aucune preuve n'établit que les techniques structurées donnent de
+meilleures réponses ; leur valeur constatée est de prouver à un tiers que le processus a été suivi. Rangés selon
+cette distinction, les instruments du skill sont presque tous des **preuves de rigueur** (sceau, empreinte,
+placebo, bandes, κ, Kish, drapeaux) ; les **preuves de justesse** sont V4, le comparateur externe et le test à
+trois bras — aucune n'a été jouée. Le skill n'a pas établi que son appareil améliore ses réponses ; sa valeur
+démontrée est la traçabilité. Des scientifiques sociaux en tournoi de prévision ne font pas mieux qu'un modèle
+statistique simple, et les équipes les plus exactes utilisent des modèles plus simples (Grossmann et al., rapporté
+par Salganik 2023) : le modèle simple du skill est `p_sans_cartes`, toujours publié, et il est le juge. Un p qui
+monte avec l'horizon (`bande_horizon`) n'est pas une exactitude qui monte : ce sont deux grandeurs.
+
+**Une fonction, nommée.** Le moteur est un **banc d'essai pour l'intuition** au sens de Davies et al. (2021) : il
+dit vite si une lecture vaut d'être poursuivie, au regard du hasard (placebo) et du statu quo (`p_sans_cartes`) ;
+il ne prouve pas la relation. Les bandes et `variantes_codage` sont une **attribution** (quelles composantes de
+l'entrée font bouger p). Ce qui établit est l'étape suivante : le contre-exemple, cherché là où l'arête devrait
+échouer — une conjecture soutenue par plusieurs grands jeux de données y a été réfutée par un cas construit, et
+réparée par une variable nouvelle, non par plus de données. Une seule base ne teste aucune robustesse à la
+distribution ; aucune arête n'a été attaquée.
+
+**Postulats et présomptions** (Ross, rapporté par une synthèse de douze travaux). Que des causes existent et que
+des cartes les portent est un **postulat d'arrière-plan**, non testable ici. L'inertie est une **présomption** :
+une carte présente persiste, sauf preuve contraire — la charge de la preuve est inversée, la cesser doit être
+établi. Ne rien trouver n'est pas trouver le contraire : l'absence d'une carte n'est jamais une preuve (0.7.17).
+Une preuve très crédible sur un fait hors sujet ne vaut rien ; la règle qui combinerait crédibilité et
+pertinence (le minimum des deux) changerait p : différée. Une sortie se lit en sept bandes (échelle ODNI 203,
+`bande_verbale`) : une fréquence conditionnelle, dans le vocabulaire de la probabilité, jamais dans celui de la
+certitude du lecteur. Une prévision révisée est un nouvel identifiant, jamais la réécriture de l'ancienne ; le
+motif d'une révision se documente.
+
+**Ce que p prédit (lot 4, `apports-theoriques.md` §25).** Une carte apparaît dans un état **codé à partir de pièces** :
+p prédit un événement **rapporté**, non l'acte qui n'a pas laissé de trace. Sur 327 scandales au Congrès américain
+(3 688 observations, une douzaine de prédicteurs plausibles), seule l'année électorale survit, et elle prédit la
+**divulgation**, non l'acte (Mendenhall et Ingber 2024 ; variance expliquée de 1 à 11 %) : une théorie plausible ne
+fait pas un prédicteur. Le skill est un modèle **généralisé** au sens de Rosenfeld et Kraus (2018) : il ne modélise
+pas le décideur, seulement la situation ; c'est défendable quand les données sont rares, au prix de la variation
+entre acteurs, que rien ne représente. Ce qui se modéliserait est la **règle** qu'un acteur applique, non chaque
+décision (Aumann). Pour situer un ordre de grandeur : prédire le coup suivant d'un joueur expert, dans un jeu à
+information complète, avec 30 millions d'exemples, donne 57 % d'exactitude, et ses auteurs le disent « extrêmement
+précis » ; un p tiré de dix homologues ne se lit pas au dixième de point. Sous un événement rare, prédire « jamais »
+a une exactitude presque parfaite : c'est pourquoi le skill se juge contre `p_sans_cartes` (le taux de base, imprimé
+d'abord) et le placebo, jamais par l'exactitude.

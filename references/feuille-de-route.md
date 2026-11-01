@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,7 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.18 (faite) | Mesurer la base et nommer ce qu'on mesure | `voisins` (meilleur voisin non trivial, unicité ū) ; centile du placebo ; empreinte de clôture portable ; fiabilité distinguée de la validité, deux sens de « reproductible », banc déjà résolu, deux multiplicités (`validation.md` §10) ; κ à 20 cas chiffré, effet Hawthorne (A4) ; gabarit de formulation (`SKILL.md`) ; probabilités identiques à la 0.7.9 ; second lot : `accord` contrôle les absences sous forte prévalence, π de Scott et α de Krippendorff ; `voisins` par strate ; connecteurs et voulu/contrôlé/effectué (A5) ; causes et loi de composition nommées (`dynamiques.md`) ; `w_emprunt` convention de repli (T4) ; question sans estimand refusée, contraintes et sélection, régime formatif, réflexivité ; troisième lot : bande verbale (ODNI 203), co-occurrence des cartes (`voisins`), effets des causes contre causes des effets, rigueur perçue contre justesse, banc d'essai pour l'intuition, présomptions ; quatrième lot : multi-pas à contexte figé (T3), p prédit le rapporté, modèle généralisé, panel ≠ validation | — |
 | 0.7.17 (faite) | Évaluer sans étalon | support et exigence distingués, règle de mesure par arête figée avant les cas ; absence d'une carte non utilisée, écrite ; codeur humain justifié (anthropomimétisme) ; problème de spécificité ; orthogonalité ; agnosticisme structuré ; clôture identique à la 0.7.9 | — |
 | 0.7.16 (faite) | Sémantique du futur | `passage.forme` (prospective, rétrospective, attribuée, inclassable) et refus de F sur pièce non prospective ; `programmation` {qui, engagement} pour un événement programmé ; lecture aspectuelle de `semantique` ; correspondance futurate / futur générique ; épreuve d'accord sur 30 phrases au banc ; clôture identique à la 0.7.9 | — |
 | 0.7.15 (faite) | Manifeste du skill | fichiers cachés du dépôt hors de `SHA256SUMS` : `audit` ne dépend plus du canal d'installation | — |
@@ -64,6 +65,13 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 | 0.8 | Structurer | objets-frontière sourcés (strate 7 en cours, §5) ; cases Vides à combler (décision 1b = universelles) ; échelle de dureté (portes par niveau ρ, date de révision des sources) ; comparateur de marché de prévision (étape 4) | étapes 2 et 3 |
 | 0.9 | Éprouver | séquence H1.6 (motifs ordonnés), comparée à l'état courant seul ; banque de cas adverses ; mode « scénarios » à la manière d'ACH (`apports-theoriques.md` §7) ; registre de dépendances et dossier externe (`apports-theoriques.md` §10) | 30 cas actifs dans une strate ; pour le registre, une source corrigée dans un cas réel |
 | 1.0 | Grammaire | cartes comme règles de transformation, écrites par un rédacteur indépendant de la matrice puis comparées à elle ; liaisons comme opérateurs ; dérivation de l'alphabet en note séparée | rédacteur indépendant |
+
+*Item 1.0, estimation de λ (précisions 0.7.18).* La régression autologistique prévue est la bonne méthode :
+la pseudo-vraisemblance d'un modèle d'Ising est une régression logistique par nœud (Besag 1975). Deux pièges
+documentés : près d'une transition de phase, l'inférence par champ moyen ne retrouve plus les couplages
+(estimer **par strate**, jamais sur la base entière) ; en échantillon fini, l'estimateur est consistant mais
+peu efficace (sur vingt cas, il variera beaucoup). Publier l'intervalle de chaque λ estimé, pas son seul
+point : un λ dans [0,5 ; 6] ne vaut pas mieux que 3 en précision, il vaut mieux en statut.
 
 **Décisions d'auteur du 2026-10-29** (fiche « cinq arbitrages de la 0.7.3 ») :
 
@@ -304,6 +312,29 @@ Chaque élément attend une condition de données ; le coder avant serait coder 
 | Intervalles des événements composés et multi-pas | premières références conditionnelles vérifiées | — |
 | Calibration des multiplicateurs et des inerties | jalon V4 atteint | `lambda`, `inertie` |
 | Scinder `moteur.py` en modules (validation, calcul, score, autotests) | jalon V4 atteint ; d'ici là, un fichier unique reste plus simple à auditer et à recopier | — |
+| Poids par unicité ū (López de Prado 2018, ch. 4) ; purge des transitions dont les fenêtres recoupent celles du test (trois conditions, ch. 7) | base réelle ; **version séparée** (change p), clôture publiée et sens de chaque changement vérifié (p vers p₀, intervalle plus large) ; jamais avec une décroissance par unicité cumulée, qui irait en sens inverse | `demi_vie_ans` |
+| Validation combinatoire purgée (CPCV, ch. 12) : une distribution du gain V4 sur plusieurs chemins au lieu d'un seul | cas réels et partition figée d'avance (année, strate ou épisode) | `v4_gain_abs` |
+| Contrôle positif : base `fictif` séparée, une carte qui précède toujours l'événement, une qui ne le précède jamais (`validation.md` §10) | avant la première mesure d'accord sur une base réelle | — |
+| Verdict à quatre états d'un codeur (présent, absent, pièce illisible, non tranchable ; giskard) : une pièce illisible n'entre pas au dénominateur de κ ni du Brier ; codeur écarté en bloc si ses réponses sont impossibles, avec la perte publiée (Galaxy Zoo) | premiers cas double-codés | `kappa_min` |
+| Compteur des cas commencés et non résolus : une troncature devient une censure (BDA3 §8.7) | premier cas réel ; demande un champ de schéma | — |
+| Fiche de base en sept rubriques (motivation, composition, collecte, étiquetage, **usages exclus**, distribution, maintenance ; « datasheets for datasets ») | base réelle | — |
+| Intervalles des quantités dérivées (`apport_homologie`, `fragilite_niveau`, ū) par bootstrap **par cas**, jamais par transition | base réelle (sur la démonstration saturée, l'intervalle mesurerait la construction) | — |
+| Résultats persistants : sorties datées portant l'empreinte de la base et des paramètres ; texte d'interprétation séparé des nombres dans le JSON | quand un résultat devra être relu sans être recalculé | — |
+| Priorisation des cas à coder par dispersion de p sous la bande de λ (heuristique, non une valeur d'information) | situations candidates décrites | `lambda` |
+| Champs d'acteur : `controle` et `effectuation` distincts de la volonté ; chaîne de ratification ordonnée {qui, tient/refuse, date} ; règle **bravée** (`conformite` : appliquée, suspendue, bravée) pour une carte en position `bouge` ; état laissé par un événement qui n'a pas eu lieu | premiers cas réels de strate 13 ou 5 ; changent le schéma, non p | — |
+| `passage.fonction` (contenu, épistémique, acte de parole) et `topos` déclaré par pièce, contrôlés par `valider_base` | premier double codage, pour expliquer les désaccords | — |
+| Calcul de l'accord depuis deux fiches par α de Krippendorff (plus de deux codeurs, valeurs F/f/absence, unités manquantes) ; version pondérée ordinale, sans les repères 0,67/0,80, qui ne s'y appliquent pas | premiers cas double-codés | `kappa_min`, `kappa_rapportable` |
+| Poids d'emprunt décroissant avec la distance entre strates, publié à côté du poids fixe | deux strates Documentées ; **version séparée** (change p sur H3) | `w_emprunt` |
+| Test d'émergence : p avec et sans la strate inférieure | cas réels sur deux strates | — |
+| Dérive temporelle de la lecture : rapport de fréquence de deux cartes entre période proche et période éloignée (débiaisage de Galaxy Zoo 2) | 30 cas actifs | — |
+| Contre-exemple construit par arête : ce qui casserait chaque arête, et le cas de la base qui s'en approche ; pour chaque arête, pourquoi une cause commune ou une relation inverse est écartée | avant toute promotion d'arête au barreau I | `matrice` |
+| Bornes de la probabilité de causation pour un événement observé (Musio et Dawid 2025), covariables déclarées | cas réels résolus et formule vérifiée | — |
+| Combinaison crédibilité × pertinence d'une pièce par leur minimum (Tecuci et al.) | cas réels ; **version séparée** (change p) | — |
+| Qualificateur explicite de la conclusion (Toulmin) ; position du cas entre « histoire lâche » et argument formel (Wong 2014) ; cadrage de la question déclaré | quand un critère opérationnel existera | — |
+| Test du relais : p à trois pas contexte figé contre p en faisant bouger la carte relais, sur un cas connu | cas réels à trois états au moins | `pas_max` |
+| Lecture idiographique de huit à dix situations, sans agrégation ; panel d'experts publié avec sa composition | après le premier double codage | — |
+| Lectures à faire : McFalls (2006), *Construire le politique* — causalité en science politique ; Seifert et al. (2022) ; Grossmann et al. (2023) ; Hill (1965) | — | — |
+| Sortie de données pour figures (CSV) de `bande_horizon`, `niveaux`, distribution du placebo ; le moteur reste sans dépendance (Borwein et al. 2007, rôle de la visualisation) | à la demande | — |
 
 ---
 

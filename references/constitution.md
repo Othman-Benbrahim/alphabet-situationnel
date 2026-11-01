@@ -1,6 +1,6 @@
 # Alphabet situationnel — Constitution
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Les neuf principes priment sur toutes les règles de `protocole.md`. Une règle qui en contredit un
 > est nulle et doit être corrigée, pas appliquée.
@@ -26,6 +26,12 @@ des verdicts. C'est ce que font ici P1 (cartes candidates), les paramètres déc
 fourchette empirique. Le skill y ajoute un test que ces travaux n'ont pas : le placebo d'homologie, qui
 dit sur son propre exemple que la sélection des cas ne fait pas mieux que le hasard. Le terme décrit une
 posture ; il ne prouve rien de la justesse.
+
+**Étaler ses cartes sur la table (0.7.18).** Borwein et al. (2007, p. 24) demandent à toute démarche
+expérimentale de dire quand elle croit ses outils heuristiques, pourquoi elle a confiance dans ses calculs
+et où réside l'incertitude. C'est ce que font le dossier scellé, les sources du calcul, `garantie.support`
+et « non estimé ». La certitude des mathématiques expérimentales ne se transpose pas : l'arithmétique y est
+un oracle, la prévision n'en a pas ; le skill garde ses intervalles.
 
 ---
 

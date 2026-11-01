@@ -1402,14 +1402,26 @@ def cloture(base):
     n=len(res)
     return {'version':P['version'],'etats':len(etats),'consequences':n,'desarmes':desarmes,
             'probant':n>0 and desarmes<=n/2,'hors_cloture':['p_placebo (200 tirages par calcul)','horizons de plus d’un pas','composés'],
-            'empreinte':empreinte(res),'resultats':res}
+            'empreinte':empreinte(res),'empreinte_portable':empreinte(arrondir(res)),'resultats':res}
+
+
+def arrondir(x,chiffres=10):
+    """0.7.18. Flottants arrondis à `chiffres` décimales, récursivement. L'empreinte stricte hache les flottants
+    au bit près : elle peut différer d'une plateforme à l'autre (bibliothèque mathématique) sans qu'une
+    conséquence change d'une manière lisible. L'empreinte portable sert à comparer deux plateformes ;
+    l'empreinte stricte reste celle du journal."""
+    if isinstance(x,float):return round(x,chiffres)
+    if isinstance(x,dict):return {k:arrondir(v,chiffres) for k,v in x.items()}
+    if isinstance(x,(list,tuple)):return [arrondir(v,chiffres) for v in x]
+    return x
 
 
 def comparer_clotures(a,b):
     """Conséquences changées entre deux clôtures de la même base (clés communes), et clés propres à l'une."""
     ra,rb=a['resultats'],b['resultats']
     changees=sorted(k for k in set(ra)&set(rb) if ra[k]!=rb[k])
-    return {'communes':len(set(ra)&set(rb)),'changees':len(changees),'exemples':changees[:10],
+    hors_arrondi=[k for k in changees if arrondir(ra[k])!=arrondir(rb[k])]
+    return {'communes':len(set(ra)&set(rb)),'changees':len(changees),'changees_hors_arrondi':len(hors_arrondi),'exemples':changees[:10],
             'seulement_avant':len(set(ra)-set(rb)),'seulement_apres':len(set(rb)-set(ra)),
             'conservative':not changees and set(ra)==set(rb)}
 
@@ -1442,6 +1454,17 @@ def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
        'kappa_intervalle_95_approche':None if se is None else [k-1.96*se,k+1.96*se],'pabak':2*po-1,
        'accord_positif':None if 2*a+b+c==0 else 2*a/(2*a+b+c),'accord_negatif':None if 2*d+b+c==0 else 2*d/(2*d+b+c),
        'manque_second':m1,'manque_premier':m2,'faux_positifs_second':None if c+d==0 else c/(c+d)}
+    # 0.7.18 (Artstein et Poesio 2008 ; Krippendorff 2011). π de Scott (marges regroupées) : κ et π peuvent tomber de
+    # part et d'autre de kappa_min, on publie les deux. α de Krippendorff, nominal, deux codeurs, sans valeur
+    # manquante : α = 1 − (2n − 1)(b + c) / (n₀ n₁), n₀ et n₁ comptant les valeurs (et non les unités). Publiés,
+    # hors du verdict.
+    pi_=r['prevalence'];pep=pi_*pi_+(1-pi_)*(1-pi_);n1_=2*a+b+c;n0_=2*d+b+c
+    r['pe_regroupe']=pep
+    r['pi_scott']=None if abs(1-pep)<1e-12 else (po-pep)/(1-pep)
+    r['alpha_krippendorff']=None if n0_*n1_==0 else 1-(2*n-1)*(b+c)/(n0_*n1_)
+    # Taux de manque de la valeur **absence** : sous forte prévalence, c'est elle la valeur rare (a=90, b=5, c=5,
+    # d=0 : pₒ 0,90, κ −0,05, PABAK 0,80, taux de manque des ancrages 0,05 ; aucune absence partagée).
+    r['manque_absence_second']=None if c+d==0 else c/(c+d);r['manque_absence_premier']=None if b+d==0 else b/(b+d)
     if a+b+c==0:v='sans objet : aucun des deux codeurs n’ancre la carte'
     elif max(a+b,a+c)<P['accord_min_ancrages']:v=f'non estimable : moins de {P["accord_min_ancrages"]} ancrages pour chaque codeur'
     else:
@@ -1449,6 +1472,12 @@ def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
         ok=max(x for x,base_ in ((m1,a+b),(m2,a+c)) if x is not None and base_>=P['accord_min_ancrages'])<=P['fnr_max']
         v=('rapportable' if r['pabak']>=P['kappa_rapportable'] else 'provisoire' if r['pabak']>=P['kappa_min'] else 'insuffisant') if ok \
           else f'insuffisant : un codeur manque plus de {round(100*P["fnr_max"])} % des ancrages de l’autre'
+        # 0.7.18 : la règle des deux taux de manque vaut pour la valeur rare. Si la carte est ancrée dans plus de la
+        # moitié des décisions, la valeur rare est l'absence : même contrôle sur les absences de chaque codeur.
+        if ok and r['prevalence']>.5:
+            xs=[x for x,base_ in ((r['manque_absence_second'],c+d),(r['manque_absence_premier'],b+d)) if x is not None and base_>=P['accord_min_ancrages']]
+            if not xs:v='non estimable : forte prévalence et moins de '+str(P['accord_min_ancrages'])+' absences pour chaque codeur'
+            elif max(xs)>P['fnr_max']:v=f'insuffisant : forte prévalence, un codeur manque plus de {round(100*P["fnr_max"])} % des absences de l’autre'
     if repetabilite:
         r.update(type='repetabilite',ecart_jours=ecart_jours,
                  lecture='a : ancré aux deux passes ; b : première passe seule ; c : seconde seule ; manque_second et manque_premier se lisent « manque de la seconde / de la première passe »')
@@ -1529,6 +1558,67 @@ def export_codeur(cas):
     return {'id':cas.get('id'),'fenetre':cas.get('fenetre'),'sequence':seq,'issue':issue,
             'avertissements':['Faits retenus par le premier codeur, sans leur rattachement : la sélection elle-même reste une trace du premier codage.']
                              +[f'fait qui nomme une carte (à reformuler avant envoi) : {x}' for x in sig]}
+
+
+def voisins(base):
+    """0.7.18 (stumpy, matrice de profil ; López de Prado 2018, ch. 4). Deux diagnostics de la base, sans effet
+    sur p. (1) Pour chaque transition, son meilleur voisin par la similarité du moteur (H1 : égalité de l'état
+    avec forces et qualificatifs ; H1.5 : Jaccard pondéré F = 1, f = 0,5), correspondances triviales exclues
+    — même cas, ou fenêtres qui se recoupent. Une base où presque tout a un jumeau exact ne laisse aucune place
+    à la sélection : le placebo ne peut pas s'en distinguer. (2) L'unicité moyenne ū de López de Prado
+    (inverse de la moyenne harmonique de la concurrence mensuelle) : la part d'information propre de chaque
+    transition, non utilisée par le calcul."""
+    T=[t for c in base for t in transitions(c)]
+    if not T:return None
+    mois=lambda d:int(d[:4])*12+int(d[5:7])-1
+    iv=[(mois(a['date']),mois(b['date'])) for _,a,b in T]
+    q_=lambda e:{(cle(m),m['i'],tuple(sorted(m['q']))) for m in e['mots']}
+    def sim(e1,e2):
+        f1,f2=forces(e1),forces(e2)
+        w1={k:(1. if v=='F' else .5) for k,v in f1.items()};w2={k:(1. if v=='F' else .5) for k,v in f2.items()};u=set(w1)|set(w2)
+        return sum(min(w1.get(k,0),w2.get(k,0)) for k in u)/sum(max(w1.get(k,0),w2.get(k,0)) for k in u) if u else 0.
+    best=[];jum=0;seuls=0
+    for i,(ci,a,_) in enumerate(T):
+        bs=None;ex=False
+        for j,(cj,a2,_) in enumerate(T):
+            if j==i or cj==ci or (iv[i][0]<iv[j][1] and iv[j][0]<iv[i][1]):continue
+            s_=sim(a,a2);bs=s_ if bs is None else max(bs,s_)
+            if a['mots'] and q_(a)==q_(a2):ex=True
+        if bs is None:seuls+=1
+        best.append(0. if bs is None else bs);jum+=ex
+    n=len(best);bt=sorted(best);qq=lambda u:bt[min(n-1,int(u*n))]
+    conc=defaultdict(int)
+    for s_,e_ in iv:
+        for m in range(s_,e_):conc[m]+=1
+    un=[sum(1/conc[m] for m in range(s_,e_))/(e_-s_) for s_,e_ in iv if e_>s_]
+    # 0.7.18 (confondant entre cartes : Académie des sciences 2017, Gao et al. 2022). Deux cartes toujours présentes
+    # ensemble dans les états de la base ne se départagent pas : leurs effets sont confondus.
+    etats_={}
+    for c in base:
+        for x in c['sequence']+[c['issue']]:
+            if isinstance(x,dict) and x.get('etat'):etats_[x['etat']]=set(forces(lire_etat(x['etat'])))
+    occ=defaultdict(int);paire=defaultdict(int)
+    for ks in etats_.values():
+        for k in ks:occ[k]+=1
+        for k1 in ks:
+            for k2 in ks:
+                if k1<k2:paire[(k1,k2)]+=1
+    cooc=sorted(({'cartes':[k1,k2],'ensemble':v,'jaccard':v/(occ[k1]+occ[k2]-v)} for (k1,k2),v in paire.items()),
+                key=lambda x:(-x['jaccard'],-x['ensemble'],x['cartes']))
+    # 0.7.18 (Boudon 1963, effet de groupement) : combien de cas et de transitions par strate ; une strate pauvre
+    # rend l'emprunt H3 presque inévitable.
+    ps_=defaultdict(lambda:[0,0])
+    for c in base:
+        for st_ in c['strates']:ps_[st_][0]+=1;ps_[st_][1]+=len(transitions(c))
+    return {'transitions':n,'jumeau_H1_non_trivial':jum,'part_jumeau_H1':jum/n,'sans_voisin_non_trivial':seuls,
+            'meilleur_voisin':{'moyenne':sum(best)/n,'mediane':qq(.5),'q95':qq(.95),'minimum':bt[0]},
+            'au_dessus_jaccard_H15':sum(x>=P['jaccard_H15'] for x in best),'seuil':P['jaccard_H15'],
+            'unicite':{'moyenne':sum(un)/len(un),'mediane':sorted(un)[len(un)//2],'minimum':min(un),
+                       'part_inferieure_a_1':sum(x<1-1e-12 for x in un)/len(un),'concurrence_max':max(conc.values())} if un else None,
+            'par_strate':{str(k):{'cas':v[0],'transitions':v[1]} for k,v in sorted(ps_.items())},
+            'etats_distincts':len(etats_),'co_occurrence':{'paires':cooc[:10],'toujours_ensemble':sum(x['jaccard']>=1-1e-12 for x in cooc)},
+            'lecture':'diagnostic de la base, sans effet sur p : une médiane du meilleur voisin à 1 signale un vocabulaire saturé '
+                      '(la sélection des homologues n’a rien à discriminer) ; une médiane basse, des cas singuliers.'}
 
 
 def confronter(base):
@@ -1696,6 +1786,10 @@ def ponderer(trans, asof, emprunt=False):
     for cid,a,b,hit,sans in trans:
         age=max(0,(jour(asof)-jour(b['date']))/365.25)
         # A case contributes at most one effective observation, even if it has many transitions.
+        # 0.7.18 : López de Prado (2018, ch. 4) pondère par l'attribution de rendement |Σ r/c_t| ; sans amplitude de
+        # transition et à fenêtre fixe, elle se réduit à l'unicité moyenne ū. Le recouvrement entre cas distincts
+        # (ū = 0,705 sur la démonstration, `voisins`) n'est pas corrigé ici : le corriger change p, version séparée.
+        # La décroissance reste chronologique, contre l'avis de la source (graphe.md §3.4, complément 0.7.18).
         w=(.5**(age/P['demi_vie_ans'])) / counts[cid]
         if emprunt: w*=P['w_emprunt']
         out.append({'id':cid,'debut':a['date'],'fin':b['date'],'poids':w,'issue':int(hit),'sans_evenement':sans})
@@ -1780,7 +1874,7 @@ def graine_placebo(etat,typ,cible,asof):
     return int(hashlib.sha256(f'{texte(etat)}|{cible} {typ}|{asof}'.encode()).hexdigest()[:12],16)
 
 
-def placebo_homologie(base,typ,cible,etat,asof,c_A,p0,graine):
+def placebo_homologie(base,typ,cible,etat,asof,c_A,p0,graine,p_reel=None):
     """0.7.4 (décision 3). Placebo d'homologie : autant de cas distincts que la classe retenue, tirés au
     hasard dans la même strate et la même fenêtre (sans regarder les cartes), sous le même a priori p0 et
     la même révision. `p − p_placebo` sépare « l'analogie structurale apporte » de « le taux de base de la
@@ -1796,8 +1890,17 @@ def placebo_homologie(base,typ,cible,etat,asof,c_A,p0,graine):
         a_=sum(x['poids'] for x in sm);e_=sum(x['poids']*x['issue'] for x in sm)
         ps.append((e_+P['k']*p0)/(a_+P['k']))
     ps.sort();q=lambda u:ps[min(len(ps)-1,int(u*len(ps)))]
-    return {'p':proba(sum(ps)/len(ps)),'graine':graine,'tirages':len(ps),'cas_tires':n,'cas_disponibles':len(ids),
+    out={'p':proba(sum(ps)/len(ps)),'graine':graine,'tirages':len(ps),'cas_tires':n,'cas_disponibles':len(ids),
             'plage_90':[proba(q(.05)),proba(q(.95))]}
+    if p_reel is not None:
+        # 0.7.18 : même statistique que sonde_matrice (centile de permutation, ex æquo comptés pour moitié ;
+        # une p-value prédictive au sens de Gelman et al., BDA3 §6.3). Nullité d'intérêt : « la sélection des
+        # homologues ne fait pas mieux que des cas tirés au hasard » ; un centile proche de 0,5 dit que
+        # l'instrument ne trouve rien, non que tout va bien. Résolution : 1/tirages.
+        sous=sum(x<p_reel-1e-12 for x in ps);egaux=sum(abs(x-p_reel)<=1e-12 for x in ps)
+        out.update({'centile_reel':(sous+egaux/2)/len(ps),'resolution':1/len(ps),
+                    'nullite':'la sélection des homologues ne fait pas mieux que des cas tirés au hasard dans la strate'})
+    return out
 
 
 def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_materielle=(),asof=None,sans_cartes=False,placebo=False,**unused):
@@ -1888,7 +1991,7 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
             'rho':rho,'homologie':h if hom else None,'nb_cas_par_niveau':counts,'c_A':cA,'n_A':nA,'n_E':nE,
             'niveaux':niveaux,'fragilite_niveau':fragilite,'poids_a_priori_p':P['k']/(nA+P['k']),
             'n_eff_kish':kish,'part_cas_le_plus_lourd':part_max,
-            'placebo':placebo_homologie(base,typ,cible,etat,asof,cA,ap['p0'],graine_placebo(etat,typ,cible,asof)) if placebo and not sans_cartes and not borrowed else None,
+            'placebo':placebo_homologie(base,typ,cible,etat,asof,cA,ap['p0'],graine_placebo(etat,typ,cible,asof),prob) if placebo and not sans_cartes and not borrowed else None,
             'a_priori':ap,'comparateur':ap['f_base'],'transitions':samples,'drapeaux':flags,
             'incertitude':'intervalle de crédibilité à 80 % de la loi Beta a posteriori dont p est la moyenne (Beta-binomial) : '
                            'quantiles calculés exactement, mais sur une vraisemblance pondérée (décroissance, un cas pèse au plus une observation) '
@@ -2881,7 +2984,7 @@ RENVOIS = {
     ('validation.md','1'):'Journal des prévisions', ('validation.md','4'):'Diagnostic',
     ('validation.md','5'):'calibration', ('validation.md','6'):'lacunes', ('validation.md','7'):'santé', ('validation.md','8'):'aveugle',
     ('validation.md','9'):'Banc', ('simulation.md','7'):'État de travail', ('apports-theoriques.md','1'):'Règle',
-    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('apports-theoriques.md','19'):'Copley', ('apports-theoriques.md','20'):'Digital Consciousness Model', ('constitution.md','1'):'Ce qu', ('simulation.md','4'):'Rédiger', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
+    ('apports-theoriques.md','10'):'Cinq apports', ('apports-theoriques.md','11'):'manque', ('apports-theoriques.md','12'):'Capacité', ('apports-theoriques.md','13'):'Accord', ('apports-theoriques.md','14'):'rivaux', ('apports-theoriques.md','15'):'open-ontologies', ('apports-theoriques.md','16'):'V34', ('apports-theoriques.md','17'):'comparatif', ('simulation.md','3'):'Trajectoires', ('apports-theoriques.md','18'):'Unifier', ('apports-theoriques.md','19'):'Copley', ('apports-theoriques.md','20'):'Digital Consciousness Model', ('apports-theoriques.md','21'):'mathématiques expérimentales', ('apports-theoriques.md','22'):'Dix notes', ('apports-theoriques.md','23'):'Causalité', ('apports-theoriques.md','24'):'Causes des effets', ('apports-theoriques.md','25'):'Horizon', ('graphe.md','5'):'Emprunt', ('validation.md','10'):'ne mesure pas', ('constitution.md','1'):'Ce qu', ('simulation.md','4'):'Rédiger', ('graphe.md','2.1'):'Sources', ('equivalences.md','4'):'Érosion', ('validation.md','8'):'aveugle', ('frequences-externes.md','2'):'six champs', ('graphe.md','3.4'):'Capacité', ('graphe.md','3.2'):'similarité', ('feuille-de-route.md','4'):'Premiers cas', ('feuille-de-route.md','7'):'Code différé', ('graphe.md','4'):'Révision', ('graphe.md','2.4'):'plusieurs pas', ('graphe.md','3.3'):'postule', ('feuille-de-route.md','1'):'Vue', ('base-de-cas.md','6'):'qualité', ('sources-france.md','5'):'Séries', ('sources-france.md','1'):'Règles',
 }
 RENVOI_RE = re.compile(r'`?([a-z\-]+\.md)`?\s*§\s*([0-9]+(?:\.[0-9]+)?(?:bis)?|[A-Z]\b)')
 
@@ -3104,7 +3207,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.17','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.18','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3288,6 +3391,18 @@ def ligne_signalement(result):
             f" · échéance {result.get('echeance') or '[date]'} · journal {result.get('journal') or '[à attribuer]'}")
 
 
+BANDES_VERBALES=((.05,'probabilité très éloignée'),(.20,'très improbable'),(.45,'improbable'),(.55,'chance approximativement égale'),
+                 (.80,'probable'),(.95,'très probable'),(1.01,'presque certain'))
+
+
+def bande_verbale(p):
+    """0.7.18 (directive ODNI 203, 2015, citée par Van Puyvelde 2015). Sept bandes de probabilité, colonne
+    « probabilité » et non « certitude » : p est une fréquence conditionnelle, pas un état de confiance du lecteur.
+    Une bande ne remplace pas p ni son intervalle ; elle dit combien de chiffres le lecteur peut utiliser."""
+    if p is None:return None
+    return next(n for b,n in BANDES_VERBALES if p<b)
+
+
 def afficher(result,as_json=False):
     if as_json or 'p' not in result:
         print(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False));return
@@ -3308,6 +3423,9 @@ def afficher(result,as_json=False):
     try:c_,s_=k_.split('@');ev=f"{NOMS[c_]}@{s_} {t_}".strip()
     except (ValueError,KeyError):pass
     print(f"Événement : {ev} · ρ = provenance du chiffre, pas sa fiabilité")
+    bv_=result.get('bande_verbale')
+    if bv_:print(f"Bande : {bv_['p']} (intervalle de {bv_['intervalle'][0]} à {bv_['intervalle'][1]}) — échelle en sept bandes ; "
+                 "une fréquence conditionnelle, pas une certitude")
     if (result.get('barreau') or P['barreau']['defaut'])=='A':
         print("Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ;"
               " aucun modèle causal, donc ni effet d'une intervention ni « ce qui se serait passé »")
@@ -3421,6 +3539,7 @@ def main():
     rj=subs.add_parser('rejets');rj.add_argument('--dossier',required=True);rj.add_argument('--audit')
     vr_=subs.add_parser('valider-references');vr_.add_argument('fichier')
     cf=subs.add_parser('confronter');cf.add_argument('fichier');cf.add_argument('--json',action='store_true')
+    vo=subs.add_parser('voisins');vo.add_argument('fichier');vo.add_argument('--json',action='store_true')
     ds=subs.add_parser('dossier');ds.add_argument('--fichier',required=True);ds.add_argument('--json',action='store_true')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
@@ -3454,6 +3573,20 @@ def main():
         print(f"sceau : {dr['sceau']}")
         print(dr['instruction'])
         return
+    if a.cmd=='voisins':
+        r=voisins(charger(a.fichier));exiger(r is not None,'voisins : aucune transition dans la base')
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        mv,un=r['meilleur_voisin'],r['unicite']
+        print(f"{r['transitions']} transitions · jumeau H1 non trivial : {r['jumeau_H1_non_trivial']} ({r['part_jumeau_H1']*100:.0f} %) · "
+              f"meilleur voisin : moyenne {mv['moyenne']:.3f}, médiane {mv['mediane']:.3f}, minimum {mv['minimum']:.3f} · "
+              f"au-dessus de {r['seuil']} : {r['au_dessus_jaccard_H15']}/{r['transitions']}")
+        if un:print(f"unicité moyenne {un['moyenne']:.3f} (médiane {un['mediane']:.3f}, minimum {un['minimum']:.3f}) · "
+                    f"{un['part_inferieure_a_1']*100:.0f} % des transitions partagent des mois · concurrence maximale {un['concurrence_max']}")
+        co_=r['co_occurrence']
+        print(f"co-occurrence dans {r['etats_distincts']} états distincts : {co_['toujours_ensemble']} paire(s) de cartes toujours ensemble"
+              +(' ; la plus liée : '+' + '.join(co_['paires'][0]['cartes'])+f" (Jaccard {co_['paires'][0]['jaccard']:.2f}, {co_['paires'][0]['ensemble']} états)" if co_['paires'] else ''))
+        print('par strate (cas / transitions) : '+' · '.join(f"{k}: {v['cas']}/{v['transitions']}" for k,v in r['par_strate'].items()))
+        print(r['lecture']);return
     if a.cmd=='confronter':
         r=confronter(charger(a.fichier))
         if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
@@ -3532,11 +3665,13 @@ def main():
         print(f"clôture {r['version']} : {r['consequences']} conséquences sur {r['etats']} états, {r['desarmes']} désarmées"
               f"{'' if r['probant'] else ' — plus de la moitié : la clôture n’établit rien'} · empreinte {r['empreinte']}")
         print('hors clôture : '+' ; '.join(r['hors_cloture']))
+        print(f"empreinte portable (flottants à 10 décimales, pour comparer deux plateformes) : {r['empreinte_portable']}")
         if a.contre:
             cmp_=comparer_clotures(lire_json(a.contre,'--contre'),r)
             print(f"contre {a.contre} : {cmp_['changees']} conséquence(s) changée(s) sur {cmp_['communes']} communes ; "
                   f"{cmp_['seulement_avant']} seulement avant, {cmp_['seulement_apres']} seulement après · "
-                  +('extension conservatrice' if cmp_['conservative'] else 'NON conservatrice'))
+                  +('extension conservatrice' if cmp_['conservative'] else 'NON conservatrice')
+                  +('' if cmp_['conservative'] else f" ; {cmp_['changees_hors_arrondi']} au-delà de 10 décimales"))
             for k_ in cmp_['exemples']:print('  changée : '+k_)
             if not cmp_['conservative']:raise SystemExit(1)
         if a.empreinte:
@@ -3551,6 +3686,8 @@ def main():
         f_=lambda v:'indéfini' if v is None else f'{v:.3f}'
         print(f"table a={a.a} b={a.b} c={a.c} d={a.d} · prévalence {r['prevalence']*100:.1f} % · pₒ {r['po']:.3f} · κ {f_(r['kappa'])} · PABAK {r['pabak']:.3f} · "
               f"accord positif {f_(r['accord_positif'])} · manque du second {f_(r['manque_second'])} · manque du premier {f_(r['manque_premier'])}")
+        print(f"π de Scott {f_(r['pi_scott'])} · α de Krippendorff {f_(r['alpha_krippendorff'])} · pₑ {r['pe']:.3f}"
+              +(f" · manque des absences {f_(r['manque_absence_second'])} / {f_(r['manque_absence_premier'])}" if r['prevalence']>.5 else ''))
         print('verdict : '+r['verdict']);return
     if a.cmd=='rejets':
         d_=lire_json(a.dossier,'--dossier')
@@ -3704,6 +3841,8 @@ def main():
             # au hasard. Constat publié et drapeau ; ρ, qui dit la provenance et non la fiabilité, est inchangé.
             pg_=(pl_ or {}).get('plage_90')
             result['homologie_discernable']=None if not pg_ or result.get('p') is None else not (pg_[0]<=result['p']<=pg_[1])
+            # 0.7.18 : le drapeau est un tricolore ; le centile dit où p se situe parmi les tirages (comparable et agrégeable).
+            result['centile_placebo']=(pl_ or {}).get('centile_reel')
             if result['homologie_discernable'] is False:
                 result.setdefault('drapeaux',[]).append(f"Homologie indiscernable du hasard : p ({pct(result['p'])}) dans la plage à 90 % du placebo "
                     f"({pct(pg_[0],False)}–{pct(pg_[1])}) ; la sélection des homologues ne fait pas mieux que des cas tirés au hasard dans la strate.")
@@ -3758,6 +3897,10 @@ def main():
                             'passage':'soutient' if any(isinstance(x,dict) and x.get('relation')=='soutient' for x in ps_) else 'partiel'}
                 result['sensibilite']=sensibilite(etat,typ,cible,active,opts,a.pas,sem,pieces)
         result['echeance']=end;result['journal']=a.journal;result['etat']=a.etat
+        if result.get('p') is not None:
+            iv_=result.get('intervalle') or [None,None]
+            result['bande_verbale']={'p':bande_verbale(result['p']),'intervalle':[bande_verbale(iv_[0]),bande_verbale(iv_[1])],
+                'lecture':'échelle de probabilité en sept bandes (ODNI 203) ; une fréquence conditionnelle, pas une certitude'}
         if dossier and not dossier['complet']:
             result.setdefault('drapeaux',[]).append('Dossier incomplet (plancher A7) : '+' ; '.join(dossier['manques'][:4])
                 +(f' (+{len(dossier["manques"])-4})' if len(dossier['manques'])>4 else '')+' → statut de lecture Spéculatif, à reporter dans « À vérifier ».')
@@ -4567,6 +4710,11 @@ def autotest():
             self.assertEqual(accord(35,5,5,1843)['verdict'],'rapportable')
             self.assertTrue(accord(1,1,1,115)['verdict'].startswith('non estimable'))
             with self.assertRaises(ValueError):accord(-1,0,0,1)
+            # 0.7.18 : forte prévalence (Di Eugenio et Glass 2004) : PABAK 0,80 mais κ < 0 ; refusé par le contrôle des absences.
+            r=accord(90,5,5,0);self.assertAlmostEqual(r['kappa'],-0.0526,places=3);self.assertAlmostEqual(r['pabak'],.8)
+            self.assertTrue(r['verdict'].startswith('insuffisant : forte prévalence'))
+            self.assertAlmostEqual(accord(1,1,3,5)['alpha_krippendorff'],1-19*4/(14*6))                 # Meg et Owen : α = 0,095
+            self.assertEqual(accord(35,5,5,1843)['verdict'],'rapportable')                              # faible prévalence inchangée
         def test_support_garantie(self):
             # 0.7.10 : support du mécanisme (Toulmin) ; régression bornée, date ≤ information.
             g={'mecanisme':'m','attendu':'a','contredirait':'c'}
@@ -4636,6 +4784,27 @@ def autotest():
             old=P['k'];P['k']=7.0
             try:self.assertFalse(comparer_clotures(a,cloture(base))['conservative'])                    # un paramètre changé se voit
             finally:P['k']=old
+        def test_empreinte_portable(self):
+            # 0.7.18 : un écart au-delà du bit, sous 10 décimales, change l'empreinte stricte, pas la portable.
+            base=[fake_case()];a=cloture(base);b=copy.deepcopy(a)
+            k_=sorted(b['resultats'])[0];b['resultats'][k_]['p']+=1e-15
+            self.assertNotEqual(empreinte(a['resultats']),empreinte(b['resultats']))
+            self.assertEqual(empreinte(arrondir(a['resultats'])),empreinte(arrondir(b['resultats'])))
+            c_=comparer_clotures(a,b);self.assertEqual((c_['changees'],c_['changees_hors_arrondi']),(1,0))
+            self.assertEqual(a['empreinte_portable'],empreinte(arrondir(a['resultats'])))
+
+        def test_voisins(self):
+            # 0.7.18 : diagnostic de la base ; sur la démonstration, 69/78 jumeaux H1 non triviaux, ū = 0,705.
+            r=voisins(charger(RACINE/'assets/base-de-cas.exemple.jsonl'))
+            self.assertEqual((r['transitions'],r['jumeau_H1_non_trivial'],r['au_dessus_jaccard_H15']),(78,69,73))
+            self.assertAlmostEqual(r['unicite']['moyenne'],55/78,places=9);self.assertEqual(r['unicite']['concurrence_max'],4)
+            un=voisins([fake_case()]);self.assertEqual(un['sans_voisin_non_trivial'],un['transitions'])   # un cas seul : aucun voisin
+            self.assertEqual(r['par_strate'],{'6':{'cas':40,'transitions':78},'7':{'cas':40,'transitions':78}})
+            self.assertEqual((r['etats_distincts'],r['co_occurrence']['toujours_ensemble']),(111,0))
+            self.assertEqual([bande_verbale(x) for x in (.02,.05,.22,.5,.6,.9,.97)],
+                             ['probabilité très éloignée','très improbable','improbable','chance approximativement égale','probable','très probable','presque certain'])
+            self.assertIsNone(voisins([]))
+
         def test_e_processus(self):
             # 0.7.12 (audit V34, D4) : valide à tout instant ; franchit vite sur un gain net, jamais sans gain.
             self.assertIsNone(e_processus([]))
@@ -4658,6 +4827,9 @@ def autotest():
             self.assertEqual(r['resultat_principal']['p_avec_cartes'],r['p']);self.assertEqual(r['resultat_principal']['p_sans_cartes'],r['p_sans_cartes'])
             self.assertEqual(sorted(r['bande_horizon']['pas']),['1','3','6']);self.assertAlmostEqual(r['bande_horizon']['pas']['1']['p'],r['p'])
             self.assertIs(r['homologie_discernable'],False);self.assertTrue(any('indiscernable' in x for x in r['drapeaux']))
+            # 0.7.18 : le placebo publie aussi un centile, cohérent avec le drapeau.
+            self.assertTrue(0<=r['centile_placebo']<=1);self.assertAlmostEqual(r['placebo']['resolution'],1/P['placebo_tirages'])
+            self.assertTrue(.05<=r['centile_placebo']<=.95)
         def test_ecart_marginales(self):
             # 0.7.13 : le noyau concurrent ne reproduit pas les marginales ; l'écart est publié.
             e=lire_etat('[2026-01-01 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[f]')

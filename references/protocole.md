@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.17
+> Version : 0.7.18
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -108,7 +108,44 @@ fiabilité rapportable (Krippendorff 1980, cité par Carletta 1996) ; ces repèr
 Krippendorff et sont repris pour κ à titre indicatif. Un κ se publie avec son intervalle, et la **forme**
 des désaccords compte plus que leur ampleur (Reidsma et Carletta 2008) : les désaccords se conservent et
 s'examinent par carte. L'effectif de 20 cas n'est pas justifié par un calcul de puissance
-(`feuille-de-route.md` §1). **Prévalence (0.7.9).** κ dépend de la prévalence du code : indéfini à prévalence
+(`feuille-de-route.md` §1). **Ce que 20 cas peuvent établir (0.7.18).** Avec l'erreur-type usuelle de κ,
+√(pₒ(1−pₒ)/(n(1−pₑ)²)), à pₑ = 0,5 et n = 20, l'intervalle à 95 % vaut ±0,35 autour de κ = 0,60 et ±0,26 autour
+de 0,80 (approximation asymptotique, fragile à cet effectif) : `kappa_min` et `kappa_rapportable`, distants
+de 0,13, ne se distinguent pas à moins d'une erreur-type. Vingt cas détectent un accord grossier ; ils ne
+vérifient pas un seuil à 0,80, qui demanderait de l'ordre de 250 décisions codées. **Répétabilité.** La
+seconde passe de `accord --repetabilite` est une situation d'observation : un codeur qui se sait testé est
+plus constant qu'au travail (effet Hawthorne, mesuré par Galaxy Zoo, Lintott et al. 2008) ; la
+répétabilité publiée surestime donc la stabilité. **Pas de pondération des codeurs par leur accord avec les
+autres** : elle favorise la majorité (Galaxy Zoo : +15,8 % puis +37 % d'elliptiques dans les catalogues
+pondérés), et des codeurs peuvent s'accorder sur une classification fausse. **Pourquoi pas
+d'automatisation** : on automatise une mesure quand une référence indépendante existe (une dimension
+physique) ; pour une lecture, l'accord entre lecteurs est le seul étalon disponible, donc il se mesure. **Forte
+prévalence (0.7.18).** La règle des deux taux de manque protège la valeur rare quand la carte est rarement
+ancrée ; quand elle l'est dans plus de la moitié des décisions, la valeur rare est l'**absence**, et la même
+règle s'applique aux absences : avec a = 90, b = 5, c = 5, d = 0 (Di Eugenio et Glass 2004), pₒ = 0,90, κ = −0,05,
+PABAK = 0,80, et aucune absence n'est partagée ; `accord` le déclarait « rapportable », il le déclare désormais
+« insuffisant ». Refuser PABAK dès que pₑ dépasse 0,90, comme le propose la note, briserait le cas de faible
+prévalence pour lequel PABAK a été retenu (0.7.9). `accord` publie aussi le π de Scott (marges regroupées) et l'α de
+Krippendorff nominal : κ et π peuvent tomber de part et d'autre de 0,67 sur les mêmes données (Artstein et Poesio
+2008), et α est le seul des trois qui s'étende à plus de deux codeurs, à plus de deux valeurs et aux unités
+manquantes — ce que le calcul depuis deux fiches demandera (`feuille-de-route.md` §7). **Ce que valent les repères.**
+Une méta-analyse de 96 études d'annotation (Bayerl et Paul 2011) trouve 74 % d'accord moyen dans les études dont le
+but est de **mesurer** la fiabilité, 86 % dans celles qui produisent un jeu d'entraînement, et note que les valeurs
+sous 80 % n'y sont pas publiées : 0,80 est un seuil de publication autant qu'un seuil de fiabilité. Le même travail
+mesure que l'accord baisse avec le nombre de catégories et de codeurs, et que des experts et des novices peuvent
+être chacun fiables et en désaccord entre eux : fiabilité n'est pas validité (`validation.md` §10). Tout accord
+publié déclare donc : nombre de codeurs, matériel codé, nombre de catégories, critères de sélection et statut des
+codeurs, entraînement, coefficient et calcul, et **le but de la mesure**. **Pondération.** Le refus de pondérer les
+codeurs par l'accord vise la repondération itérative ; un poids plafonné à 1, qui n'écarte que les réponses
+incohérentes sans jamais avantager les conformistes (Galaxy Zoo 2, Willett et al. 2013 : w = min(1, (κ̄/0,6)^8,5),
+95 % des votants inchangés), reste admissible s'il est publié. **Un panel n'est pas une validation.** Un panel d'experts
+porte sa composition : sur un objet politisé, la réponse corrèle avec le genre et l'orientation politique des
+répondants jusqu'à r = 0,55 (Rindermann et al., 102 experts sur l'intelligence). Un avis d'experts sur les cartes
+établit leur **reconnaissabilité**, non leur justesse, et se publie avec le nombre, les disciplines et les
+orientations déclarées des répondants. Le codeur interprète une pièce où un acteur interprète sa propre situation
+(**double herméneutique**, Smith et Fieldsend 2021) : les deux niveaux se distinguent dans la fiche (A5 : un discours
+est un fait sur le discours). Une lecture approfondie de huit à dix situations, sans agrégation, est un
+complément du codage, non une source de p. **Prévalence (0.7.9).** κ dépend de la prévalence du code : indéfini à prévalence
 nulle (pₑ = 1), il passe de 1 à 0 sur une carte ancrée une fois, au premier désaccord. Les repères
 s'appliquent à PABAK = 2·pₒ − 1, sous la condition que chacun des deux taux de manque, b/(a+b) et c/(a+c),
 reste sous `fnr_max` ; aucun codeur n'est la référence de l'autre. Un κ indéfini se déclare indéfini
@@ -136,6 +173,26 @@ donne, et le passage cité doit le soutenir tel qu'il est écrit (A6, `passage`)
 - **Coïncidence lexicale** : quand le nom d'une carte figure dans la description (« mon réseau »),
   le mot ne compte pas, et l'anti-résonance est cherchée du côté de la voisine.
 - Un fait vague (sans date, sans nombre, sans acteur identifiable) ne dépasse pas Faible.
+- **Lire un « parce que » (0.7.18).** Affirmer une cause n'est pas l'établir : le codeur constate que la pièce
+  affirme un rapport, il ne juge pas ce rapport (Wüest 2023) ; c'est un fait sur le discours. Trois emplois
+  d'un même connecteur (Sweetser 1990) : de **contenu** (deux faits, l'un cause de l'autre), **épistémique**
+  (de B, le locuteur conclut A : « il l'aime, puisqu'il est revenu »), d'**acte de parole** (justifier de
+  dire). Un emploi épistémique ne soutient pas une transition dans le sens du connecteur : il en inverse
+  souvent le sens, et rien en aval ne le détecterait. Une cause qui s'appliquerait à tout le monde dans la
+  situation (« parce que les Pyrénées étaient bleues ») n'ancre rien. Une causalité sans connecteur
+  (parataxe : « Elle suffoquait. Elle s'approcha de la fenêtre. ») est hors de portée de toute détection par
+  mots : elle se lit avec un savoir que le lecteur apporte (topos, Mellet 2003), et deux codeurs qui n'ont pas
+  le même topos liront autrement sans que l'un ait tort ; le topos mobilisé s'écrit dans la `garantie`.
+- **Un mot ne range pas une carte de façon biunivoque** (Desclés et Guentchéva 1998) : une forme
+  grammaticale ne prouve pas un sens (une construction transitive n'est pas une action ; « les colonnes
+  supportent le toit »), et une même carte s'atteste par des marqueurs variés. Le contexte filtre ; une pièce
+  ambiguë est un cas normal, d'où `passage.forme: inclassable`.
+- **Voulu, contrôlé, effectué.** Pour l'acteur d'un événement (`programmation`, `option.acteur`), trois
+  questions distinctes : l'issue était-elle **voulue**, l'acteur pouvait-il l'empêcher ou la produire
+  (**contrôle**), l'a-t-il produite lui-même (**effectuation**) ? On peut vouloir sans contrôler, contrôler
+  sans effectuer (faire faire). Une chaîne de ratification (le ministre démissionne, le président accepte ou
+  refuse) a plusieurs acteurs, et chacun peut rompre ; elle se décrit acteur par acteur, et un événement
+  `programmee` nomme celui dont l'engagement est attendu.
 
 **A6 · Force d'ancrage et voisines.**
 
@@ -599,7 +656,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.17"` |
+| `version` | `"0.7.18"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

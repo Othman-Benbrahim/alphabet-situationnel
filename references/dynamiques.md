@@ -1,6 +1,6 @@
 # Alphabet situationnel — Dynamiques des cartes (couche 4, a priori)
 
-> Version : 0.7.17
+> Version : 0.7.18
 
 > Ce que chaque structure **tend à produire au pas suivant**, proposé comme hypothèse à partir de sa représentation structurelle.
 > Ces intensités **modulent** une fréquence de base (T2) : elles ne sont pas des probabilités. Valeurs
@@ -230,6 +230,33 @@ mesure exacte de ce qui manque au moteur pour répondre à une question causale.
 dans `parametres.json` (`"SRC>CIB": "I"`) seulement avec la source qui documente le mécanisme, et
 `audit` refuse toute autre valeur. Conséquence pratique : une transition A ne garantit pas son
 transport vers un contexte différent, ce que l'emprunt entre strates (T4, poids 0,5) reconnaissait déjà.
+
+**Ce que la matrice code, et ce qu'elle ne code pas (0.7.18).** Des quatre causes d'Aristote (*Physique*
+II.3) — matérielle, formelle, efficiente, finale —, les cartes codent la **formelle** : la forme d'une
+situation. La matérielle n'y entre que par les contraintes ; l'efficiente (qui a produit) seulement par
+`programmation` ; la finale (en vue de quoi), nulle part. Dans la typologie de Pires (1993, lien matériel ou
+d'interprétation × relation événementielle ou structurelle), le skill occupe les cases matérielles ; une
+représentation qui consolide une structure, ou une intention qui produit une structure, n'a pas de champ. Les
+cartes suffisent-elles à prévoir sans l'agent ? C'est l'hypothèse à éprouver, non un acquis ; une action
+volontaire interposée coupe la chaîne pour le sens commun (Hart et Honoré 1959), et le calcul attribue alors
+l'effet à l'état antérieur. Une carte « intention » ne comblerait pas ce manque : elle s'appliquerait après
+coup à tout événement, sans marqueur qui puisse être absent. Ce qui se code est la **séquence des actes
+préparatoires**, datés : 83 attaques ou approches contre des personnalités américaines (Fein et Vossekuil 1998)
+ne montrent aucun profil d'auteur, aucune menace directe à la cible chez 43 auteurs d'attaque, mais des propos
+sur l'attaque envisagée chez deux tiers des auteurs — un taux P(avoir parlé | être passé à l'acte), non
+l'inverse.
+
+**La loi de composition, nommée.** logit p₀ = logit f + Σ ln λ : effets **directs**, multiplicatifs, sans
+interaction, monotones (aucun λ < 1), indépendants de l'ordre ; une cause efficiente au niveau de la situation,
+jamais finale (Coleman 1990 : le comportement d'un système s'explique par des causes efficientes). Un effet
+total de signe opposé à l'effet direct (une politique qui produit l'inverse de ce qu'elle vise) n'est pas
+représentable à un pas. Deux cartes qui apparaissent dans le même état n'ont pas d'ordre lisible (causation
+contemporaine) ; une transition établit au mieux un ordre de dates, non un ordre causal. Le calcul ne
+**compose** pas des événements par produit de marginales : un composé est non estimé, et le noyau joint
+(0.7.14) déclare n'estimer aucune dépendance. Un événement collectif qui exige deux volontés de sens opposé
+(« démission effective ») se pose comme **un** événement, estimé sur ses homologues ; le décomposer en deux
+marginales multipliées surestimerait ou sous-estimerait selon le signe de leur corrélation, inconnu sans la
+structure.
 
 ## Synthèse : matrice des transitions a priori
 

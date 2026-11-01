@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.25
+> Version : 0.7.30
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,13 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.30 (faite) | Formulation | `v4_effectif_equivalence` = point de lecture d'une non-supériorité ; erreur contrôlée par énoncé, énoncés publiés ensemble ; fin de la boucle de relecture ; probabilités identiques à la 0.7.9 | — |
+| 0.7.29 (faite) | Deux énoncés | énoncés séparés C (cartes) et A (appareil), table des quatre issues ; non-supériorité unilatérale et énoncé de nuisance (`v4.decision`) ; puissance par énoncé ; ce que la conclusion négative n'exclut pas ; troncature différentielle ; relecture par un méthodologue extérieur avant l'épisode 1 ; probabilités identiques à la 0.7.9 | — |
+| Avant l'épisode 1 : étude d'accord sur des cas réels ; fiche d'étude remplie ; tiers nommé ; relecture de la fiche et du §11 par un méthodologue extérieur | conditions de l'épisode 1 | — |
+| 0.7.28 (faite) | Inertie de strate | quatrième p (`p_inertie_strate`, mêmes tirages que le placebo, sans λ) et `v4_inertie_strate` ; contraste confirmatoire alphabet − inertie de strate ; courbe de puissance du gain ; négatif sur contraste désigné ; fréquences au dossier neutre ; taux de manque par bootstrap ; barème des abstentions ; indépendance du tiers ; probabilités identiques à la 0.7.9 | — |
+| 0.7.27 (faite) | Sens de la conclusion | trois p emboîtés, formules côte à côte ; contrastes confirmatoires alphabet − inertie et alphabet − dossier neutre, décomposition par le placebo descriptive ; 171 épisodes ; équivalence sur deux ensembles ; accord prospectif par carte et par bootstrap ; seul le tiers s'abstient ; carte hors liste retirée de l'état ; modèle à poids ouverts ; contrôle positif des juges ; probabilités identiques à la 0.7.9 | — |
+| Bootstrap sur les états pour l'accord groupé ; retrait mécanique des cartes non admises d'un état publié | avant l'épisode 1 (script du tiers, ou moteur) | — |
+| 0.7.26 (faite) | Ordre des opérations | le tiers calcule p après publication de l'état, scellement obligatoire ; accord prospectif groupé ; puissance conjointe (192 épisodes) ; équivalence nommée et cas mixtes ; même réécriture pour réel et leurre ; graine publique ; taux d'abstention maximal ; correction : le placebo est un placebo d'homologie, non de cartes ; probabilités identiques à la 0.7.9 | — |
 | 0.7.25 (faite) | Contraste confirmatoire | conjonction dossier neutre, inertie, placebo (intersection-union) ; bras d'un modèle figés ; leurres du même dossier, cartes permutées, deux juges, puissance déclarée ; libellés qui nomment H0 ; même repli pour hors liste et abstention, d̄ primaire avec repli (`couverture.v4_avec_repli`) ; fiche d'étude horodatée ; tiers qui exécute et recode 20 % ; plafond de 300 épisodes ; probabilités identiques à la 0.7.9 | — |
 | Motif d'abstention `carte hors liste` produit par le moteur ; contrôle de la confirmation humaine d'un état proposé par un modèle, sur un dossier | avant l'épisode 1 | — |
 | 0.7.24 (faite) | Marges fermées | exclusion préalable mécanique ; accord mesuré avant l'épisode 1 et liste des cartes admises figée ; estimateur et lecture de l'autocorrélation ; paraphrases et dossier neutre figés d'avance ; table des issues et contradiction ; arrêt et effectif d'équivalence fixé une fois (`v4_effectif_equivalence`) ; leurres chiffrés (26 sur 40) ; tiers nommé avant ; constat : V4 ne peut pas commencer sans étude d'accord ; probabilités identiques à la 0.7.9 | — |

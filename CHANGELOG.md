@@ -1,9 +1,80 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.25
+> Version : 0.7.30
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.30 — 2026-11-01 · formulation
+
+Neuvième relecture (amass, sur le §11.13) : aucune marge de décision, deux précisions (`validation.md` §11.14). **Documentation
+seule ; aucune probabilité ne change, vérifié par clôture.** Le paramètre `v4_effectif_equivalence` garde son nom et fixe le
+point de lecture d'une non-supériorité ; l'erreur est contrôlée par énoncé, et les énoncés se publient toujours ensemble.
+Fin de la boucle de relecture.
+
+## 0.7.29 — 2026-11-01 · deux énoncés
+
+Huitième relecture (amass, sur le §11.12) : cinq marges de lecture, fermées au `validation.md` §11.13
+(`apports-theoriques.md` §29.9). **Aucune probabilité ne change, vérifié par clôture.** Aucun texte retiré.
+
+- **Deux énoncés séparés** : C (les cartes, contre l'inertie de strate) et A (l'appareil, contre le dossier neutre),
+  chacun à son α, table des quatre issues ; la conjonction du §11.11 est remplacée.
+- **`v4.decision`** : l'énoncé négatif devient une non-supériorité unilatérale (borne basse de d̄ > −0,025) ; nouvel
+  énoncé de **nuisance** (borne basse > +0,025, champ `nuisance`) ; z de l'effectif provisoire en unilatéral (2,49).
+- **Puissance** par énoncé et σ par contraste ; point de lecture fixé par le gain (171 épisodes à σ = 0,10) ;
+  tableau à cinq issues.
+- **Lecture** : « pas d'apport > 2,5 » n'exclut pas un apport plus petit ; raison du seuil ; troncature différentielle.
+- **Relecture extérieure** (méthodologue, tiers) : condition de l'épisode 1.
+
+## 0.7.28 — 2026-11-01 · inertie de strate
+
+Septième relecture (amass, sur le §11.11) : six marges, fermées au `validation.md` §11.12 (`apports-theoriques.md`
+§29.8). **Aucune probabilité ne change, vérifié par clôture.** Aucun texte retiré.
+
+- **`calculer`** : `p_inertie_strate`, les mêmes tirages de cas que le placebo sous p₀ = f, sans λ (champ facultatif
+  du journal, contrôlé contre le calcul figé) ; **`scorer`** : `brier_inertie_strate` et `v4_inertie_strate`. Sur la
+  démonstration, 5,5 des 9,9 points d'écart entre l'alphabet et f viennent du tirage de cas, sans carte.
+- **Contraste confirmatoire** des cartes : alphabet − inertie de strate (remplace alphabet − inertie) ; décomposition
+  exacte en a priori et homologues, descriptive.
+- **Courbe de puissance du gain** publiée d'avance : zone « non établi » de 2 à environ 4,5 points.
+- **Négatif** sur le seul contraste des cartes, désigné ; dossier neutre muni de f et de l'inertie de strate, modèle
+  nommé ; taux de manque par bootstrap (passage ≈ 0,77 à 10 % vrai) ; barème des abstentions ; indépendance du tiers.
+- 155 autotests.
+
+## 0.7.27 — 2026-11-01 · sens de la conclusion
+
+Sixième relecture (amass, sur le §11.10) : six marges, fermées au `validation.md` §11.11 (`apports-theoriques.md`
+§29.7). **Documentation seule ; aucune probabilité ne change, vérifié par clôture.** Aucun texte retiré : la
+conjonction des §11.9 et §11.10 reste écrite, le §11.11 la remplace.
+
+- **Trois p emboîtés** (inertie, placebo, alphabet), formules côte à côte. Contrastes **confirmatoires** : alphabet
+  − inertie (effet total des cartes) et alphabet − dossier neutre ; placebo − inertie et alphabet − placebo
+  descriptifs. Libellé exact de la conclusion positive. 171 épisodes à σ = 0,10 (deux contrastes).
+- **Équivalence** exigée sur l'ensemble avec repli et sur les seules questions codées.
+- **Accord prospectif** : critère par carte en plus du groupé ; bootstrap sur les états, borne basse ≥ 0,67 ;
+  tirage par le tiers ; recodage avant résolution.
+- **Codage** : limite déclarée (exécution privée invérifiable) ; seul le tiers s'abstient ; une carte hors liste est
+  retirée de l'état, non convertie en abstention.
+- **Détails** : fiche modifiée = nouvelle étude ; modèle à poids ouverts hébergé par le tiers ; `v4_n` compté avec
+  les abstentions ; leurres réécrits à l'aveugle, contrôle positif des juges (9 sur 10).
+
+## 0.7.26 — 2026-11-01 · ordre des opérations
+
+Cinquième relecture (amass, sur le §11.9) : sept marges, fermées au `validation.md` §11.10 (`apports-theoriques.md`
+§29.6). **Documentation seule ; aucune probabilité ne change, vérifié par clôture.** Aucun texte retiré.
+
+- **Ordre des opérations** : état publié, contrôle de liste, calcul par le tiers, scellement obligatoire ; aucune
+  abstention après le contrôle de liste.
+- **Accord prospectif** groupé sur toutes les décisions des états recodés ; échec = « codage non reproduit en
+  prospectif », aucune conclusion confirmatoire.
+- **Trois contrastes** : puissance planifiée à 93 % par contraste (192 épisodes à σ = 0,10) ; équivalence nommée
+  (inertie et placebo pour les cartes ; dossier neutre sous son propre libellé) ; cas mixtes non confirmatoires.
+- **Leurres** : lecture réelle et leurre réécrits par le même tiers ; présentation en paire, position tirée ;
+  juges étrangers au projet.
+- **Graine** dérivée d'une balise d'aléa publique ; sorties brutes des bras publiées ; disparition d'une version.
+- **Taux d'abstention maximal** (40 %) ; plafond réservé à l'équivalence ; justification de l'écrêtage corrigée.
+- **Correction** : `p_placebo` est un placebo d'homologie (cas tirés au hasard), pas une permutation de cartes ; la
+  conjonction du §11.9 tient, sa justification était fausse.
 
 ## 0.7.25 — 2026-11-01 · contraste confirmatoire
 

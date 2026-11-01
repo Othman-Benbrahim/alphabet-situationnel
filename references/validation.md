@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.25
+> Version : 0.7.30
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -943,3 +943,327 @@ optimiste : le recodage par le tiers des 20 % d'états de V4 mesure l'accord **e
 lit pour V4. Le recalcul de σ̂ après 20 épisodes est bruité (environ 16 % d'erreur relative, donc environ 30 % sur
 l'effectif) : un **plafond** se déclare dans la fiche, **300 épisodes** par défaut. Si l'effectif recalculé le
 dépasse, l'étude s'arrête au plafond et conclut « non établi ».
+
+### 11.10 Cinquième relecture : ordre des opérations, accord prospectif, placebo (0.7.26)
+
+amass a relu le §11.9 et relevé sept marges ; ses recalculs concordent (0,81 ; 0,57 ; 862 contre 138 ; 16 % et
+environ 30 %). Toutes sont retenues. En les vérifiant contre le code, une erreur **de notre texte** est apparue.
+
+**Correction du §11.9, points 1 et 3 : le placebo ne permute pas les cartes.** `p_placebo` est un placebo
+d'**homologie** (`placebo_homologie`, 0.7.4) : le même a priori p₀, cartes comprises, la même révision, mais des
+cas **tirés au hasard** dans la même strate et la même fenêtre, en même nombre que la classe retenue, au lieu des
+homologues. On moyenne 200 tirages (`placebo_tirages`), graine dérivée de l'état, de la cible et de la date. Ce
+qui est préservé : la strate, la fenêtre, le nombre de cas, p₀ ; ce qui est tiré : quels cas. Aucun état n'est
+fabriqué, donc pas d'état improbable que l'alphabet battrait trop facilement. Ce que mesure chaque contraste :
+- contre l'**inertie** (`p_sans_cartes`, sans les λ) : l'apport des cartes **dans l'a priori** ;
+- contre le **placebo** : l'apport des cartes **dans le choix des homologues** ;
+- contre le **dossier neutre** : l'apport de l'appareil entier sur un modèle qui lit les mêmes faits.
+
+Les cartes agissent par deux chemins, l'a priori et l'homologie ; la conjonction inertie et placebo les couvre
+tous les deux, le dossier neutre ajoute la comparaison extérieure. La conjonction du §11.9 reste donc juste, mais
+sa justification était fausse : « le même dossier, cartes permutées » décrivait un placebo qui n'existe pas. La
+moyenne de 200 tirages n'est pas un comparateur proche de l'inertie : elle garde les λ.
+
+**1. Ordre des opérations, horodaté étape par étape.** Le codeur ne lance jamais le calcul. Séquence, chaque
+étape horodatée chez le tiers avant la suivante :
+1. l'état est codé sur le dossier, et son empreinte publiée ;
+2. le contrôle de la liste des cartes admises s'applique à cet état publié ; une carte hors liste fait de la
+   question une abstention, **à cette étape seulement** ;
+3. le **tiers** calcule p à partir de l'état publié (`calculer --dossier`) ;
+4. le scellement suit, obligatoire : un p calculé ne se retire pas, l'état ne se recode pas.
+
+Aucune abstention n'est admise après l'étape 2. Ainsi, le jugement du codeur sur l'issue ne peut plus passer dans
+le score par un retrait sélectif.
+
+**2. Accord prospectif : une règle groupée.** Le recodage de 20 % des états de V4 donne environ 10 états à 50
+épisodes et 28 à 138 : trop peu par carte pour le seuil de 82 décisions. La règle prospective est donc **groupée** :
+la table 2×2 somme toutes les décisions carte × strate des états recodés (environ 450 à 138 épisodes) ; `accord` la
+lit (PABAK, taux de manque, κ, π, α, intervalle). **Critère** : verdict groupé au moins `provisoire`. **Échec** :
+aucune conclusion confirmatoire ; les résultats de V4 se publient sous le libellé « codage non reproduit en
+prospectif ». L'accord par carte se publie, descriptif. Les décisions d'un même état ne sont pas indépendantes :
+l'intervalle groupé est optimiste, c'est déclaré.
+
+**3. Trois contrastes : puissance conjointe et cas mixtes.**
+- **Puissance.** 80 % par contraste donnerait environ 51 % pour la conjonction si les contrastes étaient
+  indépendants. L'effectif se planifie donc à **93 % par contraste** (0,93³ ≈ 0,80) : z = 1,645 + 1,812 = 3,46, soit
+  **192 épisodes** à σ(d) = 0,10 pour l'équivalence. C'est l'hypothèse de la fiche, recalculée une fois (§11.8).
+  Si les contrastes sont corrélés positivement, la puissance conjointe est plus haute.
+- **Équivalence nommée.** « Les cartes n'apportent pas plus de 2,5 points » exige l'équivalence contre l'inertie
+  **et** contre le placebo. L'équivalence contre le dossier neutre est un autre énoncé, publié sous son propre
+  libellé : « l'alphabet ne fait pas mieux de plus de 2,5 points qu'un modèle qui lit les mêmes faits ».
+- **Cas mixtes.** Gain contre un ou deux des trois bras seulement : « non établi : gain partiel contre … »,
+  descriptif ; aucune conclusion confirmatoire. Le moteur ne lit qu'une référence à la fois (`v4.decision`) ; la
+  table conjointe se lit sur les trois sorties.
+
+**4. Leurres : même procédure pour les deux lectures.** La lecture réelle **et** le leurre sont réécrits par le
+même tiers, selon la même consigne, à même longueur, ton et valence ; les juges ne peuvent plus reconnaître la
+lecture réelle à son style. Les cartes du leurre sont tirées au hasard parmi les seize, en même nombre et dans
+les mêmes strates que la lecture réelle, avec une graine dérivée de la situation. Présentation **en paire**,
+position tirée au sort ; c'est ce que suppose la proportion nulle de 1/2. Les juges connaissent la situation et
+sont étrangers au projet ; le tiers les recrute. L'accord entre juges se publie, descriptif, sans seuil.
+
+**5. Graines et traces.** La graine du tirage des questions n'est choisie par personne : elle dérive d'une valeur
+publique postérieure à l'engagement (la première valeur d'une balise d'aléa publique, par exemple celle du NIST,
+après l'horodatage de la fiche). Les cinq exécutions de chaque bras d'un modèle de langage, sorties brutes
+comprises, se publient avec leur empreinte, aucune n'étant écartée. Si la version du modèle d'un bras disparaît en
+cours d'étude, le bras s'arrête sans substitution ; si c'est le dossier neutre, la conclusion confirmatoire devient
+impossible, et l'étude se clôt « non établi » sur ce point.
+
+**6. Trois détails.**
+- **Dilution.** Une abstention vaut d = 0 contre l'inertie : avec 40 % d'abstentions, un gain de 2,5 points sur
+  l'ensemble suppose environ 4,2 points sur les questions chiffrées. La fiche déclare un **taux d'abstention
+  maximal, 40 % par défaut** ; au-delà, l'étude conclut « non établi ».
+- **Plafond.** Les 300 épisodes plafonnent l'effectif d'**équivalence** seulement. Le gain peut conclure dès
+  `v4_n` épisodes, par l'e-processus.
+- **Écrêtage, justification corrigée.** Le §11.9 disait que le Brier paie sans borne une probabilité de 0 ou 1 :
+  c'est faux, le Brier est borné ; c'est la perte logarithmique (publiée par `scorer`) qui ne l'est pas. L'écrêtage
+  à [0,01 ; 0,99] est sans effet notable sur le Brier et légèrement favorable aux bras d'un modèle : il est donc
+  prudent pour la comparaison.
+
+### 11.11 Sixième relecture : ce que la conclusion positive voudra dire (0.7.27)
+
+amass a relu le §11.10 et relevé six marges ; ses recalculs concordent (0,51 ; 0,93 ; 3,46 ; 192 ; 4,17). La
+première change le sens de la conclusion : elle est retenue, et la conjonction du §11.9 et du §11.10 est
+**remplacée** ci-dessous. Ces deux paragraphes restent écrits ; c'est celui-ci qui fait foi.
+
+**1. Les trois p sont emboîtés.** Côte à côte, avec f la fréquence de référence, λ les multiplicateurs des
+cartes, k = 2 et p₀ = logit⁻¹(logit f + Σ ln λ) :
+
+| Bras | Formule | Cartes dans l'a priori | Cartes dans le choix des cas |
+|---|---|---|---|
+| inertie (`p_sans_cartes`) | p = f (λ = 1, aucun homologue retenu) | non | non |
+| placebo (`p_placebo`) | moyenne sur 200 tirages de (n_E* + k·p₀)/(n_A* + k), les cas étant tirés au hasard dans la strate et la fenêtre, en nombre égal à la classe retenue | oui | non |
+| alphabet (`p`) | (n_E + k·p₀)/(n_A + k) sur les homologues | oui | oui |
+
+Les contrastes se lisent donc ainsi, et le §11.10 se trompait en disant que l'inertie mesure « l'apport dans l'a
+priori » :
+
+| Contraste | Ce qu'il mesure | Statut |
+|---|---|---|
+| alphabet − inertie | l'**effet total** des cartes (a priori et homologues) | **confirmatoire** |
+| alphabet − dossier neutre | l'apport de l'appareil sur un modèle qui lit les mêmes faits | **confirmatoire** |
+| placebo − inertie | le chemin de l'**a priori** seul | descriptif |
+| alphabet − placebo | le chemin du **choix des homologues** seul | descriptif |
+
+**Conclusion positive, libellé exact** : « l'alphabet apporte au moins 2,5 points de Brier par rapport à ses propres
+fréquences sans cartes, **et** par rapport à un modèle qui lit les mêmes faits ». Elle exige les deux contrastes
+confirmatoires (intersection-union, chacun à `v4_alpha`). L'ancienne conjonction exigeait en plus que le choix des
+homologues apporte 2,5 points à lui seul : si les cartes n'agissaient que par l'a priori, l'étude n'aurait jamais
+pu conclure. La décomposition entre les deux chemins se publie, descriptive. Le placebo se publie sous ses deux
+formes : la moyenne des 200 tirages (un comparateur sans bruit d'échantillonnage, donc plus exigeant) et sa plage
+à 90 % (`plage_90`), qui dit ce que donnerait un choix quelconque de cas.
+
+**Puissance**, recalculée pour deux contrastes : 0,8^½ ≈ 0,894 par contraste ; z = 1,645 + 1,617 = 3,26 ; **171
+épisodes** à σ(d) = 0,10 pour l'équivalence. Ce chiffre remplace les 192 du §11.10 comme hypothèse de la fiche.
+
+**2. Équivalence : deux lectures, toutes deux exigées.** Une abstention vaut d = 0 contre l'inertie : elle dilue le
+gain, mais elle **facilite** l'équivalence, en rapprochant la moyenne de zéro et en réduisant la variance.
+« Pas d'apport supérieur à 2,5 points » exige donc l'équivalence **sur l'ensemble avec repli et sur les seules
+questions codées** (`v4` et `couverture.v4_avec_repli`, deux sorties de `scorer`). σ(d) s'estime sur les deux ;
+l'effectif d'équivalence se fixe sur le plus grand. L'hypothèse de 0,10 vaut pour chacun.
+
+**3. Accord prospectif groupé : quatre précisions.**
+- **Aucune carte cachée.** La table groupée est dominée par des absences partagées, et un taux de manque groupé
+  peut masquer une carte fréquente entièrement discordante. Le critère groupé s'accompagne d'un critère par carte :
+  toute carte qui atteint `accord_min_ancrages` ancrages dans le recodage et dont le verdict est « insuffisant »
+  fait échouer l'accord prospectif.
+- **Borne basse, par bootstrap sur les états.** L'intervalle groupé se calcule par bootstrap sur les **états**
+  recodés (2 000 rééchantillons, graine publique), et le critère porte sur la **borne basse** : au moins 0,67. Le
+  moteur ne fait pas ce bootstrap ; le tiers le fait et publie son script.
+- **Tirage.** Le tiers tire les 20 % d'états à recoder, avec la même balise publique que les questions.
+- **Moment.** Le recodage a lieu **avant la résolution** de la question, ou à l'aveugle de son issue.
+
+**4. Ce qui ne se contrôle pas, et un levier retiré.**
+- **Limite déclarée.** « Le codeur ne lance jamais le calcul » reste invérifiable : le moteur est public, et une
+  exécution privée ne laisse pas de trace. Les options : un codeur qui n'a pas l'environnement du moteur, ou la
+  déclaration de cette limite dans la publication. La fiche dit laquelle.
+- **Tout se code, seul le tiers s'abstient.** Toute question soumise est codée. Le codeur ne s'abstient jamais ; le
+  tiers seul prononce une abstention, pour un motif de la liste fermée (état nul, Hors domaine, question causale,
+  temporalité sans référence externe), et les motifs se publient.
+- **Carte hors liste : retirée, non convertie (correction du §11.9, point 5).** Convertir en abstention un état qui
+  ancre une carte hors liste laissait au codeur un levier : ancrer une telle carte là où il pense que l'alphabet
+  se trompera. Désormais, le tiers **retire mécaniquement** de l'état publié les mots des cartes non admises,
+  publie l'état avant et après le retrait, et calcule sur l'état restant ; seul un état devenu nul fait une
+  abstention.
+
+**5. Trois détails.**
+- **Fiche.** Toute modification de la fiche après la valeur de la balise ouvre une nouvelle étude ; la graine
+  précédente se déclare avec la nouvelle.
+- **Modèle des bras.** Un modèle hébergé peut disparaître avant 171 épisodes et donner à son fournisseur un veto sur
+  l'étude. Les bras d'un modèle de langage utilisent donc un modèle **à poids ouverts**, version figée, hébergé par
+  le tiers, empreinte des poids publiée.
+- **`v4_n`** se compte sur les mêmes épisodes que le d̄ primaire, abstentions comprises
+  (`couverture.v4_avec_repli`, qui applique le plancher sur ses propres épisodes).
+
+**6. Leurres : réécriture aveugle et contrôle positif.**
+- Le réécrivain reçoit les deux lectures sans savoir laquelle est réelle, dans un ordre tiré.
+- **Contrôle positif** : chaque juge reçoit aussi 10 paires dont le leurre vient d'une **autre** situation, mêlées
+  aux autres. Un juge qui en reconnaît moins de 9 sur 10 est exclu, selon cette règle fixée d'avance ; si plus de
+  la moitié des juges sont exclus, le test principal est déclaré sans valeur.
+- Une reconnaissance faible des leurres à cartes tirées au hasard dirait que les cartes s'adaptent à des situations
+  variées. C'est précisément le risque de lecture Barnum que le test expose : ce résultat se publie comme tel.
+
+### 11.12 Septième relecture : la base de cas, la puissance du gain (0.7.28)
+
+amass a relu le §11.11 et relevé six marges ; ses recalculs concordent (0,894 ; 3,26 ; 171). Les deux premières
+changent ce que les conclusions voudront dire ; elles sont retenues, et la première a demandé du code.
+
+**1. L'inertie ne tire pas les mêmes cas : un quatrième p, l'inertie de strate.** Le §11.11 écrivait « alphabet −
+inertie = effet total des cartes ». C'est trop fort, pour une raison un peu différente de celle qu'avance la relecture.
+f n'est pas une référence extérieure à la base : c'est la fréquence de la base dans la strate, contractée vers une
+référence avec k₀ = 20 pseudo-observations (`graphe.md` §2.2). Mais l'alphabet et le placebo n'utilisent pas f : ils
+révisent p₀ sur c_A cas avec k = 2. Le passage de f à un petit échantillon faiblement contracté change p sans
+qu'aucune carte y soit pour rien. **Mesuré sur la démonstration** (POLARITÉ@7 + CONTRAINTE@6 → SEUIL@7) : f = 12,1 %,
+inertie de strate 17,6 %, placebo 20,2 %, alphabet 22,0 %. Sur les 9,9 points d'écart entre l'alphabet et f, 5,5
+viennent du tirage de cas, sans carte. La relecture avait raison sur la conséquence.
+
+Le moteur calcule depuis 0.7.28 l'**inertie de strate** : les mêmes tirages que le placebo (même graine, même nombre
+de cas, 200 tirages), sous p₀ = f, sans λ. Sortie `p_inertie_strate` de `calculer`, champ facultatif du journal
+contrôlé contre le calcul figé, et `v4_inertie_strate` dans `scorer`. Les quatre p :
+
+| Bras | Formule | λ | Cas |
+|---|---|---|---|
+| inertie (`p_sans_cartes`) | f, fréquence de la strate contractée (k₀ = 20) | non | tous, sans tirage |
+| inertie de strate (`p_inertie_strate`) | moyenne sur 200 tirages de (n_E* + k·f)/(n_A* + k) | non | tirés au hasard |
+| placebo (`p_placebo`) | moyenne sur les **mêmes** tirages de (n_E* + k·p₀)/(n_A* + k) | oui | tirés au hasard |
+| alphabet (`p`) | (n_E + k·p₀)/(n_A + k) | oui | homologues |
+
+| Contraste | Ce qu'il mesure | Statut |
+|---|---|---|
+| alphabet − inertie de strate | l'**effet des cartes** (a priori et homologues), à base de cas et contraction égales | **confirmatoire** (remplace alphabet − inertie) |
+| alphabet − dossier neutre | l'apport de l'appareil sur un modèle qui lit les mêmes faits **et les mêmes fréquences** | **confirmatoire** |
+| placebo − inertie de strate | l'a priori des cartes seul (mêmes cas, seuls les λ changent) | descriptif |
+| alphabet − placebo | le choix des homologues seul | descriptif |
+| alphabet − inertie | l'effet de l'appareil avec sa base de cas | descriptif |
+
+La décomposition est exacte : alphabet − inertie de strate = (alphabet − placebo) + (placebo − inertie de strate).
+Le biais de troncature de la base (§10) touche les quatre p ; aucun contraste ne l'élimine, et c'est déclaré.
+
+**2. Puissance de la conclusion de gain, publiée d'avance.** Les 171 épisodes sont calculés pour l'équivalence à effet
+nul. Pour le gain, approximation normale, σ(d) = 0,10, un regard à 171 épisodes, un contraste (erreur-type 0,77 point) :
+
+| Gain vrai (points) | « gain ≥ 2,5 établi » | « pas d'apport > 2,5 » | « non établi » |
+|---|---|---|---|
+| 0 | 0,00 | 0,90 | 0,10 |
+| 1 | 0,00 | 0,62 | 0,38 |
+| 2 | 0,01 | 0,16 | 0,83 |
+| 2,5 | 0,05 | 0,05 | 0,90 |
+| 3 | 0,16 | 0,01 | 0,83 |
+| 4 | 0,62 | 0,00 | 0,38 |
+| 5 | 0,95 | 0,00 | 0,05 |
+
+Pour deux contrastes à 0,894, 80 % de puissance demande un gain vrai d'environ 4,7 points ; l'e-processus, lisible à
+tout instant, est moins puissant qu'un test à un regard. **Lecture** : un apport vrai entre 2 et environ 4,5 points
+finira le plus souvent « non établi ». Ce n'est pas un échec : la zone grise est large et voulue, parce que le seuil
+est 2,5 points. Ce tableau est publié avec la fiche, avant l'épisode 1.
+
+**3. La conclusion négative porte sur un contraste désigné.** « Les cartes n'apportent pas plus de 2,5 points » se
+lit sur **le seul contraste alphabet − inertie de strate**, désigné d'avance, en équivalence sur les deux ensembles
+(avec repli et codées seules, §11.11). Pas d'union, donc pas de correction. L'équivalence contre le dossier neutre est
+un autre énoncé, publié sous son libellé (« l'appareil ne fait pas mieux de plus de 2,5 points que [modèle nommé] lisant
+les mêmes faits ») ; elle ne dit rien des cartes.
+
+**4. Le dossier neutre reçoit les mêmes fréquences, et la conclusion nomme son modèle.** La consigne du dossier neutre
+donne au modèle f et l'inertie de strate, chiffrés, avec leur définition : sans elles, le gain contre ce bras comprendrait
+la valeur des fréquences. L'alphabet est un codeur humain plus un moteur : le contraste contre le dossier neutre mesure
+**l'appareil**, et la phrase « les cartes apportent » ne s'en déduit pas ; elle ne se déduit que du contraste alphabet −
+inertie de strate. Le libellé confirmatoire nomme le modèle et sa version : la conclusion ne vaut que contre lui.
+
+**5. Accord prospectif : le taux de manque aussi par bootstrap.** Le critère groupé exige, sur le même bootstrap par états,
+la borne basse de PABAK ≥ 0,67 **et** la borne haute du taux de manque ≤ 0,2. Probabilité de passage, publiée d'avance :
+avec environ 50 décisions « présent » et un taux de manque vrai de 10 %, environ 0,77 (simulation, borne unilatérale
+approchée) ; le critère est exigeant. Les cartes sous `accord_min_ancrages` ancrages dans le recodage sont **non évaluées
+en prospectif** : leur liste se publie, et les épisodes qui les ancrent restent dans V4 (ces cartes étaient admises avant
+l'étude), avec ce drapeau.
+
+**6. Barème des abstentions du tiers.** La fiche fixe, pour chaque motif de la liste fermée, une définition et deux
+exemples : état nul (aucun mot après retrait des cartes non admises) ; Hors domaine (la carte cible est Hors domaine dans
+la strate, `equivalences/strate-NN.md`) ; question causale (la question demande ce qui **fait** arriver l'événement, non
+s'il arrive) ; temporalité sans référence externe (`programmee` ou `duree_de_vie` sans `--fref` ni `--references`, que le
+moteur refuse lui-même). Les abstentions se publient **par motif**.
+
+**Le tiers.** Tout le dispositif repose sur son indépendance réelle, et c'est ce qu'un lecteur jugera en premier. La
+fiche publie sa relation à l'auteur (aucun lien financier, professionnel ou familial, ou leur nature s'il en existe), la
+façon dont il a été choisi, et une déclaration d'intérêts signée.
+
+### 11.13 Huitième relecture : deux énoncés, non-supériorité, nuisance (0.7.29)
+
+amass a relu le §11.12 ; ses recalculs concordent (4,4 = 1,8 + 2,6 ; 9,9 dont 5,5 ; le tableau de puissance à ±0,01).
+Il ne relève plus de décision ouverte après coup, et cinq marges de lecture, toutes retenues. Les règles ci-dessous
+**remplacent** celles des §11.11 et §11.12 là où elles diffèrent ; ces paragraphes restent écrits.
+
+**1. Deux énoncés séparés, non une conjonction.** Le §11.11 exigeait la conjonction (inertie et dossier neutre) ; le
+§11.12 disait que « les cartes apportent » ne se déduit que du contraste avec l'inertie de strate. Les deux textes se
+contredisaient. Désormais, deux énoncés, chacun avec son libellé, son α (`v4_alpha`) et sa règle, chacun publié seul,
+donc sans multiplicité :
+- **Énoncé C (cartes)** : « les cartes apportent au moins 2,5 points », sur alphabet − inertie de strate.
+- **Énoncé A (appareil)** : « l'appareil apporte au moins 2,5 points par rapport à [modèle et version] lisant les mêmes
+  faits et les mêmes fréquences », sur alphabet − dossier neutre.
+
+| | A : oui | A : non établi ou négatif |
+|---|---|---|
+| **C : oui** | les cartes apportent, et l'appareil bat le modèle | les cartes apportent sur les fréquences, l'appareil ne bat pas le modèle |
+| **C : non établi ou négatif** | l'appareil bat le modèle, sans que les cartes en soient la cause établie | ni l'un ni l'autre |
+
+La puissance à deux contrastes du §11.11 (0,894 par contraste) ne s'applique plus : chaque énoncé a sa propre
+puissance, à 80 %.
+
+**2. Non-supériorité, et un énoncé de nuisance.** L'énoncé négatif « pas d'apport supérieur à 2,5 points » se testait par
+une équivalence bilatérale : un alphabet **pire** de plus de 2,5 points restait « non établi », alors que la phrase était
+vraie. Il devient un test **unilatéral de non-supériorité** : la borne basse unilatérale à 95 % de d̄ (Brier de
+l'alphabet − Brier de la référence) dépasse −0,025. S'y ajoute un énoncé séparé de **nuisance** : la même borne dépasse
++0,025, c'est-à-dire que l'alphabet dégrade de plus de 2,5 points. `v4.decision` rend les deux depuis 0.7.29
+(`nuisance`). Un alphabet nuisible est un résultat, publié comme tel.
+
+**3. Effectif et puissance, par énoncé.** La non-supériorité demande z = 1,645 + 0,842 = 2,49, soit **99 épisodes** à
+σ(d) = 0,10 ; c'est le minimum pour la lire. Mais le gain, à ce même effectif, aurait peu de puissance. Le point de lecture
+retenu est donc fixé par le gain : **171 épisodes** à σ(d) = 0,10 (80 % de puissance pour un gain vrai d'environ 4,4
+points, un contraste). Puissance, approximation normale, un regard à 171 épisodes, erreur-type 0,76 point :
+
+| Gain vrai (points) | « gain ≥ 2,5 » | « pas d'apport > 2,5 » | « dégradation > 2,5 » | « non établi » |
+|---|---|---|---|---|
+| −4 | 0,00 | 1,00 | 0,62 | 0,00 |
+| −2,5 | 0,00 | 1,00 | 0,05 | 0,00 |
+| 0 | 0,00 | 0,95 | 0,00 | 0,05 |
+| 1 | 0,00 | 0,62 | 0,00 | 0,38 |
+| 1,5 | 0,00 | 0,37 | 0,00 | 0,63 |
+| 2 | 0,01 | 0,16 | 0,00 | 0,83 |
+| 2,5 | 0,05 | 0,05 | 0,00 | 0,90 |
+| 3 | 0,16 | 0,01 | 0,00 | 0,83 |
+| 4 | 0,62 | 0,00 | 0,00 | 0,38 |
+| 5 | 0,95 | 0,00 | 0,00 | 0,05 |
+
+(« dégradation » est un énoncé séparé ; quand il est établi, « pas d'apport > 2,5 » l'est aussi.) Le tableau se publie
+**pour chaque énoncé, avec son σ** : σ(d) contre le dossier neutre est sans doute plus grand contre lui que contre l'inertie de
+strate, un modèle de langage pouvant s'écarter d'une fréquence bien plus qu'une inertie. Le recalcul unique après 20
+épisodes (§11.8) se fait **par contraste**, et `v4_effectif_equivalence` retient le plus grand.
+
+**4. Ce que « pas d'apport supérieur à 2,5 points » n'exclut pas.** Pour un apport vrai de 1,5 point, cette conclusion
+sort avec une probabilité de 0,37 : un apport réel et modeste peut la produire. La fiche porte la phrase, en clair :
+« Cette conclusion n'exclut pas un apport inférieur à 2,5 points. » Elle porte aussi la raison du seuil : l'étude est
+conçue pour détecter de **grands** effets. Un seuil de 1 point demanderait environ 620 épisodes en non-supériorité et
+860 en équivalence, hors de portée d'une première étude ; 2,5 points valent 10 % d'un Brier de 0,25.
+
+**5. Troncature différentielle.** Le contraste alphabet − inertie de strate ne neutralise pas la troncature de la base
+(§10) : elle peut rendre les homologues choisis par les cartes plus ou moins représentatifs que des cas tirés au hasard.
+Sur des questions d'un banc public, qui ne sont pas tronquées, ce défaut jouerait plutôt **contre** l'alphabet. Cela pèse
+sur la lecture d'un résultat négatif, et c'est l'une des raisons de l'énoncé de nuisance.
+
+**6. Fin de cette boucle de relecture.** amass le dit lui-même : chaque tour a été fait par le même relecteur, avec la
+même grille, et ce n'est pas une évaluation indépendante. Avant l'épisode 1, la fiche et le §11 sont relus par **un
+biostatisticien ou un méthodologue qui n'a pas participé à leur écriture**, et par le tiers désigné ; leurs rapports
+se publient avec la fiche. Cette relecture externe est une condition de l'épisode 1, au même titre que l'étude d'accord.
+
+### 11.14 Deux précisions de formulation (0.7.30)
+
+amass a relu le §11.13 : plus de marge qui laisse une décision ouverte après coup ; ses recalculs concordent (99 ; 619 ;
+862 ; le tableau à ±0,01 ; 4,4 points ; 10 %). Il a relu le texte, sans exécuter `v4.decision`.
+
+- **Le nom `v4_effectif_equivalence`.** Le paramètre garde son nom de 0.7.24, mais il fixe depuis 0.7.29 le **point de
+  lecture** de l'énoncé négatif, qui est une **non-supériorité unilatérale**, et de l'énoncé de nuisance : il n'y a plus
+  de test d'équivalence bilatéral dans la règle. Le nom est conservé pour ne pas casser les journaux et les textes
+  antérieurs ; la fiche le dit.
+- **Une erreur par énoncé, pas pour l'ensemble.** C, A, « pas d'apport supérieur à 2,5 points » et « dégradation de plus
+  de 2,5 points » sont chacun testés à `v4_alpha`. L'erreur est contrôlée **par énoncé**, non pour la famille : plusieurs
+  énoncés donnent plus d'occasions d'affirmer à tort au moins l'un d'eux. En contrepartie, **les énoncés se publient
+  toujours ensemble**, y compris ceux qui échouent, et aucun ne se cite sans les autres.

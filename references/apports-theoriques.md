@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.25
+> Version : 0.7.30
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1355,3 +1355,48 @@ une fiche d'étude horodatée porte les valeurs absentes ; le tiers exécute le 
 des états ; plafond de 300 épisodes. **Corrigé chez amass** : l'e-processus teste déjà H0 « gain < 2,5 points »
 (§5), il ne pouvait pas le voir sans ce paragraphe ; le libellé, en revanche, était à reprendre. **Corrigé chez
 nous** : l'exemple de la marge de 1 point (862 contre 138).
+
+### 29.6 Cinquième relecture (0.7.26)
+
+amass, sur le §11.9 : sept marges, toutes retenues et fermées au §11.10 (ordre des opérations horodaté, le tiers
+calcule p ; accord prospectif groupé ; puissance conjointe à 93 % par contraste, 192 épisodes ; équivalence
+nommée ; cas mixtes ; même réécriture pour la lecture réelle et le leurre ; graine publique ; dilution et taux
+d'abstention maximal ; plafond limité à l'équivalence ; justification de l'écrêtage). **Corrigé chez nous, en
+vérifiant sa question sur le placebo** : `p_placebo` ne permute pas les cartes, il tire des cas au hasard à la place
+des homologues ; la conjonction tient, sa justification du §11.9 était fausse.
+
+### 29.7 Sixième relecture (0.7.27)
+
+amass, sur le §11.10 : six marges, retenues au §11.11. La plus lourde est juste : les trois p sont emboîtés
+(inertie ⊂ placebo ⊂ alphabet). L'ancienne conjonction exigeait que le seul choix des homologues apporte 2,5
+points. **Remplacée** : contrastes confirmatoires alphabet − inertie (effet total des cartes) et alphabet −
+dossier neutre ; décomposition par le placebo, descriptive ; 171 épisodes à σ = 0,10. Aussi : équivalence exigée
+sur l'ensemble avec repli et sur les seules codées ; critère par carte et bootstrap sur les états pour l'accord
+prospectif ; seul le tiers s'abstient ; carte hors liste retirée de l'état plutôt que convertie en abstention ;
+modèle à poids ouverts hébergé par le tiers ; réécriture aveugle et contrôle positif des juges.
+
+### 29.8 Septième relecture (0.7.28)
+
+amass, sur le §11.11 : six marges, retenues au §11.12. La première est juste dans sa conséquence et a demandé du
+code : un quatrième p, l'**inertie de strate** (mêmes tirages que le placebo, p₀ = f, sans λ), qui donne la vraie
+ablation des cartes à base de cas égale. **Corrigé chez amass** : f n'est pas une référence extérieure à la base,
+c'est la fréquence de la strate contractée avec k₀ = 20 ; l'écart vient de k et du tirage, non de l'absence de base.
+**Mesuré** sur la démonstration : 5,5 des 9,9 points d'écart alphabet − f viennent du tirage, sans carte. Aussi :
+courbe de puissance du gain publiée (zone grise de 2 à 4,5 points) ; conclusion négative sur un contraste désigné ;
+fréquences données au dossier neutre et modèle nommé ; taux de manque par bootstrap ; barème des abstentions ;
+indépendance du tiers déclarée.
+
+### 29.9 Huitième relecture (0.7.29)
+
+amass, sur le §11.12 : aucune décision ouverte après coup, cinq marges de lecture, retenues au §11.13. Deux énoncés
+séparés (cartes, appareil) avec la table des quatre issues, au lieu d'une conjonction qui contredisait le §11.12 ;
+l'énoncé négatif devient une non-supériorité unilatérale, plus un énoncé de nuisance (`v4.decision`) ; puissance par
+énoncé, σ par contraste ; ce que « pas d'apport > 2,5 » n'exclut pas, et la raison du seuil ; troncature différentielle.
+amass recommande d'arrêter la boucle avec lui seul : retenu, une relecture par un méthodologue extérieur et par le tiers
+devient une condition de l'épisode 1.
+
+### 29.10 Neuvième relecture (0.7.30)
+
+amass, sur le §11.13 : aucune marge de décision, deux précisions de formulation, versées au §11.14 (le paramètre
+`v4_effectif_equivalence` fixe le point de lecture d'une non-supériorité ; erreur contrôlée par énoncé, énoncés publiés
+ensemble). La boucle de relecture s'arrête là, comme le §11.13 le prévoit.

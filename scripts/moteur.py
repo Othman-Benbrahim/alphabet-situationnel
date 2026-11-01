@@ -2000,6 +2000,10 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
             'niveaux':niveaux,'fragilite_niveau':fragilite,'poids_a_priori_p':P['k']/(nA+P['k']),
             'n_eff_kish':kish,'part_cas_le_plus_lourd':part_max,
             'placebo':placebo_homologie(base,typ,cible,etat,asof,cA,ap['p0'],graine_placebo(etat,typ,cible,asof),prob) if placebo and not sans_cartes and not borrowed else None,
+            # 0.7.28 (validation.md §11.12) : inertie de strate, les mêmes tirages de cas que le placebo (même graine,
+            # même nombre) sous p₀ = f, sans λ. placebo − inertie de strate isole l'a priori des cartes ; alphabet −
+            # inertie de strate, l'effet des cartes à base de cas égale.
+            'inertie_strate':placebo_homologie(base,typ,cible,etat,asof,cA,ap['reference_interne'],graine_placebo(etat,typ,cible,asof)) if placebo and not sans_cartes and not borrowed else None,
             'a_priori':ap,'comparateur':ap['f_base'],'transitions':samples,'drapeaux':flags,
             'incertitude':'intervalle de crédibilité à 80 % de la loi Beta a posteriori dont p est la moyenne (Beta-binomial) : '
                            'quantiles calculés exactement, mais sur une vraisemblance pondérée (décroissance, un cas pèse au plus une observation) '
@@ -2453,6 +2457,11 @@ def valider_journal(data):
         if vr>=(0,5,0):
             exiger('p_sans_cartes' in x,f'{ident} : p_sans_cartes requis depuis 0.5 (null pour un composé) : comparateur inertiel')
         if x.get('p_sans_cartes') is not None:proba(x['p_sans_cartes'],ident+'.p_sans_cartes')
+        # 0.7.28 : inertie de strate, facultative (journaux antérieurs admis) ; contrôlée contre le calcul figé.
+        if x.get('p_inertie_strate') is not None:
+            proba(x['p_inertie_strate'],ident+'.p_inertie_strate')
+            if isinstance(calc,dict) and calc.get('p_inertie_strate') is not None:
+                exiger(abs(calc['p_inertie_strate']-x['p_inertie_strate'])<1e-12,f'{ident} : p_inertie_strate différent du calcul figé')
         # 0.7.4 (décision 3) : placebo d'homologie, au même titre que p_sans_cartes (null si non évaluable).
         if vr>=(0,7,4):
             for k_ in ('p_placebo','graine_placebo','apport_homologie'):
@@ -2832,7 +2841,9 @@ def v4_statut(dm):
     # v4_alpha, soit l'intervalle à 1 − 2α de d̄ dans ±v4_equivalence_delta), lue une seule fois, à l'effectif
     # d'équivalence déclaré. Barrière : si l'autocorrélation d'ordre 1 des épisodes dépasse v4_autocorrelation_max,
     # aucune des deux conclusions n'est émise. Le test du signe et le statut ci-dessus restent publiés, descriptifs.
-    zt=NormalDist().inv_cdf(1-P['v4_alpha'])+NormalDist().inv_cdf(1-(1-P['v4_puissance'])/2)
+    # 0.7.29 (§11.13) : l'énoncé négatif est une **non-supériorité** unilatérale (« pas d'apport supérieur à δ »),
+    # non une équivalence bilatérale : un alphabet nuisible n'y devient plus « non établi ». z = z₁₋α + z_puissance.
+    zt=NormalDist().inv_cdf(1-P['v4_alpha'])+NormalDist().inv_cdf(P['v4_puissance'])
     # 0.7.24 : l'effectif d'équivalence se fixe une fois (après 20 épisodes, sur σ̂), puis se déclare dans
     # v4_effectif_equivalence ; tant qu'il vaut 0, il est provisoire et aucune équivalence ne se conclut.
     de=P['v4_equivalence_delta'];fixe=P['v4_effectif_equivalence']>0
@@ -2844,19 +2855,23 @@ def v4_statut(dm):
     # équivalence à la fois : contradiction publiée, aucune conclusion ; l'équivalence exige un effectif fixé.
     mur=dm['episodes']>=P['v4_n']
     gain_ok=mur and eg is not None and eg['e_max']>=P['v4_e_seuil_primaire']
-    eq_ok=mur and fixe and ic_eq is not None and dm['episodes']>=n_eq and -de<ic_eq[0] and ic_eq[1]<de
+    # Non-supériorité : borne basse unilatérale de d̄ (Brier − référence) au-dessus de −δ, soit un gain < δ établi.
+    # Nuisance, énoncé séparé : la même borne au-dessus de +δ, soit une dégradation de plus de δ établie.
+    eq_ok=mur and fixe and ic_eq is not None and dm['episodes']>=n_eq and ic_eq[0]>-de
+    nuis=mur and fixe and ic_eq is not None and dm['episodes']>=n_eq and ic_eq[0]>de
     if not mur:concl='non encore évalué : moins de '+str(P['v4_n'])+' épisodes'
     elif barr:concl='aucune conclusion : épisodes autocorrélés (ρ̂₁ > '+str(P['v4_autocorrelation_max'])+'), espacer les épisodes'
     # 0.7.25 : libellés qui nomment l'hypothèse testée et le seuil (e_gain_v4 teste H0 « gain < v4_gain_abs »).
     elif gain_ok and eq_ok:concl='aucune conclusion : gain ≥ '+str(P['v4_gain_abs'])+' et équivalence à ±'+str(de)+' à la fois (contradiction publiée)'
     elif gain_ok:concl='gain d’au moins '+str(P['v4_gain_abs'])+' établi (H0 « gain < '+str(P['v4_gain_abs'])+' » rejetée, e ≥ '+str(P['v4_e_seuil_primaire'])+')'
-    elif eq_ok:concl='pas d’apport supérieur à '+str(de)+' en valeur absolue (équivalence) ; un apport plus petit n’est pas exclu'
+    elif nuis:concl='dégradation de plus de '+str(de)+' établie (nuisance) ; énoncé séparé, publié comme tel'
+    elif eq_ok:concl='pas d’apport supérieur à '+str(de)+' (non-supériorité) ; un apport plus petit n’est pas exclu'
     elif fixe and dm['episodes']>=n_eq:concl='non établi : ni gain, ni équivalence à l’effectif d’équivalence (arrêt)'
     elif not fixe:concl='non encore évalué : effectif d’équivalence non fixé (provisoire '+str(n_eq)+')'
     else:concl='non encore évalué'
-    decision={'conclusion':concl,'gain_e_max':None if eg is None else eg['e_max'],'equivalence_intervalle':ic_eq,
+    decision={'conclusion':concl,'nuisance':nuis,'gain_e_max':None if eg is None else eg['e_max'],'equivalence_intervalle':ic_eq,
               'effectif_equivalence':n_eq,'effectif_equivalence_fixe':fixe,'autocorrelation_1':r1,'barriere':barr,
-              'regle':(f"gain : e_gain_v4 ≥ {P['v4_e_seuil_primaire']} ; aucun apport : intervalle à {1-2*P['v4_alpha']:.0%} de d̄ dans ±{de}, "
+              'regle':(f"gain : e_gain_v4 ≥ {P['v4_e_seuil_primaire']} ; pas d'apport > {de} : borne basse unilatérale à {1-P['v4_alpha']:.0%} de d̄ > −{de} (nuisance : > +{de}), "
                        f"lu à épisodes ≥ max({P['v4_n']}, ⌈({zt:.2f}·σ̂/{de})²⌉) ; barrière ρ̂₁ > {P['v4_autocorrelation_max']} ; test du signe descriptif")}
     return {'statut':st,'episodes':dm['episodes'],'effectif_requis':req,'effectif_cible':cible,'d_moyen':dm['d_moyen'],
             'intervalle_95_approche':ic,'p_test':p_,'sigma_d':sd,'regle':regle,'sequentiel':seq,'decision':decision}
@@ -2892,6 +2907,7 @@ def score_result(data):
         origine=items[0].get('origine','moteur')
         bb=None if any(x.get('frequence_de_base') is None for x in items) else ech*sum((x['frequence_de_base']-scores[x['id']]['issue'])**2 for x in items)
         bsc=None if any(x.get('p_sans_cartes') is None for x in items) else ech*sum((x['p_sans_cartes']-scores[x['id']]['issue'])**2 for x in items)
+        bis=None if any(x.get('p_inertie_strate') is None for x in items) else ech*sum((x['p_inertie_strate']-scores[x['id']]['issue'])**2 for x in items)
         bj=None if any(x.get('probabilite_jugement') is None for x in items) else ech*sum((x['probabilite_jugement']-scores[x['id']]['issue'])**2 for x in items)
         ref=None if len(items)>1 else items[0].get('frequence_de_base') if items[0].get('frequence_de_base') is not None else items[0].get('p_sans_cartes')
         # 0.6.14 : éligibilité V4 = calcul figé joint, empreintes, résolution vérifiée et prépublication
@@ -2907,7 +2923,7 @@ def score_result(data):
         excluded=origine=='jugement' or any(x['rejeu'] or x['fictif'] for x in items) or not verified
         units.append({'ids':[x['id'] for x in items],'episode_id':items[0]['episode_id'],'origine':origine,'rejeu':any(x['rejeu'] for x in items),
                       'date':min(x['date'] for x in items),
-                      'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_jugement':bj,
+                      'brier':b,'brier_base':bb,'brier_sans_cartes':bsc,'brier_inertie_strate':bis,'brier_jugement':bj,
                       **pertes_log(items,scores),
                       'discriminant':None if origine=='jugement' else discriminant(items),
                       **brier_comparateur(items,scores,ech,origine),
@@ -2998,6 +3014,7 @@ def score_result(data):
             'brier_base_par_episode':bb,'gain':gain,'gain_par_episode':dv4,'v4':v4,'v4_discriminant':v4_discriminant,
             'comparateur_externe':comparateur_externe([x for x in units if x['origine']=='moteur']),
             'v4_comparateur':v4_bras(eligible,'brier_comparateur',None),
+            'v4_inertie_strate':v4_bras(eligible,'brier_inertie_strate',None),
             'v4_comparateur_discriminant':v4_bras(eligible,'brier_comparateur','discriminant_comparateur'),'statut':status,'par_groupe':by,'calibration':calibration,
             'decomposition_murphy':decomposition,'details':units,
             'limites':['Prépublication déclarée : authenticité à vérifier humainement.',
@@ -3275,7 +3292,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.25','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.30','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3430,7 +3447,7 @@ def appliquer_temporalite(result, temporalite):
     if temporalite!='generique' and not externe and result.get('p') is not None:
         motif={'programmee':'échéance programmée','duree_de_vie':'durée de vie propre au phénomène'}[temporalite]
         result.update(p=None,intervalle=None,p_sans_cartes=None,apport_cartes=None,sensibilite=None,
-                      p_placebo=None,apport_homologie=None,
+                      p_placebo=None,apport_homologie=None,p_inertie_strate=None,
                       non_estime_motif=f'{motif} : référence de domaine requise (--fref ou --references) ; ni le taux générique ni des cas appariés par cartes ne représentent ce calendrier')
         result.setdefault('drapeaux',[]).append(f'Non estimé : {motif} ; l’inertie et la fréquence par défaut ne représentent pas ce calendrier ou cette durée de vie (simulation.md §4).')
     return result
@@ -3905,6 +3922,7 @@ def main():
             result=horizon_result(etat,typ,cible,active,dict(opts,placebo=True),a.pas,sem)
             pl_=result.get('placebo')
             result['p_placebo']=pl_['p'] if pl_ else None
+            is_=result.get('inertie_strate');result['p_inertie_strate']=is_['p'] if is_ else None
             result['graine_placebo']=pl_['graine'] if pl_ else None
             result['apport_homologie']=None if pl_ is None or result.get('p') is None else result['p']-pl_['p']
             # 0.7.12 (audit V34, D5) : un p dans la plage à 90 % du placebo est indiscernable d'une sélection de cas
@@ -3982,7 +4000,7 @@ def main():
         if a.date_information is None:
             result.setdefault('drapeaux',[]).append(f'Date d’information non déclarée : date de l’état ({asof}) appliquée. '
                                                    'Les cas disponibles après cette date sont exclus du calcul.')
-        for k_ in ('p_placebo','graine_placebo','apport_homologie'):result.setdefault(k_,None)   # composés : null
+        for k_ in ('p_placebo','graine_placebo','apport_homologie','p_inertie_strate'):result.setdefault(k_,None)   # composés : null
         result=appliquer_temporalite(result,a.temporalite)
     if a.cmd=='calculer':
         ml=marqueur_local(*cible.split('@'))
@@ -5145,6 +5163,18 @@ def autotest():
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
+        def test_inertie_strate(self):
+            # 0.7.28 : mêmes tirages que le placebo (graine, nombre de cas), p₀ = f ; p inchangé.
+            base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            r=calculer(e,'apparait','SEU@7',base,asof='2026-09-20',placebo=True)
+            pl,ist=r['placebo'],r['inertie_strate']
+            self.assertEqual((pl['graine'],pl['cas_tires'],pl['tirages']),(ist['graine'],ist['cas_tires'],ist['tirages']))
+            self.assertEqual(r['p'],calculer(e,'apparait','SEU@7',base,asof='2026-09-20')['p'])
+            self.assertIsNone(calculer(e,'apparait','SEU@7',[],placebo=True)['inertie_strate'])
+            p=forecast(version_regles='0.7.4',probabilite=.3,p_placebo=.25,graine_placebo=7,apport_homologie=.05,p_inertie_strate=.2)
+            self.assertTrue(valider_journal([p]))
+            with self.assertRaises(ValueError):valider_journal([dict(p,p_inertie_strate=1.5)])
         def test_decision_0723(self):
             # 0.7.23 : intervalle de PABAK, répétabilité d'un modèle, couverture avec repli, décision V4.
             r=accord(90,5,5,0);lo,hi=r['pabak_intervalle_95_approche'];self.assertAlmostEqual(hi-lo,2*1.96*2*math.sqrt(.9*.1/100))
@@ -5173,6 +5203,7 @@ def autotest():
                 self.assertIn('contradiction',v4_statut(dict(dm,e_gain_v4=gain))['decision']['conclusion'])
                 self.assertTrue(v4_statut(dict(dm,e_gain_v4=gain,d_moyen=-.05))['decision']['conclusion'].startswith('gain d’au moins'))
                 self.assertTrue(v4_statut(dict(dm,episodes=30,e_gain_v4=gain))['decision']['conclusion'].startswith('non encore'))
+                self.assertIn('nuisance',v4_statut(dict(dm,d_moyen=.05))['decision']['conclusion'])   # 0.7.29
             finally:P['v4_effectif_equivalence']=ancien
         def test_abstention(self):
             # 0.6.11 (audit V22) : un calcul non estimé ne devient pas une prévision chiffrée.

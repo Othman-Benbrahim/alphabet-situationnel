@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.18
+> Version : 0.7.21
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -61,6 +61,18 @@ l'ordre ; une étape échouée arrête la procédure.
 
 Un motif propre à une seule strate ne devient pas une carte : il devient l'équivalent local d'une carte
 existante, ou reste au journal des lacunes. Raison : une carte mono-strate casserait P1.
+
+**L'objection de Durkheim à Simmel (0.7.21).** Le skill reprend l'idée de la sociologie formelle de Simmel :
+une même **forme** de relation se retrouve dans des **contenus** très différents (« in the case of the most
+diverse purposes may be the same », Simmel 1902), d'où des cartes transversales aux strates (P1). Durkheim
+lui a opposé quatre objections (« La sociologie et son domaine scientifique », publié en italien en 1900) :
+la séparation de la forme et du contenu n'est pas prouvée ; le niveau de généralité où l'on coupe est
+arbitraire ; les exemples sont « choisis plus ou moins au hasard » ; la preuve se réduit à une suite
+d'exemples. Les quatre valent pour le skill. A2 répond pour les cartes **à venir** : lacunes issues de
+situations indépendantes, structure nommée, deux strates. Elle ne répond pas pour les **seize** cartes de
+départ, qui n'ont pas suivi A2 : c'est pourquoi elles restent « candidates ». La réponse à Durkheim n'est pas
+un argument mais une mesure : accord entre codeurs (A4), anti-résonance (A7), cas sans événement (B4),
+scores sur des questions résolues. Tant que cette mesure n'a pas commencé, l'objection reste ouverte.
 
 **A3 · Statut des équivalents.**
 
@@ -656,7 +668,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.18"` |
+| `version` | `"0.7.21"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

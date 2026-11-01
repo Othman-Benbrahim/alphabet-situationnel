@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.18
+> Version : 0.7.21
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1168,3 +1168,134 @@ vingtaine de lignes de `feuille-de-route.md` §7, dont trois changeraient p (poi
 distance, combinaison crédibilité × pertinence). La conclusion commune des quatre lots est celle du skill depuis
 0.7.7 : l'instrument est construit, la mesure n'a pas commencé ; les notes l'ont rendu plus exact sur ce qu'il
 mesure, non plus informé sur le monde.
+
+## 26. Contingence et tournants : Grossetti, Elster, Druckman (0.7.19)
+
+**Documents reçus.** La recension par Claire Champenois et Yan Dalla Pria de Michel Grossetti, *Sociologie de
+l'imprévisible. Dynamiques de l'activité et des formes sociales* (PUF, 2004), dans *Sociologie du travail* 48(1), 2006,
+p. 114-116, qui cite Elster (1998) ; Daniel Druckman, « Thirty-Five Years of Research on Turning Points: Insights Gained
+and Gaps to be Filled », *Negotiation Journal* 36(2), 2020, p. 91-106 ; Andrew Hadfield, « Turning point: or, the wheel
+has come full circle », *Textual Practice* 28(1), 2014. Lus intégralement. Le livre de Grossetti n'a pas été lu, ni
+Abbott (1997), suggéré par une note extérieure d'un autre modèle, dont le reste a été jugé en majorité déjà couvert.
+**Aucune probabilité ne change.**
+
+### 26.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Une carte est un mécanisme au sens d'Elster (conditions d'activation inconnues) ; la contingence est l'irruption d'un mécanisme plutôt qu'un autre | juste ; c'est le statut de « structures transversales candidates » (P1) | écrit | `dynamiques.md` |
+| Bifurcation : enchaînement imprévisible qui produit des irréversibilités durables (Grossetti, par recension) | juste comme définition ; SEUIL et TRACE·MÉMOIRE la portent, SEUIL → TRACE est une arête forte | écrit, sans carte nouvelle | `dynamiques.md` |
+| Trois échelles de passage micro → macro (temps, masse, spécialisation) | le skill n'a que le temps (fenêtre, bande d'horizon) | écrit comme limite | `dynamiques.md` |
+| Tournant : précipitant, départ, conséquences ; un départ refusé n'est pas un tournant | converge avec le marqueur de SEUIL@7 (« reconnu par les parties ») | écrit ; référence d'appui, statut inchangé | `dynamiques.md` |
+| 34 négociations tracées (Druckman 2001), codes de processus à fidélité inter-codeurs « acceptable » | une base de cas réels candidate pour la strate 7, la première du dossier | ligne de feuille de route ; à recoder | `feuille-de-route.md` §7 |
+
+### 26.2 Corrigé dans la note extérieure
+
+1. **« Ajouter une strate ou des cartes de bifurcation. »** Refusé : SEUIL et TRACE·MÉMOIRE portent la bifurcation,
+   et l'accord entre codeurs baisse avec le nombre de catégories (§23).
+2. **« Cartes à agents universelles » lu comme une agentivité structurelle.** Contresens : la décision 1b porte sur
+   l'application aux strates sans agents des cartes qui supposent des agents.
+3. **« Ajouter un champ mécanisme causal par carte ».** Il existe : `garantie` (`mecanisme`, `attendu`, `contredirait`,
+   `support`).
+4. **Modèle Bayo-ACE.** Non trouvé ; rien n'est versé sans source.
+
+### 26.3 Refusé
+
+Hadfield (2014) : un essai sur les études littéraires (Eagleton, Leavis) dont seul le titre parle de tournant ; sans
+objet. Une carte « bifurcation » ou « contingence » : elle ne serait reconnue qu'après coup. Les cartes cognitives
+floues et le modèle de la fronce par ensembles flous : déjà comparés et écartés (§17 ; `concurrents`, théorie des
+catastrophes).
+
+## 27. Grossetti lu dans le texte : formes de l'imprévisibilité, irréversibilités, échelles (0.7.20)
+
+**Documents reçus.** Michel Grossetti, *Sociologie de l'imprévisible. Dynamiques de l'activité et des formes
+sociales*, PUF, 2004 (version auteur déposée sur HAL, halshs-00715823, environ 71 000 mots, lue pour les
+chapitres 1, 2 et 4 et le début du chapitre 3) ; « L'imprévisibilité dans les parcours sociaux », *Cahiers
+internationaux de sociologie* 120, 2006, p. 5-28 ; « Éléments de discussion pour une sociologie des
+bifurcations », communication au colloque « Anticipation », 2003 ; « L'espace à trois dimensions des phénomènes
+sociaux. Échelles d'action et d'analyse », *SociologieS*, 2011 ; Yann Bérard, « Quand l'événement structure »,
+recension de Bessin, Bidart et Grossetti (dir.), *Bifurcations*, La Découverte, 2010. Le fichier de l'article
+de 2006 porte en page de garde la notice HAL d'un autre texte (halshs-00476374, « Lien social et réseaux
+économiques chez les migrants internationaux ») : le contenu est bien celui des *Cahiers*. Le §26 avait été
+écrit sur une recension ; ce paragraphe ne le retire pas, il le complète et le corrige sur un point.
+**Aucune probabilité ne change.**
+
+### 27.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Moment prévu ou non × issues délimitées ou non : carrefour, transition programmée, risque anticipé, crise | juste ; la numérotation des cases diffère entre 2004 et 2006, on les cite par leur nom | correspondance avec `temporalite` et l'événement déclaré ; la crise n'a pas d'estimande | `simulation.md` §4 |
+| Risque anticipé : imprévisible pour la personne, routinier au niveau agrégé | juste ; c'est le niveau de la fréquence d'homologues | écrit ; raison de plus de ne rien décider sur une personne | `simulation.md` §4 |
+| Une crise se resserre souvent en carrefour ; une situation change de case | juste | moment où une prévision devient rédigeable ; indicateur de bascule | `simulation.md` §4 |
+| Imprévisibilité × irréversibilité : routine, risque sans conséquence, rituel, bifurcation | juste ; distingue SEUIL prévisible et bifurcation | écrit | `dynamiques.md` |
+| Risque sans conséquence (« évité de justesse ») | pendant du cas sans événement ; `sans_evenement: true` reste plus strict | écrit | `base-de-cas.md` §4 |
+| Le niveau choisi fixe la case (reproduction du système, bifurcation du parcours) | juste ; S1 fixe le niveau | deux niveaux ne sont pas homologues | `dynamiques.md` |
+| Crise par recouvrement de contextes (travail, famille, santé), à la Cournot | qualitatif ; appuie l'abaissement entre strates sans en régler la taille | écrit | `dynamiques.md` |
+| Généralité = variété des contextes impliqués (2011) | corrige la phrase de 0.7.19 : le nombre de strates touchées en est une mesure grossière | correction ajoutée à côté du texte de 0.7.19 | `dynamiques.md` |
+| Alternatives non réalisées, rationalisation des témoignages, point d'arrêt de la remontée, ralenti, continuité | juste ; le ralenti est incompatible avec les fenêtres égales (B1) | quatre précautions de codage | `base-de-cas.md` §3 |
+
+### 27.2 Corrigé dans le texte du skill
+
+1. **« Le skill n'a que le temps » (0.7.19).** Trop fort : il a aussi, en gros, la généralité, par le
+   nombre de strates qu'un épisode touche. Il n'a pas la masse des acteurs.
+2. **« Le livre de Grossetti n'a pas été lu » (§26).** Vrai en 0.7.19 ; il l'est en 0.7.20, en version
+   auteur. La ligne de lecture de la feuille de route est complétée, pas effacée.
+
+### 27.3 Refusé ou différé
+
+- **Une case « forme d'imprévisibilité » dans la fiche ou le journal.** Utile pour comparer plus tard les
+  scores par forme ; mais c'est un champ nouveau, que personne n'a encore codé à deux. Différé à la feuille de
+  route (§7), comme les autres champs sans accord mesuré.
+- **Les commencements comme règle** (une transition plus probable au début d'une entité). Hypothèse de
+  Grossetti, illustrée, non chiffrée ; la règle changerait p. Différé.
+- **Les opérateurs d'échelle comme sous-commandes** (reproduction, agrégation, sédimentation, montée en
+  généralité). Ce sont des descriptions de la forme d'un changement, pas des estimateurs ; le skill n'a pas
+  de cas pour les distinguer. Écrit comme vocabulaire de lecture seulement.
+- **Encastrement et découplage** (chapitre 3, Polanyi et Granovetter). Lus en partie ; ils décrivent le
+  rapport entre sphères d'activité, que la grille porte déjà par la strate et les liaisons. Rien de
+  vérifiable à verser sans lecture complète du chapitre.
+- **Recension de *Bifurcations*** (Bérard) : trois réserves (statut de l'entretien rétrospectif, absence de
+  l'événement médiatique, diagnostic de « société de bifurcation » non tranché). La première est déjà
+  couverte par `classe_source: memoire` ; les deux autres sont hors du domaine du skill.
+
+## 28. Simmel, Durkheim et Ramos : formes, objection, événements critiques (0.7.21)
+
+**Documents.** Déjà reçus : Howard Ramos, « Sociology in Existential Times », *Society* 62, 2025, p. 809-820 ;
+Isaac E. Catt, « Unsuspected Realms of the Stranger in Semiotics, Semiosis, and Communication », *Semiotics*
+2001. Trouvés et lus : Georg Simmel, « The Number of Members as Determining the Sociological Form of the
+Group », *American Journal of Sociology* 8, 1902, parties I et II (Mead Project, Brock University ; la fin de
+la partie I n'a pas été lue) ; Émile Durkheim, « La sociologie et son domaine scientifique » (1900), dans la
+traduction espagnole de *Sociológica* 17(50), 2002 ; Howard Ramos, « Opportunity for Whom? Political
+Opportunity and Critical Events in Canadian Aboriginal Mobilization, 1951-2000 », *Social Forces* 87(2), 2008 ;
+Ronald S. Burt, « Structural Holes and Good Ideas », *American Journal of Sociology* 110(2), 2004 (lu en
+partie). L'article de Cantó-Milà (2018) sur les formes chez Simmel, cité par Ramos, n'a pas pu être ouvert
+(accès refusé). **Aucune probabilité ne change.**
+
+### 28.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Une même forme dans des contenus différents (Simmel 1902) | juste ; c'est l'hypothèse P1 des cartes transversales | écrit comme filiation | `protocole.md`, A2 |
+| Les quatre objections de Durkheim : séparation non prouvée, niveau de coupe arbitraire, exemples au hasard, preuve par exemples | juste ; elles valent pour les seize cartes de départ, qui n'ont pas suivi A2 | objection écrite comme ouverte, réponse par la mesure | `protocole.md`, A2 |
+| Le tiers : médiateur, *tertius gaudens*, *divide et impera* ; avantage perdu quand les deux s'unissent | juste ; lit des transitions et un indicateur de POLARITÉ déjà écrits | écrit, sans changer de force | `dynamiques.md` |
+| Courtage mesuré (Burt 2004) | une entreprise, 673 managers ; appui de structure pour RÉSEAU, pas une fréquence | écrit comme appui | `dynamiques.md` |
+| Événements critiques (Ramos 2008) : trois années (1969, 1982, 1990) choisies par l'auteur ; effets « modestement soutenus », non robustes selon la spécification ; une seule source de presse | confirme deux règles du skill : pas de carte « bifurcation » reconnue après coup (§26), et la sélection par la presse (`classe_source`, Weidmann 2016) | écrit ici, sans règle nouvelle | §28 |
+
+### 28.2 Corrigé dans la lecture de Ramos (2025)
+
+1. **« Les menaces existentielles sont des tournants. »** Ramos l'affirme sans le montrer : son article
+   est un essai sur la discipline. Pour le skill, qu'un problème soit **cadré** comme menace existentielle est
+   un fait sur le discours (A5), non un fait sur le monde, ni un tournant.
+2. **Les cinq « lentilles » de la sociologie** (formes, processus, mécanismes, distributions, acteurs). Le
+   skill les a toutes, à des degrés inégaux : cartes (formes), transitions (processus), `garantie.mecanisme`,
+   fréquences (distributions), `option.acteur` (acteurs, le plus faible). Rien à ajouter.
+
+### 28.3 Refusé
+
+- **Catt (2001).** Sémiotique de l'« étranger » appliquée au profilage racial ; la figure de l'étranger de
+  Simmel y est mentionnée de loin. Hors du domaine du skill, qui ne décide rien sur une personne
+  (`constitution.md` §6).
+- **Une carte « tiers » ou « dyade ».** La triade se lit avec POLARITÉ, RÉSEAU et HIÉRARCHIE ; une carte de
+  plus baisserait l'accord entre codeurs (§23) et n'a ni lacune au journal ni passage par A2.
+- **Le seuil du nombre** (le passage de deux à trois change tout, au-delà moins). Juste chez Simmel, mais le
+  skill ne compte pas les acteurs (§27 : pas d'échelle des masses).

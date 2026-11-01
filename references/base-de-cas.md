@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.18
+> Version : 0.7.21
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -235,6 +235,34 @@ Une validation structurale ne remplace pas A6/A7. Une contre-observation substan
 baisse de confiance ; ne pas écrire « substantielle mais F maintenu ». Les observations nouvelles
 ne modifient jamais rétroactivement un journal déjà publié.
 
+**Coder une bifurcation après coup (0.7.20, Grossetti 2004, ch. 4 §2).** Quatre précautions de méthode,
+qui ne changent aucun champ de la fiche.
+
+- **Nommer les issues qui ne se sont pas produites.** Pour qu'un état soit lu comme un franchissement
+  contingent plutôt que comme une suite obligée, il faut des alternatives : plusieurs issues assez
+  équivalentes, et la raison de penser qu'elles étaient les seules. Granovetter et McGuire en trouvaient
+  trois pour l'industrie électrique américaine, à partir des débats de l'époque et des données. Deux
+  sources possibles : la controverse entre acteurs, ou l'analyse des données quand une décision a été prise
+  sans débat. Le champ `option` (`avant`, `apres`) porte l'issue retenue ; les autres s'écrivent dans les
+  notes de codage, avec leur source. Sans elles, le codage tombe dans l'un des deux pièges que Grossetti
+  nomme : tout est singulier, ou tout devait arriver. Un résultat présenté **après coup** comme
+  « parfaitement inévitable » (son exemple, dans l'article de 2006 : le référendum de 2005) est un signal d'alerte, non une preuve.
+- **Témoignages (`classe_source: memoire`).** Les récits rationalisent, et pas tous dans le même sens : un
+  créateur d'entreprise raconte sa stratégie, un artiste le « hasard des rencontres ». Ils ramènent aussi
+  tout à soi et sous-estiment l'action des autres. Contre-mesures : poser des questions concrètes (faits,
+  noms, dates) plutôt que demander un commentaire ; relancer à chaque choix présenté comme naturel (« aviez-
+  vous envisagé d'autres solutions ? ») ; croiser les témoignages et les sources écrites. C'est la règle de
+  `corroboration` appliquée à la mémoire.
+- **Où commencer la fenêtre.** Remonter d'une bifurcation à la précédente n'a pas de fin. Grossetti
+  s'arrête « lorsque le problème change suffisamment de nature » : quand remonter plus loin poserait une
+  autre question. Le premier état d'un cas est ce point d'arrêt, déclaré ; ce n'est pas une origine.
+- **Le ralenti n'entre pas dans une fiche.** La méthode du « ralenti » (Suter 1997) détaille les moments
+  supposés décisifs et résume les autres. Une fiche ne le permet pas : ses états sont séparés de fenêtres
+  égales (B1). Le ralenti se fait dans les notes de codage ; si un moment exige un grain plus fin, c'est
+  un autre cas, à une autre fenêtre, et il n'est pas homologue du premier. La continuité entre le moment et
+  ses conséquences doit, elle, se montrer pièce par pièce (`liaisons`, `preuves_liaisons`) : « la chaîne
+  causale peut comprendre des moments d'imprévisibilité mais elle ne doit pas se rompre ».
+
 ---
 
 ## 4. Cas sans événement (B4)
@@ -243,6 +271,14 @@ Inclure les cas sans événement selon un plan représentatif et consigner la po
 Le repère d'un tiers à défaut d'estimation est une alerte de collecte, pas un quota à imposer aux
 données. Sans cas sans événement dans les homologues, ρ0 est interdit. Le champ ne remplace pas
 les issues explicites des transitions : celles-ci sont calculées depuis les états.
+
+**Le risque sans conséquence (0.7.20).** Grossetti range dans une case à part les séquences très
+incertaines restées sans effet durable : l'accident « évité de justesse », le couple qui a failli se
+séparer, l'offre d'emploi envisagée puis laissée (`dynamiques.md`, paragraphe sur le livre de Grossetti).
+Ce sont les cas qu'une reconstruction rétrospective oublie le plus, parce que rien ne s'y est « passé ».
+Ils comptent comme cas sans événement pour l'événement qui ne s'est pas produit. Le drapeau
+`sans_evenement: true` reste plus strict : il exige qu'aucune apparition, disparition ni changement de
+force ne survienne sur toute la séquence ; une approche du seuil qui change une force ne le permet pas.
 
 ---
 

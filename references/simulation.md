@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.18
+> Version : 0.7.21
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -166,6 +166,44 @@ skill, à justifier par elle-même. Une réponse « non estimée » se journalis
 elle compte, sans score. Ne pas non plus le coder comme la disparition d'INCERTITUDE : la proclamation lève une
 incertitude, pas la structure ; recours et contestations peuvent la prolonger. La structure qui porte
 un calendrier est PÉRIODICITÉ.
+
+**Quatre formes d'imprévisibilité (0.7.20, Grossetti).** Grossetti (*Sociologie de l'imprévisible*, PUF,
+2004, ch. 1 ; repris dans « L'imprévisibilité dans les parcours sociaux », *Cahiers internationaux de
+sociologie* 120, 2006) croise deux questions : le **moment** de la situation à l'issue incertaine est-il
+prévu, et ses **issues** sont-elles délimitées d'avance ? Les deux textes ne numérotent pas les cases de la
+même façon ; on les cite donc par leur nom.
+
+| | Issues délimitées d'avance | Issues non délimitées |
+|---|---|---|
+| **Moment prévu** | **Carrefour** : scrutin, concours, match, palier d'orientation | **Transition, changement d'état programmé** : négociation au calendrier fixé, retraite, entrée dans l'âge adulte |
+| **Moment imprévu** | **Risque anticipé** : maladie, chômage, catastrophe à plan de secours | **Crise** : rien n'est cadré, ni le moment ni les issues |
+
+Ce que chaque case demande au skill, sans rien changer au calcul :
+
+- **Carrefour** : le moment est fixé par un texte, c'est `programmee` ; l'issue est la question elle-même,
+  et elle a une partition déclarée. C'est le cas déjà traité plus haut : référence externe, ou pas de
+  chiffre. Grossetti ajoute une raison : cette imprévisibilité est **organisée** (isoloir, règles du jeu,
+  épreuves simultanées), et les acteurs veulent qu'elle reste entière ; aucune carte ne la lit.
+- **Transition programmée** : la date est fixée, pas les issues. `programmee` s'applique à la date ; mais
+  une prévision exige un événement observable déclaré avant calcul (§4, premier paragraphe). Tant qu'aucune
+  issue ne peut être nommée avec son critère de résolution, la question n'a pas d'estimande : lecture
+  seule (mode LIRE), pas de pari.
+- **Risque anticipé** : c'est la case où les fréquences d'homologues ont un sens, et Grossetti dit
+  pourquoi : une situation imprévisible **pour la personne** (on ne prévoit pas de tomber malade) est sans
+  surprise **au niveau agrégé** (le médecin sait qu'il y aura des malades). La fréquence que rend le moteur
+  est de ce second niveau. Elle ne dit pas ce qui arrivera dans **ce** cas, et c'est une raison de plus
+  pour que le skill ne décide rien sur une personne.
+- **Crise** : ni moment ni issues. Il n'y a pas de question formulable, donc pas d'estimande. Le skill
+  lit (LIRE), ne chiffre pas, et le dit. Grossetti note que la plupart des crises se **resserrent** ensuite
+  en un petit nombre d'options : une crise devient un carrefour quand les acteurs ont construit les
+  branches. C'est à ce moment, et pas avant, qu'une prévision peut être rédigée.
+
+Une situation change de case en cours de route : une négociation bien cadrée tourne à la crise, un match
+à la catastrophe, une crise se resserre en alternative (le paradigme ancien ou le nouveau, chez Kuhn). Une
+prévision posée sur un carrefour suppose que la partition tient jusqu'à l'échéance ; si une issue hors
+partition devient possible, c'est un **indicateur de bascule** à écrire (il prépare une révision et ne
+réécrit pas le pari, §4). Le moment de la décision n'est pas pour autant le moment où l'on sait : chez
+Grossetti, le degré d'imprévisibilité d'une situation est « lui-même partiellement imprévisible ».
 
 ---
 

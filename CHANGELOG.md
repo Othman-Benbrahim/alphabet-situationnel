@@ -1,9 +1,57 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.18
+> Version : 0.7.21
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.21 — 2026-11-01 · Simmel, Durkheim, Ramos
+
+Simmel (1902), l'objection de Durkheim (1900), Ramos (2008, 2025), Burt (2004) et Catt (2001) triés
+(`apports-theoriques.md` §28). **Documentation seule ; aucune probabilité ne change, vérifié par clôture.** Aucun
+texte retiré : ajouts seulement.
+
+- **`protocole.md` A2** : la sociologie formelle de Simmel comme filiation des cartes transversales ; les quatre
+  objections de Durkheim valent pour le skill, et restent ouvertes pour les seize cartes de départ, qui n'ont pas
+  suivi A2 ; la réponse est une mesure, pas un argument.
+- **`dynamiques.md`** : le tiers de Simmel (médiateur, *tertius gaudens*, *divide et impera*) lit des transitions et
+  un indicateur de POLARITÉ déjà écrits ; le courtage mesuré par Burt comme appui de RÉSEAU.
+- **Refusé** : Catt (2001), hors domaine ; une carte « tiers » ou « dyade ».
+- **Moteur** : registre des renvois seulement (`apports-theoriques.md` §28).
+
+## 0.7.20 — 2026-11-01 · Grossetti lu dans le texte
+
+Le livre de Grossetti (*Sociologie de l'imprévisible*, 2004, version auteur) et ses textes de 2003, 2006 et 2011, avec
+la recension de *Bifurcations* (2010) par Bérard, triés (`apports-theoriques.md` §27). **Documentation seule ; aucune
+probabilité ne change, vérifié par clôture.** Aucun texte retiré : ajouts seulement, dont une correction écrite à côté
+du texte de 0.7.19.
+
+- **`simulation.md` §4** : quatre formes d'imprévisibilité (moment prévu ou non × issues délimitées ou non) —
+  carrefour, transition programmée, risque anticipé, crise — reliées à `temporalite` et à l'événement déclaré ; la
+  crise n'a pas d'estimande ; le risque anticipé est la case des fréquences agrégées ; une situation change de case.
+- **`dynamiques.md`** : imprévisibilité et irréversibilité, deux axes (routine, risque sans conséquence, rituel,
+  bifurcation) ; le niveau choisi fixe la case ; crise par recouvrement de contextes ; contingence à mesurer.
+  **Correction** : le nombre de strates touchées mesure en gros la généralité ; le skill a deux échelles sur trois.
+- **`base-de-cas.md`** : quatre précautions pour coder une bifurcation après coup (issues non réalisées,
+  témoignages, point d'arrêt, ralenti hors fiche) (§3) ; le risque sans conséquence comme cas sans événement (§4).
+- **Feuille de route** : champ `forme_imprevisibilite` différé jusqu'à un accord mesuré ; règle des commencements
+  différée (version séparée) ; ligne de lecture complétée.
+- **Moteur** : registre des renvois seulement (`base-de-cas.md` §4, `apports-theoriques.md` §27).
+
+## 0.7.19 — 2026-11-01 · contingence et tournants
+
+Grossetti (2004, par recension), Elster (1998) et Druckman (2020) triés (`apports-theoriques.md` §26). **Documentation
+seule ; aucune probabilité ne change, vérifié par clôture** : empreinte
+`b1a592c8184d505becf216d07b83a2b5545e08527c4c67f2311b20b5530fdade`, identique à la 0.7.9. 153 autotests. Aucun texte
+retiré : ajouts seulement.
+
+- **`dynamiques.md`** : une carte est un mécanisme au sens d'Elster ; la bifurcation (irréversibilité durable)
+  se lit par SEUIL et TRACE·MÉMOIRE, sans carte nouvelle ; des trois échelles de Grossetti, le skill n'a que le temps ;
+  tournant de négociation en trois temps, et un départ refusé n'est pas un tournant (convergent avec le marqueur de
+  SEUIL@7).
+- **Feuille de route** : les 34 négociations de Druckman (2001) comme corpus de cas candidats pour la strate 7, à
+  recoder ; lectures à faire (le livre de Grossetti, Abbott 1997, Knight 1921).
+- **Refusé** : Hadfield (2014), sans objet ; une carte de bifurcation.
 
 ## 0.7.18 — 2026-11-01 · mesurer la base, nommer ce qu'on mesure
 

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Dynamiques des cartes (couche 4, a priori)
 
-> Version : 0.7.18
+> Version : 0.7.21
 
 > Ce que chaque structure **tend à produire au pas suivant**, proposé comme hypothèse à partir de sa représentation structurelle.
 > Ces intensités **modulent** une fréquence de base (T2) : elles ne sont pas des probabilités. Valeurs
@@ -257,6 +257,90 @@ contemporaine) ; une transition établit au mieux un ordre de dates, non un ordr
 (« démission effective ») se pose comme **un** événement, estimé sur ses homologues ; le décomposer en deux
 marginales multipliées surestimerait ou sous-estimerait selon le signe de leur corrélation, inconnu sans la
 structure.
+
+**Une carte est un mécanisme ; une bifurcation n'est pas une carte (0.7.19).** Elster (1998) définit les
+mécanismes comme des « structures causales récurrentes et facilement identifiables dont les conditions
+d'activation sont inconnues ou les conséquences indéterminées » : c'est le statut des seize cartes. La contingence
+y tient à l'irruption d'un mécanisme plutôt que d'un autre, ou à l'effet conjoint de deux mécanismes chacun
+déterminé : c'est pourquoi le skill rend une fréquence conditionnelle et non une loi. Grossetti (2004, lu par la
+recension de Champenois et Dalla Pria, *Sociologie du travail* 48, 2006) nomme **bifurcation** un enchaînement
+d'actions fortement imprévisible qui produit des **irréversibilités** importantes et durables, et distingue trois
+échelles de passage du « micro » au « macro » : le temps (du court au long), la masse d'acteurs, la
+spécialisation (d'un monde confiné au général). Le skill représente la bifurcation sans carte nouvelle : SEUIL
+(un retour qui ne reprend pas le même chemin) et TRACE·MÉMOIRE (dépendance au chemin), dont l'arête est l'une des
+trois fortes de la matrice ; il ne la reconnaît qu'à l'issue. De ces trois échelles, il n'en a qu'une, le temps
+(la fenêtre, la bande d'horizon) ; les strates sont des domaines, non des masses d'acteurs ni des degrés de
+spécialisation. **Tournants de négociation** (Druckman 2020, trente-cinq ans de travaux, 34 cas comparés) : un
+tournant se trace en trois temps — précipitant, départ, conséquences pour toutes les parties —, il est abrupt à des
+degrés divers, et **un départ proposé puis refusé n'est pas un tournant** : il faut que les parties l'acceptent.
+C'est la logique du marqueur de SEUIL@7 (« franchissement reconnu par les parties »), venue d'une autre littérature.
+Dans les négociations de sécurité, les précipitants sont plutôt extérieurs (médiation, crise) et les départs
+abrupts ; dans les négociations commerciales et politiques, plutôt intérieurs, procéduraux ou substantiels. Une
+crise précède souvent un tournant : une escalade est suivie d'une désescalade dans la plupart des cas comparés.
+
+**Le livre de Grossetti, lu (0.7.20).** Le paragraphe précédent s'appuyait sur une recension. Le livre
+(*Sociologie de l'imprévisible*, PUF, 2004 ; version auteur de 2004 lue en entier), l'article des *Cahiers
+internationaux de sociologie* (2006), la communication de 2003 et « L'espace à trois dimensions des
+phénomènes sociaux » (*SociologieS*, 2011) confirment la définition et la précisent sur quatre points.
+
+1. **Imprévisibilité et irréversibilité sont deux axes, non un seul.** Grossetti croise les deux
+   (tableau 7 du livre, tableau 2 de 2006) :
+
+   | | Irréversibilités faibles | Irréversibilités fortes |
+   |---|---|---|
+   | **Imprévisibilité faible** | routine | rituel, changement d'état prévisible ; changement graduel par petites étapes qui se cumulent, puis franchit un seuil |
+   | **Imprévisibilité forte** | risque sans conséquence : le couple a failli se séparer, l'accident « évité de justesse » | **bifurcation** |
+
+   Pour le codage, deux conséquences. Un franchissement **prévisible** qui laisse une trace (majorité
+   civile, ratification attendue) est SEUIL suivi de TRACE·MÉMOIRE sans être une bifurcation : la
+   bifurcation est la seule case où les deux axes sont hauts. Et le **risque sans conséquence** est le
+   pendant sociologique du cas sans événement (B4, `base-de-cas.md` §4) : la structure était là, l'issue
+   est restée proche du départ ; l'oublier, c'est le biais du survivant. Le changement graduel qui se
+   cumule jusqu'à un seuil est ce que Grossetti nomme **sédimentation** ; la fenêtre de 3 mois le voit mal,
+   parce que chaque pas y est petit.
+2. **La case dépend du niveau choisi.** Les mêmes orientations scolaires sont de la reproduction au
+   niveau du système (le système ne change pas) et des bifurcations au niveau d'un parcours de vie (le
+   parcours en est changé). Rien n'est bifurcation en soi ; c'est une relation entre un temps court et un
+   temps long que l'analyste définit. Pour le skill, c'est l'objet de la question (S1) qui fixe le niveau,
+   et deux cas codés à des niveaux différents ne sont pas homologues, même avec les mêmes cartes.
+3. **La crise est souvent une contagion entre sphères.** Dans les parcours (2006, d'après Bidart),
+   l'instabilité naît du recouvrement de contextes d'ordinaire distincts : travail, famille, santé. Chaque
+   contexte pris seul se laisse plus ou moins anticiper ; quand ils se mêlent, les imprévisibilités se
+   multiplient (l'équivalent des séries causales indépendantes de Cournot). Dans le skill, le passage à une
+   autre strate abaisse d'un cran la source d'une transition, sauf propagation admise ou transfert ancré
+   (`graphe.md` §2.1). Grossetti donne à cette convention une raison qualitative ; il ne fournit aucun
+   chiffre pour en régler la taille.
+4. **La contingence est à mesurer, pas à poser.** « La contingence des situations n'est pas quelque chose
+   que l'on doive fixer d'un point de vue théorique mais un paramètre à évaluer empiriquement. » C'est la
+   position du skill : une fréquence conditionnelle, estimée sur des cas, et un statut qui dit si elle
+   l'est. Grossetti situe aussi les **commencements** (d'une organisation, d'une relation, d'un standard)
+   parmi les moments propices aux bifurcations, parce que tout y est encore peu défini. Le skill n'en fait
+   pas une règle : c'est une hypothèse sans cas codés.
+
+**Correction de la phrase précédente sur les strates (0.7.20).** On a écrit en 0.7.19 que « les strates
+sont des domaines, non des masses d'acteurs ni des degrés de spécialisation ». C'est vrai d'une strate
+prise seule. Mais l'article de 2011 définit la troisième échelle, la **généralité**, par la **variété des
+contextes** qu'un phénomène implique (travail, famille, santé, science, un territoire), de la
+spécialisation (peu de contextes) à la généralité (beaucoup). Le **nombre de strates** qu'un épisode
+touche est donc une mesure grossière de cette échelle, et la « montée en généralité » de Grossetti (un
+chômage qui entraîne un divorce, puis une dépression) se lit comme une propagation d'une strate à
+l'autre. Le skill a ainsi deux des trois échelles, le temps et, en gros, la généralité ; il n'a toujours pas
+la masse des acteurs.
+
+**Le tiers (0.7.21, Simmel 1902).** Simmel décrit trois rôles d'un troisième élément face à deux autres
+en opposition : le **médiateur**, qui ramène l'antagonisme de la volonté à un désaccord d'idées et rend
+l'accord possible ; le ***tertius gaudens***, qui tire profit de la rivalité des deux autres et a intérêt à
+ce qu'elle dure ; le *divide et impera*, qui crée ou entretient la division pour dominer. Il montre ces trois
+rôles dans la famille, la politique, l'économie et les relations entre États. L'avantage du tiers disparaît
+dès que les deux autres s'unissent. Ces rôles éclairent des transitions déjà écrites sans en changer la
+force : POLARITÉ → RÉCIPROCITÉ (faible) passe souvent par un médiateur ; POLARITÉ → HIÉRARCHIE (moyenne) peut
+être l'œuvre d'un tiers qui divise ; et l'indicateur de bascule de POLARITÉ, « disparition des
+intermédiaires ; alignements exclusifs exigés des tiers », est la suppression de la place du tiers. Le
+courtier de RÉSEAU (intermédiarité) en est la version mesurée : Burt (2004, *American Journal of Sociology*
+110(2), 673 managers d'une seule entreprise) trouve que les idées des managers à réseau peu contraint sont
+mieux notées par deux juges qui ignorent leur auteur. C'est un appui pour la structure, pas une fréquence de
+transition. Simmel note aussi la fragilité de la **dyade** : le départ d'un seul la détruit, ce qu'une
+triade supporte. Rien ici n'est versé au calcul.
 
 ## Synthèse : matrice des transitions a priori
 

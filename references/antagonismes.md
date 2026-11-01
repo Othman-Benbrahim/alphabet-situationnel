@@ -1,6 +1,6 @@
 # Alphabet situationnel — Incompatibilités et tensions
 
-> Version : 0.7.22
+> Version : 0.7.23
 
 > **Origine.** Repris de NEXUS-ARCHÊ v0.4.2 (`antagonismes.md`) sans modification des tables.
 > Usage dans ce skill : la table du §3 alimente la règle de bonne formation G6 (une paire

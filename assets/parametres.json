@@ -1,5 +1,5 @@
 {
- "version": "0.7.22",
+ "version": "0.7.23",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -80,6 +80,9 @@
  "v4_test": "signe",
  "v4_reference": "inertie",
  "v4_n": 50,
+ "v4_equivalence_delta": 0.025,
+ "v4_autocorrelation_max": 0.3,
+ "v4_e_seuil_primaire": 20,
  "matrice": {
   "SEU": {
    "PER": "f",

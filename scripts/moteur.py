@@ -1426,7 +1426,7 @@ def comparer_clotures(a,b):
             'conservative':not changees and set(ra)==set(rb)}
 
 
-def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
+def accord(a,b,c,d,repetabilite=False,ecart_jours=None,llm=False):
     """0.7.9. Accord de deux codeurs sur une carte, à partir de la table 2×2 de leurs décisions (a : les deux
     ancrent ; b : le premier seul ; c : le second seul ; d : aucun). κ (Cohen 1960) dépend de la prévalence :
     indéfini si pₑ = 1, effondré quand le code est rare (Feinstein et Cicchetti 1990). PABAK = 2·pₒ − 1
@@ -1444,6 +1444,7 @@ def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
     # trop rapprochées mesurent la mémoire du premier codage : verdict « non recevable » sous
     # repetabilite_ecart_min_jours.
     for v in (a,b,c,d):exiger(type(v) is int and v>=0,'accord : a, b, c, d entiers ≥ 0')
+    exiger(not(llm and repetabilite),'accord : --llm et --repetabilite s’excluent (exécutions d’un modèle contre passes d’un humain)')
     if repetabilite:exiger(type(ecart_jours) is int and ecart_jours>=0,'accord --repetabilite : --ecart-jours (entier ≥ 0, jours entre les deux passes) requis')
     n=a+b+c+d;exiger(n>0,'accord : table vide')
     po=(a+d)/n;p1=(a+b)/n;p2=(a+c)/n;pe=p1*p2+(1-p1)*(1-p2)
@@ -1454,6 +1455,9 @@ def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
        'kappa_intervalle_95_approche':None if se is None else [k-1.96*se,k+1.96*se],'pabak':2*po-1,
        'accord_positif':None if 2*a+b+c==0 else 2*a/(2*a+b+c),'accord_negatif':None if 2*d+b+c==0 else 2*d/(2*d+b+c),
        'manque_second':m1,'manque_premier':m2,'faux_positifs_second':None if c+d==0 else c/(c+d)}
+    # 0.7.23 : intervalle de PABAK (approximation normale, SE = 2·√(pₒ(1−pₒ)/n)), publié avec n, le nombre de
+    # décisions ; les décisions d'un même cas ne sont pas indépendantes : l'intervalle est optimiste.
+    sp=2*math.sqrt(po*(1-po)/n);r['pabak_intervalle_95_approche']=[2*po-1-1.96*sp,2*po-1+1.96*sp]
     # 0.7.18 (Artstein et Poesio 2008 ; Krippendorff 2011). π de Scott (marges regroupées) : κ et π peuvent tomber de
     # part et d'autre de kappa_min, on publie les deux. α de Krippendorff, nominal, deux codeurs, sans valeur
     # manquante : α = 1 − (2n − 1)(b + c) / (n₀ n₁), n₀ et n₁ comptant les valeurs (et non les unités). Publiés,
@@ -1483,6 +1487,10 @@ def accord(a,b,c,d,repetabilite=False,ecart_jours=None):
                  lecture='a : ancré aux deux passes ; b : première passe seule ; c : seconde seule ; manque_second et manque_premier se lisent « manque de la seconde / de la première passe »')
         if ecart_jours<P['repetabilite_ecart_min_jours']:
             v=f'non recevable : passes séparées de {ecart_jours} j, moins de {P["repetabilite_ecart_min_jours"]} j (la seconde passe mesure la mémoire du premier codage)'
+    elif llm:
+        r.update(type='repetabilite_llm',
+                 lecture='a : ancré aux deux exécutions ; b : première seule ; c : seconde seule. Deux exécutions du même modèle, contextes séparés '
+                         '(ou une exécution et une paraphrase du dossier, à publier à part) ; une stabilité élevée mesure la fiabilité, pas la validité')
     else:r['type']='reproductibilite'
     r['verdict']=v
     return r
@@ -2819,8 +2827,29 @@ def v4_statut(dm):
     seq=None if eg is None else {'e_valeur':eg['e_valeur'],'e_max':eg['e_max'],'seuil':eg['seuil'],'franchi_a_l_episode':eg['franchi_a_l_episode'],
         'lecture':('franchi : gain ≥ v4_gain_abs établi à tout instant, sous indépendance des épisodes' if eg['franchi_a_l_episode']
                    else 'non franchi : le journal peut être relu à chaque épisode sans gonfler α')}
+    # 0.7.23 (décision d'auteur, validation.md §11) : deux conclusions, deux tests primaires. « Gain » : l'e-processus
+    # e_gain_v4 franchit v4_e_seuil_primaire. « Aucun apport » : équivalence (TOST, deux tests unilatéraux à
+    # v4_alpha, soit l'intervalle à 1 − 2α de d̄ dans ±v4_equivalence_delta), lue une seule fois, à l'effectif
+    # d'équivalence déclaré. Barrière : si l'autocorrélation d'ordre 1 des épisodes dépasse v4_autocorrelation_max,
+    # aucune des deux conclusions n'est émise. Le test du signe et le statut ci-dessus restent publiés, descriptifs.
+    zt=NormalDist().inv_cdf(1-P['v4_alpha'])+NormalDist().inv_cdf(1-(1-P['v4_puissance'])/2)
+    de=P['v4_equivalence_delta'];n_eq=None if sd is None else max(P['v4_n'],math.ceil((zt*sd/de)**2))
+    r1=dm.get('autocorrelation_1');barr=r1 is not None and r1>P['v4_autocorrelation_max']
+    se_=dm.get('erreur_type');z1=NormalDist().inv_cdf(1-P['v4_alpha'])
+    ic_eq=None if se_ is None else [dm['d_moyen']-z1*se_,dm['d_moyen']+z1*se_]
+    gain_ok=eg is not None and eg['e_max']>=P['v4_e_seuil_primaire']
+    eq_ok=ic_eq is not None and n_eq is not None and dm['episodes']>=n_eq and -de<ic_eq[0] and ic_eq[1]<de
+    if barr:concl='aucune conclusion : épisodes autocorrélés (ρ̂₁ > '+str(P['v4_autocorrelation_max'])+'), espacer les épisodes'
+    elif gain_ok:concl='gain établi (e-processus ≥ '+str(P['v4_e_seuil_primaire'])+')'
+    elif eq_ok:concl='aucun apport à ±'+str(de)+' (équivalence)'
+    elif n_eq is not None and dm['episodes']>=n_eq:concl='non établi : ni gain, ni équivalence à l’effectif d’équivalence'
+    else:concl='non encore évalué'
+    decision={'conclusion':concl,'gain_e_max':None if eg is None else eg['e_max'],'equivalence_intervalle':ic_eq,
+              'effectif_equivalence':n_eq,'autocorrelation_1':r1,'barriere':barr,
+              'regle':(f"gain : e_gain_v4 ≥ {P['v4_e_seuil_primaire']} ; aucun apport : intervalle à {1-2*P['v4_alpha']:.0%} de d̄ dans ±{de}, "
+                       f"lu à épisodes ≥ max({P['v4_n']}, ⌈({zt:.2f}·σ̂/{de})²⌉) ; barrière ρ̂₁ > {P['v4_autocorrelation_max']} ; test du signe descriptif")}
     return {'statut':st,'episodes':dm['episodes'],'effectif_requis':req,'effectif_cible':cible,'d_moyen':dm['d_moyen'],
-            'intervalle_95_approche':ic,'p_test':p_,'sigma_d':sd,'regle':regle,'sequentiel':seq}
+            'intervalle_95_approche':ic,'p_test':p_,'sigma_d':sd,'regle':regle,'sequentiel':seq,'decision':decision}
 
 
 def dossier_publie(x):
@@ -2921,7 +2950,20 @@ def score_result(data):
                  'part_des_questions':len(abst)/(len(abst)+len(prev)) if abst or prev else None,
                  'motifs':sorted({x['calcul'].get('non_estime_motif') or 'référence manquante' for x in abst}),
                  'lecture':'une abstention n’a pas de score ; un Brier calculé sur les seules questions chiffrées ne dit rien de celles que l’outil a refusées'} if abst else None
+    # 0.7.23 (validation.md §11) : couverture. Le bras alphabet est scoré sur toutes les questions binaires soumises et
+    # résolues ; une abstention reçoit la fréquence de base déclarée (règle fixée d'avance : sans cartes, p₀ = f).
+    # Une abstention sans fréquence de base reste « sans repli » et rend la couverture incomplète.
+    bin_=[(x['probabilite'],scores[x['id']]['issue']) for x in prev.values() if not x.get('partition') and x['id'] in scores and scores[x['id']]['issue'] is not None]
+    rep=[(x.get('frequence_de_base'),scores[x['id']]['issue']) for x in ab_res if not x.get('partition')]
+    rep_ok=[(q,o) for q,o in rep if q is not None];tout=bin_+rep_ok
+    couverture={'binaires_resolues_chiffrees':len(bin_),'abstentions_resolues':len(rep),'repli_applique':len(rep_ok),
+                'sans_repli':len(rep)-len(rep_ok),'taux_de_repli':len(rep_ok)/len(tout) if tout else None,
+                'brier_chiffrees':sum((q-o)**2 for q,o in bin_)/len(bin_) if bin_ else None,
+                'brier_avec_repli':sum((q-o)**2 for q,o in tout)/len(tout) if tout else None,
+                'complete':len(rep)==len(rep_ok),
+                'regle':'abstention → frequence_de_base ; score sur toutes les binaires soumises et résolues'}
     return {'questions_resolues':len(units),'questions_eligibles':len(eligible),'abstentions':abstentions,
+            'couverture':couverture,
             'incertitude_annoncee_moyenne':sum(x['incertitude_annoncee'] for x in units)/len(units) if units else None,
             'apport_des_cartes':apport_cartes([x for x in units if x['origine']=='moteur']),
             'jugements':jugements(units),
@@ -2971,7 +3013,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3208,7 +3250,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.22','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.23','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3535,7 +3577,7 @@ def main():
     sc.add_argument('--vu',action='append',default=[]);sc.add_argument('--contexte',choices=CONTEXTES_COMPARATEUR,required=True)
     ex=subs.add_parser('export-codeur');ex.add_argument('--base',required=True);ex.add_argument('--cas',required=True)
     ac=subs.add_parser('accord');[ac.add_argument(k,type=int,required=True) for k in ('--a','--b','--c','--d')];ac.add_argument('--json',action='store_true')
-    ac.add_argument('--repetabilite',action='store_true');ac.add_argument('--ecart-jours',type=int)
+    ac.add_argument('--repetabilite',action='store_true');ac.add_argument('--ecart-jours',type=int);ac.add_argument('--llm',action='store_true')
     cv=subs.add_parser('conservativite');cv.add_argument('--base',required=True);cv.add_argument('--sortie');cv.add_argument('--contre');cv.add_argument('--empreinte')
     rj=subs.add_parser('rejets');rj.add_argument('--dossier',required=True);rj.add_argument('--audit')
     vr_=subs.add_parser('valider-references');vr_.add_argument('fichier')
@@ -3681,12 +3723,14 @@ def main():
             if not ok_:raise SystemExit(1)
         return
     if a.cmd=='accord':
-        r=accord(a.a,a.b,a.c,a.d,a.repetabilite,a.ecart_jours)
+        r=accord(a.a,a.b,a.c,a.d,a.repetabilite,a.ecart_jours,a.llm)
+        if a.llm and not a.json:print('répétabilité d’un modèle : deux exécutions en contextes séparés (fiabilité, pas validité)')
         if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
         if a.repetabilite:print(f"répétabilité : même codeur, deux passes séparées de {a.ecart_jours} j (manque du second = manque de la seconde passe)")
         f_=lambda v:'indéfini' if v is None else f'{v:.3f}'
         print(f"table a={a.a} b={a.b} c={a.c} d={a.d} · prévalence {r['prevalence']*100:.1f} % · pₒ {r['po']:.3f} · κ {f_(r['kappa'])} · PABAK {r['pabak']:.3f} · "
               f"accord positif {f_(r['accord_positif'])} · manque du second {f_(r['manque_second'])} · manque du premier {f_(r['manque_premier'])}")
+        pi_=r['pabak_intervalle_95_approche'];print(f"PABAK, intervalle à 95 % (approché, décisions non indépendantes) : [{pi_[0]:.3f} ; {pi_[1]:.3f}] sur {r['n']} décisions")
         print(f"π de Scott {f_(r['pi_scott'])} · α de Krippendorff {f_(r['alpha_krippendorff'])} · pₑ {r['pe']:.3f}"
               +(f" · manque des absences {f_(r['manque_absence_second'])} / {f_(r['manque_absence_premier'])}" if r['prevalence']>.5 else ''))
         print('verdict : '+r['verdict']);return
@@ -5076,6 +5120,27 @@ def autotest():
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
+        def test_decision_0723(self):
+            # 0.7.23 : intervalle de PABAK, répétabilité d'un modèle, couverture avec repli, décision V4.
+            r=accord(90,5,5,0);lo,hi=r['pabak_intervalle_95_approche'];self.assertAlmostEqual(hi-lo,2*1.96*2*math.sqrt(.9*.1/100))
+            self.assertEqual(accord(35,5,5,1843,llm=True)['type'],'repetabilite_llm')
+            with self.assertRaises(ValueError):accord(35,5,5,1843,True,90,True)
+            # borne basse de PABAK à pₒ = 0,90 : 0,54 à 20 décisions, ≥ 0,67 à partir de 82
+            self.assertLess(accord(18,1,1,0)['pabak_intervalle_95_approche'][0],.55)
+            self.assertGreaterEqual(accord(74,4,4,0)['pabak_intervalle_95_approche'][0],.67-1e-9)
+            calc={'evenement':'SEU@7 apparait','p':None,'rho':4,'intervalle':None,'p_sans_cartes':None,
+                  'temporalite':'duree_de_vie','non_estime_motif':'durée de vie propre au phénomène'}
+            ab=forecast(calcul=dict(calc),probabilite=None,temporalite='duree_de_vie',intervalle=None,frequence_de_base=.2)
+            p2=forecast('P-2',episode_id='episode-B')
+            cv=score_result([ab,score(),p2,dict(score(),id='P-2')])['couverture']
+            self.assertEqual((cv['abstentions_resolues'],cv['repli_applique'],cv['sans_repli']),(1,1,0));self.assertTrue(cv['complete'])
+            self.assertAlmostEqual(cv['taux_de_repli'],.5)
+            self.assertNotIn('decision',v4_statut(None))                    # aucun épisode : pas de décision
+            dm={'episodes':60,'d_moyen':0.0,'sigma_d':.05,'erreur_type':.05/math.sqrt(60),'autocorrelation_1':.1,
+                'test_signe':None,'test_wilcoxon':None,'e_gain_v4':{'e_valeur':1,'e_max':2,'seuil':20,'franchi_a_l_episode':None}}
+            self.assertTrue(v4_statut(dm)['decision']['conclusion'].startswith('aucun apport'))
+            self.assertTrue(v4_statut(dict(dm,autocorrelation_1=.5))['decision']['conclusion'].startswith('aucune conclusion'))
+            self.assertTrue(v4_statut(dict(dm,e_gain_v4={'e_valeur':25,'e_max':25,'seuil':20,'franchi_a_l_episode':40}))['decision']['conclusion'].startswith('gain'))
         def test_abstention(self):
             # 0.6.11 (audit V22) : un calcul non estimé ne devient pas une prévision chiffrée.
             calc={'evenement':'SEU@7 apparait','p':None,'rho':4,'intervalle':None,'p_sans_cartes':None,

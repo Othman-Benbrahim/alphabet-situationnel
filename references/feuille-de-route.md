@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.22
+> Version : 0.7.23
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,7 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.23 (faite) | Règles de décision de V4 | qui code ; `accord --llm` et intervalle de PABAK ; cinq bras dont le dossier neutre ; couverture avec repli sur abstention (`scorer`) ; épisode défini ; e-processus pour le gain, équivalence à 0,025 pour l'absence d'apport, barrière d'autocorrélation (`v4.decision`) ; leurres en aveugle ; tiers (`validation.md` §11) ; probabilités identiques à la 0.7.9 | — |
 | 0.7.22 (faite) | Additif, pas configurationnel | ce que fait le moteur (somme en logit sans interaction), ce que retient l'homologie (état semblable ; une fréquence peut refléter une interaction sans la nommer), ce que fournirait la QCA (indicateurs, jamais garanties) ; garde pour le codeur : une conjonction de cartes est une co-activation ; probabilités identiques à la 0.7.9 | — |
 | 0.7.21 (faite) | Simmel, Durkheim, Ramos | forme et contenu (Simmel 1902) comme filiation de P1 ; objection de Durkheim écrite comme ouverte pour les seize cartes de départ (A2) ; le tiers (médiateur, *tertius gaudens*, *divide et impera*) lu par POLARITÉ, RÉSEAU et HIÉRARCHIE ; événements critiques choisis après coup (Ramos 2008) ; probabilités identiques à la 0.7.9 | — |
 | 0.7.20 (faite) | Grossetti lu dans le texte | quatre formes d'imprévisibilité (moment × issues) liées à `temporalite` et à l'événement déclaré, la crise sans estimande ; imprévisibilité × irréversibilité (routine, risque sans conséquence, rituel, bifurcation) ; le niveau choisi fixe la case ; généralité = nombre de strates touchées (correction de 0.7.19) ; quatre précautions pour coder une bifurcation après coup ; probabilités identiques à la 0.7.9 | — |

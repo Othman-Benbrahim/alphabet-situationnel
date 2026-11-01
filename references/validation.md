@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.22
+> Version : 0.7.23
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -430,6 +430,10 @@ reste le **même modèle avec le même dossier** (bras externe, §1).
 
 Les jeux de démonstration fournis ne remplissent pas ce protocole et restent hors V4.
 
+**Règles de décision (0.7.23).** Qui code, les cinq bras, le repli sur abstention, la composition des épisodes,
+les deux tests primaires, la barrière d'indépendance, les leurres et l'exécution par des tiers : §11. Elles
+prévalent sur l'étape 9 pour toute conclusion.
+
 **Rejeux successifs : du plus ancien au plus récent.** Une issue vue dans un test, même pour une autre
 question, contamine tout test ultérieur qui porte sur une date antérieure. Enchaîner les rejeux dans
 l'ordre chronologique des états, ou en sessions séparées ; toute question dont l'issue a pu être vue
@@ -705,3 +709,132 @@ information complète, avec 30 millions d'exemples, donne 57 % d'exactitude, et 
 précis » ; un p tiré de dix homologues ne se lit pas au dixième de point. Sous un événement rare, prédire « jamais »
 a une exactitude presque parfaite : c'est pourquoi le skill se juge contre `p_sans_cartes` (le taux de base, imprimé
 d'abord) et le placebo, jamais par l'exactitude.
+
+---
+
+## 11. Règles de décision fixées avant le premier épisode (0.7.23)
+
+Ces règles viennent de deux relectures extérieures du §8, du §10 et de A4 (une IA d'audit scientifique, puis
+un second modèle qui a vérifié le dépôt au commit `5835739`), revues ici contre le code. **Elles sont fixées
+avant tout épisode réel.** Les marges et les seuils ne se révisent plus. Seul l'effectif se recalcule quand σ̂(d)
+est connu : la formule est fixée, pas son résultat. Aucune règle ne change p.
+
+### 11.1 Qui code, et ce que vaut la stabilité d'un modèle
+
+- **Codeur de V4.** Les états des prévisions de V4 sont codés par un **humain**, sur le dossier scellé
+  (`calculer --dossier`), sans voir p. C'est le même codeur que la base ; `export-codeur` fournit
+  l'échantillon d'accord à un second codeur (A4). Un état proposé par un modèle doit être relu et confirmé par un humain
+  nommé, comme `recodage_confirme` l'exige pour une fiche ; sinon la prévision est hors V4. Le moteur ne contrôle pas
+  encore cette confirmation sur un dossier : c'est une règle de protocole.
+- **Répétabilité d'un modèle.** `accord --repetabilite` mesure un humain qui recode après un délai, parce que sa
+  mémoire est le risque. Pour un modèle de langage, le risque est autre : la variabilité d'une exécution à
+  l'autre, la sensibilité à la paraphrase et la dérive entre versions. `accord --llm` lit la même table 2×2
+  pour deux exécutions en contextes séparés (type `repetabilite_llm`, sans délai minimal). Protocole : k
+  exécutions sur le même dossier ; puis les mêmes avec des paraphrases du dossier, publiées **à part** ; puis
+  deux versions du modèle. On publie par carte la table, PABAK et son intervalle, et la dispersion de p entre
+  exécutions. **Une stabilité élevée mesure la fiabilité, pas la validité** : un modèle peut être stablement
+  faux (Shyr et al. 2025).
+- **Propagation jusqu'à p.** `variantes_codage` ne mesure pas le bruit du codeur : il recalcule p comme si les
+  mots d'ancrage faible étaient absents. La dispersion de p entre exécutions se publie à côté de chaque
+  prévision de V4 ; elle n'entre pas dans le score.
+
+### 11.2 Échec du codage
+
+- **Règle.** Une carte n'entre dans un calcul de V4 que si son verdict `accord` est au moins `provisoire` :
+  PABAK ≥ `kappa_min` (0,67), les deux taux de manque ≤ `fnr_max`, et le contrôle des absences sous forte
+  prévalence. Aucun seuil nouveau : c'est la règle existante.
+- **Estimation ponctuelle, intervalle publié.** Le critère porte sur la valeur de PABAK. `accord` publie depuis
+  0.7.23 son intervalle approché (SE = 2·√(pₒ(1−pₒ)/n)) et n, le nombre de décisions. À pₒ = 0,90 (PABAK 0,80),
+  la borne basse vaut 0,54 à 20 décisions et ne dépasse 0,67 qu'à partir de 82 environ. **Sous 82 décisions,
+  le verdict se lit « non évaluable »**, pas « échec ». Les décisions d'un même cas ne sont pas indépendantes :
+  l'intervalle est optimiste, et 250 décisions ne valent pas 250 cas.
+- **PABAK est secondaire.** Ses repères viennent de l'α de Krippendorff ; PABAK ne corrige pas du hasard réel et
+  devient indulgent sous forte prévalence. κ, π et α se publient avec lui. L'effectif d'accord se fixe sur la
+  **largeur d'intervalle visée**, pas sur un seuil unique.
+- **Conséquence.** Une carte en échec **invalide l'épisode** (hors V4, motif `codage`). Elle ne se remplace pas,
+  et p ne se recalcule pas : la prévision est scellée. Le nombre d'épisodes invalidés se publie.
+
+### 11.3 Les bras du test
+
+`p_sans_cartes` n'est **pas** « le même dossier sans cartes » : il retire les λ et `multiplicateur_bouge`, mais
+garde la cible et l'état codé. Le comparateur externe (§1) ne voit que la question, la résolution, l'échéance,
+la date et le domaine. Un gain de l'alphabet sur lui peut donc venir de la structure du dossier, pas des cartes.
+Cinq bras, sur les mêmes questions :
+
+| Bras | Ce qu'il reçoit | Ce qu'il isole |
+|---|---|---|
+| modèle seul | la question et ses faits, sans dossier | la valeur du modèle |
+| **dossier neutre** | même modèle, mêmes faits et dates que le dossier (`mots` réécrits en faits, `evenements`, `recherches`), même question et échéance ; **sans étiquette de carte, sans strate, sans marqueur** (la liste interdite de `elements_vus` s'étend) | la valeur du gabarit |
+| inertie | `p_sans_cartes` | la valeur des fréquences |
+| placebo | cartes permutées (`p_placebo`), scoré comme un bras | la valeur d'une étiquette quelconque |
+| alphabet complet | le dossier scellé | ce qu'on veut mesurer |
+
+**Deux niveaux.** Contre l'inertie, le placebo ou le modèle seul, V4 ne produit qu'un **jalon interne**. Seul le
+contraste avec le **dossier neutre** permet d'écrire « les cartes apportent ». Tant que ce bras n'est pas joué,
+« V4 atteint » se lit « jalon interne », et le texte doit le dire. Le dossier neutre est le plus coûteux des
+bras (un bras manuel par épisode) ; le moteur ne le produit pas.
+
+### 11.4 Couverture, refus et épisodes
+
+- **Questions admises.** Les questions viennent d'un banc public, choisies avant lecture. Les séries
+  purement chiffrées (prix, indices) sont exclues **d'avance** : sur elles, le test mesurerait l'inertie.
+- **Repli sur abstention.** Le bras alphabet est scoré sur **toutes** les questions soumises et résolues ; une
+  abstention reçoit la **fréquence de base** déclarée (sans cartes, p₀ = f, §2 de `graphe.md`). `scorer` publie
+  depuis 0.7.23 `couverture` : questions chiffrées, abstentions, repli appliqué, abstentions sans repli,
+  taux de repli, Brier sur les seules chiffrées et Brier avec repli. Une couverture incomplète (abstention sans
+  fréquence de base) se déclare. Le skill s'abstient par construction quand les cartes ne s'ancrent pas :
+  comparer sur les seules questions chiffrées comparerait sur un sous-ensemble choisi par l'outil.
+- **Épisode.** Deux questions forment un même épisode si elles ont **la même date de résolution et le même
+  événement sous-jacent**. La règle s'applique avant le premier épisode et se recopie dans `episode_id`.
+- **Portée.** Un résultat vaut pour les strates où il a été mesuré. Un gain sur la strate 7 ne dit rien des
+  douze autres.
+
+### 11.5 Ce qui conclut
+
+Deux conclusions, deux tests primaires ; `scorer` les rend dans `v4.decision` depuis 0.7.23.
+
+| Conclusion | Test primaire | Pourquoi lui |
+|---|---|---|
+| « l'alphabet apporte au moins 2,5 points » | `e_gain_v4` ≥ `v4_e_seuil_primaire` (20) à un épisode quelconque | valide à tout instant, sans correction de relecture |
+| « l'alphabet n'apporte rien » | **équivalence** (TOST, deux tests unilatéraux à `v4_alpha`) : l'intervalle à 90 % de d̄ tient dans ±`v4_equivalence_delta` (0,025), lu une seule fois, à l'effectif d'équivalence | un e-processus qui ne franchit pas son seuil dit « non établi », jamais « faux » |
+
+- **Le test du signe devient descriptif.** Il se publie toujours, il ne décide plus ; le champ `statut` de V4
+  (règle de 0.7.7) reste publié pour la trace.
+- **Marge d'équivalence : 2,5 points.** δ = `v4_gain_abs` rend les deux conclusions symétriques : un même
+  effectif, deux issues. Une marge de 1 point coûterait 6,25 fois plus d'épisodes (784 contre 125 à σ(d) =
+  0,10, selon la formule du §5). Elle se lira **en seconde lecture déclarée**, sur des épisodes neufs, après la
+  première. L'effectif d'équivalence se calcule avec z₁₋α + z₁₋β/₂ = 1,645 + 1,282 = 2,93, et non 2,80 : à
+  σ(d) = 0,10, 138 épisodes et non 125 (le tableau de la relecture sous-estimait légèrement).
+- **Barrière d'indépendance.** Les deux lectures supposent des épisodes indépendants. Si l'autocorrélation
+  d'ordre 1 des différentiels dépasse `v4_autocorrelation_max` (0,3), **aucune** conclusion n'est émise : le
+  design se révise (épisodes plus espacés). Ignorer une autocorrélation positive rendrait les deux tests
+  permissifs, l'équivalence d'abord.
+- **Échec prédictif.** L'alphabet échoue s'il ne bat pas le **dossier neutre** : sur ce contraste,
+  l'e-processus ne franchit pas 20 **et** l'équivalence à δ est atteinte. L'un sans l'autre se lit « pas de
+  preuve », non « échec ».
+- **Ce que le moteur calcule et ne calcule pas.** `v4.decision` calcule ces lectures sur la référence de V4
+  (l'inertie par défaut) et sur le comparateur externe s'il est joué. Il ne produit ni le bras dossier neutre ni
+  la dispersion entre exécutions : ces bras se jouent hors du moteur et se journalisent comme comparateurs.
+
+### 11.6 Leurres en aveugle
+
+Le placebo est un contrôle négatif du **moteur**. L'effet Barnum est un risque de **lecture** par un humain
+(Forer 1949 ; prédictions favorables générées par IA jugées plus valides, CHI 2026) ; aucun instrument du skill ne
+le testait. Protocole :
+
+1. Pour chaque situation factuelle d'un lot, une lecture réelle (mode LIRE) et un ou deux **leurres** : lectures
+   produites sur une autre situation, ou par un tirage de cartes au hasard, réécrites à **même longueur, même ton
+   et même valence**.
+2. Des juges qui **connaissent la situation**, et non la personne concernée, qui juge mal sa propre situation.
+   Ni les juges ni l'auteur ne savent quelle lecture est réelle ; l'ordre est tiré.
+3. **Critère primaire fixé d'avance** : la lecture réelle est-elle reconnue au-dessus du hasard (1/2 ou 1/3
+   selon le nombre de leurres), par un test binomial exact à 5 % ?
+4. Le résultat se publie quel qu'il soit. Une lecture que des connaisseurs ne distinguent pas d'un leurre n'a pas
+   de contenu propre à défendre, quelle que soit son élégance.
+
+### 11.7 Exécution par des tiers
+
+Un auteur qui code, juge et score ses propres cas reste une source de biais, même avec des sceaux. Pour V4 et le
+test de leurres : le codage, le jugement des leurres et le score sont **exécutés ou audités par un tiers**, nommé
+avant le premier épisode, qui publie son propre rapport. Sans tiers, un résultat se publie « exécuté par
+l'auteur ».

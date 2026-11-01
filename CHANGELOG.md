@@ -1,9 +1,27 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.22
+> Version : 0.7.23
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.23 — 2026-11-01 · règles de décision de V4
+
+Deux relectures extérieures du protocole de validation, vérifiées contre le code (`apports-theoriques.md` §29). Les
+règles sont fixées **avant tout épisode** (`validation.md` §11). **Aucune probabilité ne change, vérifié par clôture.**
+Aucun texte retiré.
+
+- **`accord`** : intervalle approché de PABAK (`pabak_intervalle_95_approche`) avec le nombre de décisions ;
+  `--llm`, répétabilité de deux exécutions d'un modèle (type `repetabilite_llm`).
+- **`scorer`** : `couverture` (toutes les binaires soumises et résolues, une abstention reçoit la fréquence de base ;
+  taux de repli, Brier avec repli) ; `v4.decision` (gain par e-processus ≥ 20, absence d'apport par équivalence
+  TOST à ±0,025, barrière si l'autocorrélation d'ordre 1 dépasse 0,3 ; test du signe descriptif). Trois paramètres :
+  `v4_equivalence_delta`, `v4_autocorrelation_max`, `v4_e_seuil_primaire`.
+- **`validation.md` §11** : codeur humain de V4 ; protocole de répétabilité d'un modèle ; échec du codage
+  (verdict au moins `provisoire`, « non évaluable » sous 82 décisions, épisode invalidé) ; cinq bras, dont le
+  dossier neutre, seul à permettre « les cartes apportent » ; épisodes, séries chiffrées exclues, portée par
+  strate ; leurres en aveugle ; exécution par des tiers.
+- 154 autotests.
 
 ## 0.7.22 — 2026-11-01 · additif, pas configurationnel
 

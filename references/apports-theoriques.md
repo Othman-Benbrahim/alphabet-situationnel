@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.22
+> Version : 0.7.23
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1299,3 +1299,40 @@ partie). L'article de Cantó-Milà (2018) sur les formes chez Simmel, cité par 
   plus baisserait l'accord entre codeurs (§23) et n'a ni lacune au journal ni passage par A2.
 - **Le seuil du nombre** (le passage de deux à trois change tout, au-delà moins). Juste chez Simmel, mais le
   skill ne compte pas les acteurs (§27 : pas d'échelle des masses).
+
+## 29. Deux relectures du protocole de validation (0.7.23)
+
+**Documents.** Un audit par une IA de recherche scientifique (amass), sur extraits du dépôt, puis sa relecture de
+`validation.md` §8 et §10 et de A4 ; une seconde relecture, par un autre modèle, qui a tiré le dépôt au commit
+`5835739` et vérifié le code. **Aucune probabilité ne change.**
+
+### 29.1 Retenu et versé
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Personne n'est désigné pour coder les états de V4 | confirmé (§8, étape 2) | un humain, sur dossier scellé, aveugle à p | `validation.md` §11 |
+| La répétabilité est conçue pour un humain | confirmé ; `variantes_codage` ne mesure pas le bruit | `accord --llm` ; protocole k exécutions, paraphrases, versions | `moteur.py accord`, §11 |
+| `p_sans_cartes` garde la cible et l'état codé | confirmé dans `apriori` | bras « dossier neutre » ; deux niveaux, interne et externe | §11 |
+| Le placebo n'est pas un bras scoré | confirmé (pas de `brier_placebo`) | placebo listé comme bras | §11 |
+| Les abstentions sont retirées avant le score | confirmé (`score_result`) | `couverture` : repli sur la fréquence de base, taux de repli, Brier avec repli | `moteur.py scorer`, §11 |
+| Pas de critère primaire, pas de marge d'équivalence | confirmé | e-processus pour le gain, TOST à δ = 0,025 pour l'absence d'apport ; test du signe descriptif | `v4.decision`, §11 |
+| Autocorrélation sans règle | confirmé | barrière ρ̂₁ > 0,3 | `v4.decision`, §11 |
+| PABAK sans intervalle | confirmé | `pabak_intervalle_95_approche` ; « non évaluable » sous 82 décisions | `moteur.py accord`, §11 |
+| Pas de test de leurres | confirmé | protocole en quatre points | §11 |
+| Exécution par des tiers | absente pour V4 | exigée, ou publication « exécuté par l'auteur » | §11 |
+
+### 29.2 Corrigé dans les relectures
+
+1. **Seuil d'échec du codage à 0,40** (proposition faite ici même, avant la seconde relecture). Retiré au profit
+   de la règle existante (verdict au moins `provisoire`, 0,67) : 0,40 aurait admis en V4 un codage qu'`accord`
+   refuse.
+2. **Effectif d'équivalence** calculé avec z = 2,80 dans la seconde relecture : la formule du TOST demande
+   z₁₋α + z₁₋β/₂ = 2,93 ; à σ(d) = 0,10, 138 épisodes et non 125.
+3. **Comparer à DIAMONDS** (premier audit) : refusé. DIAMONDS décrit la perception individuelle d'une situation
+   et ne produit ni transition ni probabilité ; il n'a rien à scorer sur une question de prévision. Le comparateur
+   parcimonieux est l'inertie.
+
+### 29.3 Ce qui reste hors du moteur
+
+Le bras dossier neutre, la dispersion de p entre exécutions d'un modèle, le test de leurres et la confirmation
+humaine d'un état proposé par un modèle sur un dossier : des règles écrites, non calculées.

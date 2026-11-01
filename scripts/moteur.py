@@ -2847,9 +2847,10 @@ def v4_statut(dm):
     eq_ok=mur and fixe and ic_eq is not None and dm['episodes']>=n_eq and -de<ic_eq[0] and ic_eq[1]<de
     if not mur:concl='non encore évalué : moins de '+str(P['v4_n'])+' épisodes'
     elif barr:concl='aucune conclusion : épisodes autocorrélés (ρ̂₁ > '+str(P['v4_autocorrelation_max'])+'), espacer les épisodes'
-    elif gain_ok and eq_ok:concl='aucune conclusion : gain et équivalence à la fois (contradiction publiée)'
-    elif gain_ok:concl='gain établi (e-processus ≥ '+str(P['v4_e_seuil_primaire'])+')'
-    elif eq_ok:concl='aucun apport à ±'+str(de)+' (équivalence)'
+    # 0.7.25 : libellés qui nomment l'hypothèse testée et le seuil (e_gain_v4 teste H0 « gain < v4_gain_abs »).
+    elif gain_ok and eq_ok:concl='aucune conclusion : gain ≥ '+str(P['v4_gain_abs'])+' et équivalence à ±'+str(de)+' à la fois (contradiction publiée)'
+    elif gain_ok:concl='gain d’au moins '+str(P['v4_gain_abs'])+' établi (H0 « gain < '+str(P['v4_gain_abs'])+' » rejetée, e ≥ '+str(P['v4_e_seuil_primaire'])+')'
+    elif eq_ok:concl='pas d’apport supérieur à '+str(de)+' en valeur absolue (équivalence) ; un apport plus petit n’est pas exclu'
     elif fixe and dm['episodes']>=n_eq:concl='non établi : ni gain, ni équivalence à l’effectif d’équivalence (arrêt)'
     elif not fixe:concl='non encore évalué : effectif d’équivalence non fixé (provisoire '+str(n_eq)+')'
     else:concl='non encore évalué'
@@ -2971,6 +2972,21 @@ def score_result(data):
                 'brier_avec_repli':sum((q-o)**2 for q,o in tout)/len(tout) if tout else None,
                 'complete':len(rep)==len(rep_ok),
                 'regle':'abstention → frequence_de_base ; score sur toutes les binaires soumises et résolues'}
+    # 0.7.25 (validation.md §11.9) : d̄ primaire **avec repli**. Une abstention résolue, non rejouée, non fictive et
+    # prépubliée (https) entre dans le différentiel : le bras alphabet y reçoit la fréquence de base ; l'inertie aussi
+    # (sans cartes, p₀ = f), d'où d = 0 contre l'inertie ; contre le comparateur externe, son propre Brier.
+    pseudo=[]
+    for x in ab_res:
+        f_=x.get('frequence_de_base');o=scores[x['id']]['issue'];pp=x.get('preuve_prepublication') or {}
+        if f_ is None or x.get('partition') or x.get('rejeu') or x.get('fictif') or not re.match(r'https://\S+',str(pp.get('source',''))):continue
+        ce=x.get('comparateur_externe');bce=None
+        if isinstance(ce,dict) and ce.get('probabilite') is not None and not comparateur_contamine(ce):bce=(ce['probabilite']-o)**2
+        pseudo.append({'episode_id':x['episode_id'],'date':x['date'],'brier':(f_-o)**2,'brier_base':(f_-o)**2,
+                       'brier_comparateur':bce,'brier_jugement':None})
+    bin_el=[x for x in eligible if not x['partition']]
+    dv4r=differentiel([x for x in bin_el+pseudo if x.get(champ_ref) is not None],champ_ref)
+    couverture['v4_avec_repli']={'abstentions_admises':len(pseudo),**v4_statut(dv4r),
+                                 'lecture':'d̄ primaire (§11.9) : binaires éligibles et abstentions avec repli ; v4 reste publié sur les seules chiffrées'}
     return {'questions_resolues':len(units),'questions_eligibles':len(eligible),'abstentions':abstentions,
             'couverture':couverture,
             'incertitude_annoncee_moyenne':sum(x['incertitude_annoncee'] for x in units)/len(units) if units else None,
@@ -3259,7 +3275,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.24','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.25','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -5144,17 +5160,18 @@ def autotest():
             cv=score_result([ab,score(),p2,dict(score(),id='P-2')])['couverture']
             self.assertEqual((cv['abstentions_resolues'],cv['repli_applique'],cv['sans_repli']),(1,1,0));self.assertTrue(cv['complete'])
             self.assertAlmostEqual(cv['taux_de_repli'],.5)
+            self.assertIn('v4_avec_repli',cv)                                              # 0.7.25 : d̄ primaire avec repli
             self.assertNotIn('decision',v4_statut(None))                    # aucun épisode : pas de décision
             dm={'episodes':60,'d_moyen':0.0,'sigma_d':.05,'erreur_type':.05/math.sqrt(60),'autocorrelation_1':.1,
                 'test_signe':None,'test_wilcoxon':None,'e_gain_v4':{'e_valeur':1,'e_max':2,'seuil':20,'franchi_a_l_episode':None}}
             self.assertIn('non fixé',v4_statut(dm)['decision']['conclusion'])                # 0.7.24 : effectif non déclaré
             ancien=P['v4_effectif_equivalence'];P['v4_effectif_equivalence']=60
             try:
-                self.assertTrue(v4_statut(dm)['decision']['conclusion'].startswith('aucun apport'))
+                self.assertTrue(v4_statut(dm)['decision']['conclusion'].startswith('pas d’apport supérieur'))
                 self.assertTrue(v4_statut(dict(dm,autocorrelation_1=.5))['decision']['conclusion'].startswith('aucune conclusion'))
                 gain={'e_valeur':25,'e_max':25,'seuil':20,'franchi_a_l_episode':40}
                 self.assertIn('contradiction',v4_statut(dict(dm,e_gain_v4=gain))['decision']['conclusion'])
-                self.assertTrue(v4_statut(dict(dm,e_gain_v4=gain,d_moyen=-.05))['decision']['conclusion'].startswith('gain'))
+                self.assertTrue(v4_statut(dict(dm,e_gain_v4=gain,d_moyen=-.05))['decision']['conclusion'].startswith('gain d’au moins'))
                 self.assertTrue(v4_statut(dict(dm,episodes=30,e_gain_v4=gain))['decision']['conclusion'].startswith('non encore'))
             finally:P['v4_effectif_equivalence']=ancien
         def test_abstention(self):

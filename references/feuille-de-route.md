@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.24
+> Version : 0.7.25
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,8 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.25 (faite) | Contraste confirmatoire | conjonction dossier neutre, inertie, placebo (intersection-union) ; bras d'un modèle figés ; leurres du même dossier, cartes permutées, deux juges, puissance déclarée ; libellés qui nomment H0 ; même repli pour hors liste et abstention, d̄ primaire avec repli (`couverture.v4_avec_repli`) ; fiche d'étude horodatée ; tiers qui exécute et recode 20 % ; plafond de 300 épisodes ; probabilités identiques à la 0.7.9 | — |
+| Motif d'abstention `carte hors liste` produit par le moteur ; contrôle de la confirmation humaine d'un état proposé par un modèle, sur un dossier | avant l'épisode 1 | — |
 | 0.7.24 (faite) | Marges fermées | exclusion préalable mécanique ; accord mesuré avant l'épisode 1 et liste des cartes admises figée ; estimateur et lecture de l'autocorrélation ; paraphrases et dossier neutre figés d'avance ; table des issues et contradiction ; arrêt et effectif d'équivalence fixé une fois (`v4_effectif_equivalence`) ; leurres chiffrés (26 sur 40) ; tiers nommé avant ; constat : V4 ne peut pas commencer sans étude d'accord ; probabilités identiques à la 0.7.9 | — |
 | 0.7.23 (faite) | Règles de décision de V4 | qui code ; `accord --llm` et intervalle de PABAK ; cinq bras dont le dossier neutre ; couverture avec repli sur abstention (`scorer`) ; épisode défini ; e-processus pour le gain, équivalence à 0,025 pour l'absence d'apport, barrière d'autocorrélation (`v4.decision`) ; leurres en aveugle ; tiers (`validation.md` §11) ; probabilités identiques à la 0.7.9 | — |
 | 0.7.22 (faite) | Additif, pas configurationnel | ce que fait le moteur (somme en logit sans interaction), ce que retient l'homologie (état semblable ; une fréquence peut refléter une interaction sans la nommer), ce que fournirait la QCA (indicateurs, jamais garanties) ; garde pour le codeur : une conjonction de cartes est une co-activation ; probabilités identiques à la 0.7.9 | — |

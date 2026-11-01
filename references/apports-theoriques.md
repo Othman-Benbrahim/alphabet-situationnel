@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.24
+> Version : 0.7.25
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1344,3 +1344,14 @@ fermés au §11.8 ; deux ont demandé du code (`v4_effectif_equivalence`, fixé 
 complétées : contradiction, plancher de `v4_n` épisodes). **Corrigé dans le texte envoyé à amass** : le chiffre de
 125 épisodes venait de la seconde relecture, par un autre modèle, non d'amass ; le §29.2 l'attribue bien à la
 seconde relecture. **Constat** : aucune carte n'a d'accord mesuré, donc V4 ne peut pas commencer.
+
+### 29.5 Quatrième relecture (0.7.25)
+
+amass, sur le §11 complet : huit marges, toutes retenues et fermées au §11.9. Le contraste confirmatoire devient
+conjoint (dossier neutre, inertie, placebo, test d'intersection-union) ; les bras d'un modèle de langage sont
+figés ; les leurres viennent du même dossier, cartes permutées ; les conclusions nomment H0 et le seuil ; hors
+liste et abstention reçoivent le même repli, et le d̄ primaire est celui avec repli (`couverture.v4_avec_repli`) ;
+une fiche d'étude horodatée porte les valeurs absentes ; le tiers exécute le score et les leurres et recode 20 %
+des états ; plafond de 300 épisodes. **Corrigé chez amass** : l'e-processus teste déjà H0 « gain < 2,5 points »
+(§5), il ne pouvait pas le voir sans ce paragraphe ; le libellé, en revanche, était à reprendre. **Corrigé chez
+nous** : l'exemple de la marge de 1 point (862 contre 138).

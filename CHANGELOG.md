@@ -1,9 +1,26 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.24
+> Version : 0.7.25
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.25 — 2026-11-01 · contraste confirmatoire
+
+Quatrième relecture du protocole (amass, sur le §11 complet) : huit marges, fermées au `validation.md` §11.9
+(`apports-theoriques.md` §29.5). **Aucune probabilité ne change, vérifié par clôture.** Aucun texte retiré : les
+règles du §11.3 et du §11.6 que le §11.9 corrige restent écrites, avec la correction à côté.
+
+- **Contraste confirmatoire** : conjonction dossier neutre, inertie, placebo (intersection-union, sans correction) ;
+  le modèle seul est descriptif.
+- **Bras d'un modèle** : version, consigne et empreinte, température, 5 exécutions, médiane, écrêtage [0,01 ; 0,99].
+- **Leurres** : même dossier, cartes permutées ; deux juges ; puissance exacte (0,95 / 0,81 / 0,57) ; conséquence
+  d'un échec écrite.
+- **`scorer`** : libellés de `v4.decision` qui nomment H0 et le seuil ; `couverture.v4_avec_repli`, d̄ primaire
+  avec les abstentions en repli.
+- **Fiche d'étude** horodatée chez un tiers ; rôle du tiers (exécute le score et les leurres, recode 20 % des
+  états) ; plafond de 300 épisodes ; correction de l'exemple à 1 point (862 contre 138).
+- 154 autotests.
 
 ## 0.7.24 — 2026-11-01 · marges fermées
 

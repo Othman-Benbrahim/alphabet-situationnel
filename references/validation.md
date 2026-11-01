@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.24
+> Version : 0.7.25
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -860,3 +860,86 @@ fermé ici, avant le premier épisode.
 
 Ces valeurs sont des **décisions d'auteur** prises avant toute mesure. Une valeur changée après l'épisode 1 ouvre une
 nouvelle étude, sur des épisodes neufs.
+
+### 11.9 Quatrième relecture : contraste confirmatoire, bras, leurres, fiche d'étude (0.7.25)
+
+amass a relu le §11 complet et relevé huit marges, dont trois capables de changer la conclusion. Ses recalculs
+concordent (0,54 ; 82 décisions ; 138 épisodes ; 26 sur 40). **Correction** de l'exemple du §11.5 : avec z = 2,93,
+une marge de 1 point coûte **862** épisodes contre **138**, et non 784 contre 125 (calculés avec 2,80) ; le rapport
+6,25 ne change pas.
+
+**1. Un seul contraste confirmatoire, conjoint.** « Les cartes apportent » exige que l'alphabet établisse un gain
+d'au moins 2,5 points contre **trois** bras à la fois : le **dossier neutre** (la structure du dossier), l'**inertie**
+(les fréquences de base et le calibrage du moteur) et le **placebo** (les mêmes moteur et dossier, cartes
+permutées : le contraste le plus direct sur les cartes). C'est un test d'intersection-union : chaque contraste à
+`v4_alpha`, sans correction de multiplicité, puisque la conclusion exige les trois. L'effectif se calcule sur le
+contraste au σ̂ le plus élevé. Le bras **modèle seul** et toute autre lecture sont **descriptifs** : ils se
+publient, ils ne concluent jamais. Il n'y a donc plus qu'une occasion de conclure. Le placebo est défini :
+`placebo_tirages` = 200 permutations par calcul, graine dérivée de l'état, de la cible et de la date
+(`graine_placebo`), que personne ne choisit.
+
+**2. Les bras d'un modèle de langage sont figés.** Pour le modèle seul et le dossier neutre : modèle et version
+nommés ; consigne complète publiée avec son empreinte ; température 0 si le service la permet, sinon la valeur
+par défaut, déclarée ; **5 exécutions** en contextes séparés ; agrégation par la **médiane** ; probabilités
+écrêtées à [0,01 ; 0,99] (une probabilité de 0 ou 1 d'un modèle de langage est un artefact de format, et le
+Brier la paie sans borne en perte logarithmique). Tout se fixe dans la fiche d'étude (point 6).
+
+**3. Les leurres viennent du même dossier.** Le §11.6 admettait un leurre produit sur une autre situation : un juge
+le rejetterait à ses faits, et le test mesurerait la fidélité aux faits, non l'apport des cartes. **Corrigé** : un
+leurre est la lecture du **même dossier** avec des cartes permutées (tirage par la même règle que le placebo),
+réécrite par un tiers à même longueur, ton et valence. **Deux juges** par situation : le premier, tiré, fournit le
+critère primaire (unité : la situation) ; le second sert à mesurer l'accord entre juges, publié. **Puissance** du
+critère de 26 sur 40, calcul exact : 0,95 si la vraie proportion de reconnaissance est 0,75 ; 0,81 si 0,70 ; 0,57
+si 0,65. Un effet modeste a donc une chance sur deux d'être manqué : c'est déclaré. **Échec** : si le critère
+n'est pas atteint, le mode LIRE est publié « lectures non distinguées d'un leurre à cartes permutées », dans le
+README et le SKILL.md, jusqu'à une nouvelle étude sur des situations neuves. V4 peut se jouer quand même : il mesure
+la prévision, pas la lecture.
+
+**4. Les conclusions nomment l'hypothèse et le seuil.** `e_gain_v4` teste H0 « gain inférieur à 2,5 points »
+(§5) : franchir 20 établit un gain d'**au moins** 2,5 points, et la contradiction avec l'équivalence est une vraie
+contradiction. L'équivalence établit « **pas d'apport supérieur à 2,5 points** en valeur absolue », non « n'apporte
+rien » : un apport de 1 ou 2 points n'est pas exclu. L'échec prédictif se lit de même. Les libellés de
+`v4.decision` le disent depuis 0.7.25.
+
+**5. Hors liste et abstention reçoivent le même repli.** Un état qui ancrerait une carte hors de la liste admise
+se détecte **avant le scellement** de la prévision ; la prévision se journalise alors en abstention (motif
+`carte hors liste`) et reçoit le repli, comme toute abstention. Plus rien ne sort du dénominateur. Le **d̄ primaire
+est celui avec repli** : `scorer` le rend dans `couverture.v4_avec_repli` (abstentions prépubliées, non rejouées,
+non fictives : la fréquence de base contre l'inertie donne d = 0 ; contre le comparateur externe, son propre
+Brier). `v4` reste publié sur les seules chiffrées, à titre descriptif. La **fréquence de base** vient d'une classe
+de référence publiée avant l'épisode 1 : le taux de réalisation, sur les questions du même banc et de même
+catégorie résolues avant cette date. Une carte au verdict « non évaluable » (moins de 82 décisions) **n'est pas
+admise**. Le moteur ne produit pas encore le motif `carte hors liste` : c'est une règle de protocole.
+
+**6. Fiche d'étude, horodatée chez un tiers avant l'épisode 1.** Le §11 renvoie aux paramètres par l'empreinte de
+`assets/parametres.json` (ligne de `SHA256SUMS` de la version figée). Valeurs aujourd'hui : `v4_n` 50, `v4_alpha`
+0,05, `v4_puissance` 0,8, `v4_gain_abs` 0,025, `v4_equivalence_delta` 0,025, `v4_autocorrelation_max` 0,3,
+`v4_e_seuil_primaire` 20, `v4_effectif_equivalence` 0 (non fixé), `kappa_min` 0,67, `fnr_max` 0,2,
+`placebo_tirages` 200. La fiche, à remplir avant l'épisode 1, porte :
+
+| Champ | Contenu |
+|---|---|
+| version | version du skill et empreinte de `parametres.json` |
+| banc | banc public de questions, règle de tirage, graine du tirage |
+| horizon | borne de l'horizon de résolution des questions (minimum et maximum, en jours) |
+| strates | strates couvertes (la portée du résultat) |
+| cartes admises | liste et empreinte, avec la table d'accord de chacune |
+| classe de référence | règle et valeurs des fréquences de base |
+| bras | modèle et version, consigne et son empreinte, température, exécutions, agrégation, écrêtage |
+| dossier neutre | gabarit et son empreinte |
+| leurres | consigne de réécriture, rédacteur, juges |
+| arrêt | date limite ; plafond d'effectif |
+| tiers | nom, rôle (ci-dessous), date d'engagement |
+
+**7. Vérifiable par un tiers.** Un historique git personnel peut être réécrit : la fiche, la version du §11 et
+l'empreinte des paramètres se publient dans un dépôt horodaté par un tiers (release, archive web, ou registre de
+préenregistrement), et l'adresse se recopie dans chaque prévision. **Rôle du tiers, décidé ici** : il **exécute** le
+score et le test de leurres, et il **code indépendamment** un tirage de 20 % des états de V4, dont l'accord avec le
+codeur de l'auteur se publie. Un audit seul ne remplace pas ce codage. La confirmation humaine d'un état proposé par
+un modèle reste une règle sans mécanisme dans le moteur : la fiche nomme qui confirme.
+
+**8. Deux points moindres.** L'accord mesuré sur des cas de la base, dont l'issue est connue, peut être
+optimiste : le recodage par le tiers des 20 % d'états de V4 mesure l'accord **en prospectif**, et c'est lui qui se
+lit pour V4. Le recalcul de σ̂ après 20 épisodes est bruité (environ 16 % d'erreur relative, donc environ 30 % sur
+l'effectif) : un **plafond** se déclare dans la fiche, **300 épisodes** par défaut. Si l'effectif recalculé le
+dépasse, l'étude s'arrête au plafond et conclut « non établi ».

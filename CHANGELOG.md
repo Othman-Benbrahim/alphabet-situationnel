@@ -1,9 +1,21 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.21
+> Version : 0.7.22
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.22 — 2026-11-01 · additif, pas configurationnel
+
+Né de la relecture d'une note extérieure qui proposait d'« assumer une causalité configurationnelle » : ce serait
+faux sur le code. **Documentation seule ; aucune probabilité ne change, vérifié par clôture.** Aucun texte retiré.
+
+- **`dynamiques.md`**, près de la loi de composition : (a) l'a priori est une somme en logit sans interaction ;
+  (b) l'homologie retient des états semblables (H1, H1.5 au seuil 0,7 ; H2 et H3 plus larges), et la fréquence
+  observée peut refléter une interaction sans que le moteur la nomme ni la teste ; (c) la QCA reste une
+  proposition, et fournirait des indicateurs, jamais des garanties. Garde : une conjonction de cartes est une
+  co-activation, non une configuration causale.
+- **`base-de-cas.md` §2** : renvoi pour le codeur (plusieurs mots dans un état ne font pas une cause conjointe).
 
 ## 0.7.21 — 2026-11-01 · Simmel, Durkheim, Ramos
 

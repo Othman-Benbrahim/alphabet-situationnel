@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.21
+> Version : 0.7.22
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -211,6 +211,12 @@ rabattent le jour au dernier jour du mois. Une transition irrégulière n'est pa
 la conserver en archive ou la rééchantillonner explicitement avec des observations vérifiables.
 Les cas actifs sans mot nouveau peuvent porter `mots:null` ; une archive n'est contrôlée que comme
 archive lisible, jamais présentée comme « active recevable ».
+
+**Plusieurs mots dans un état ne font pas une cause conjointe (0.7.22).** Une fiche qui code ensemble
+deux cartes, ou un `mecanisme` de `garantie` qui en mobilise deux, décrit une co-activation. Le calcul
+additionne leurs effets dans l'a priori ; seule la fréquence des homologues peut porter la trace d'une
+interaction, sans la nommer. Voir `dynamiques.md`, paragraphe « Additif, pas configurationnel », près de
+la loi de composition.
 
 ---
 

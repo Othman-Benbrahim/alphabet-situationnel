@@ -1,6 +1,6 @@
 # Alphabet situationnel — Dynamiques des cartes (couche 4, a priori)
 
-> Version : 0.7.21
+> Version : 0.7.22
 
 > Ce que chaque structure **tend à produire au pas suivant**, proposé comme hypothèse à partir de sa représentation structurelle.
 > Ces intensités **modulent** une fréquence de base (T2) : elles ne sont pas des probabilités. Valeurs
@@ -257,6 +257,34 @@ contemporaine) ; une transition établit au mieux un ordre de dates, non un ordr
 (« démission effective ») se pose comme **un** événement, estimé sur ses homologues ; le décomposer en deux
 marginales multipliées surestimerait ou sous-estimerait selon le signe de leur corrélation, inconnu sans la
 structure.
+
+**Additif, pas configurationnel (0.7.22).** Le paragraphe précédent nomme la loi ; celui-ci dit ce qu'elle
+interdit de lire. Trois couches, trois réponses.
+
+- **(a) Ce que fait le moteur.** L'a priori est une somme en logit : logit p₀ = logit f + Σ ln λ, sans terme
+  d'interaction. Deux cartes présentes ensemble ajoutent chacune leur ln λ ; leur présence conjointe
+  n'ajoute rien de plus. Aucune carte ne change le poids d'une autre, aucune n'est nécessaire à l'effet
+  d'une autre, et aucune combinaison n'a d'effet que ses parties n'auraient pas.
+- **(b) Ce que retient l'homologie.** Les cas homologues sont choisis sur la ressemblance de l'état
+  (`graphe.md` §3) : H1 exige les mêmes cartes et les mêmes forces, H1.5 un Jaccard pondéré d'au moins 0,7
+  sur toutes les cartes ; H2 ne demande plus que les sources de l'événement, H3 les traduit d'une autre
+  strate. Le moteur retient le plus strict de ces niveaux qui atteint trois cas. Cette ressemblance porte
+  sur des attributs, non sur des relations : les liaisons n'y entrent pas. La fréquence observée chez ces
+  homologues révise l'a priori (P = (n_E + 2 p₀)/(n_A + 2), `graphe.md` §4). Quand les homologues sont
+  nombreux et semblables à l'état entier (H1, H1.5), cette fréquence peut **refléter** une interaction
+  entre cartes, puisqu'elle est comptée sur des états qui les réunissent. Le moteur ne la nomme pas, ne la
+  teste pas, et ne la distingue pas du bruit d'un petit effectif.
+- **(c) Ce que fournirait la QCA.** La consistance et la couverture d'une règle « configuration → issue »
+  (Ragin) restent une proposition en attente de cas réels actifs (`apports-theoriques.md` §16.3), et même
+  alors elles seraient des **indicateurs**, jamais des garanties (`apports-theoriques.md` §15). Rien de configurationnel n'est
+  calculé aujourd'hui.
+
+**Garde.** Une conjonction de cartes n'est pas une configuration causale : c'est une co-activation. Dans
+l'a priori, son effet est additif. Chez les homologues, une fréquence peut porter la trace d'une
+interaction, mais ce n'est pas une configuration établie : rien ne l'a nommée ni testée. Un codeur qui écrit
+« SEUIL **avec** POLARITÉ produit… » décrit une hypothèse de configuration ; il l'écrit dans la `garantie` ou
+au journal des lacunes, et le calcul ne la lit pas. Le mot « configuration » de l'étape 1 du mode CODER
+(`base-de-cas.md` §3) désigne la situation à étudier, non une cause conjointe.
 
 **Une carte est un mécanisme ; une bifurcation n'est pas une carte (0.7.19).** Elster (1998) définit les
 mécanismes comme des « structures causales récurrentes et facilement identifiables dont les conditions

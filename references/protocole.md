@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.31
+> Version : 0.7.33
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -163,6 +163,9 @@ s'appliquent à PABAK = 2·pₒ − 1, sous la condition que chacun des deux tau
 reste sous `fnr_max` ; aucun codeur n'est la référence de l'autre. Un κ indéfini se déclare indéfini
 (`base-de-cas.md` §6, `moteur.py accord`). Tant que l’accord par carte (κ ≥ 0,67) n’est pas vérifié et archivé,
 aucun accord empirique n’est revendiqué. Effectif insuffisant : mode solo, ρ0 inaccessible.
+**Depuis 0.7.32**, le calcul depuis deux fiches d'un même cas n'est plus différé : `moteur.py depouiller --premier A.jsonl
+--second B.jsonl` construit, pour chaque carte, la table 2×2 des décisions des deux codeurs sur chaque état et chaque
+strate déclarée, la lit avec `accord`, et rend la table groupée de l'accord prospectif (`validation.md` §11.10).
 **Répétabilité (0.7.10).** L'accord entre codeurs (reproductibilité) ne dit rien du bruit d'un codeur
 seul : le même codeur, sur les mêmes cas, recode à l'aveugle et dans un ordre tiré, au moins
 `repetabilite_ecart_min_jours` jours plus tard ; `moteur.py accord --repetabilite --ecart-jours N` applique
@@ -668,7 +671,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.31"` |
+| `version` | `"0.7.33"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

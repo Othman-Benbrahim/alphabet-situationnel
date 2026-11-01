@@ -1,9 +1,37 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.31
+> Version : 0.7.33
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.33 — 2026-11-01 · Druckman lu
+
+Daniel Druckman (2001), *Journal of Conflict Resolution* 45(4), lu par reconnaissance de caractères
+(`apports-theoriques.md` §32). **Documentation seule ; aucune probabilité ne change, vérifié par clôture.** Aucun texte
+retiré.
+
+- **Correction** du §26 : les codes des 34 négociations sont consensuels (étudiants, revue par l'auteur, consensus de
+  type Delphi), sans accord indépendant mesuré ; ils ne peuvent servir ni de second codeur ni de faits.
+- **Corpus** : 34 cas tirés par strates, sources nommées ; l'unité d'analyse est le cas, comme dans le skill ; les faits
+  sont dans les *Pew Case Studies*, à obtenir avant toute saisie (feuille de route).
+- **Constats** écrits comme appuis, sans chiffre versé : fréquences par tournant et non par fenêtre ; corpus biaisé
+  vers les cas documentés ; dynamique opposée des négociations sociales aériennes selon le cadre institutionnel.
+
+## 0.7.32 — 2026-11-01 · acquérir le matériau
+
+Audit pratique de DeepSeek V4 sur la 0.7.31 (`apports-theoriques.md` §31, `validation.md` §13). **Aucune probabilité ne
+change, vérifié par clôture.** Aucun texte retiré.
+
+- **`recolter`** : carnet JSONL de faits datés et sourcés (date du fait ≤ disponibilité ≤ consultation), identifiant
+  par empreinte, doublon refusé ; `--jusqu-au` liste les faits disponibles à une date, brouillon de dossier.
+- **Grille des sources** (`fiabilite_source` A–F, `credibilite` 1–6), facultative dans les mots de fiche et de dossier ;
+  si remplie, un ancrage F exige A à C et 1 à 3.
+- **`depouiller`** : κ depuis deux codages des mêmes cas, table par carte et groupée (A4, §11.10).
+- **Test cp1252** étendu aux glyphes d'`accord`.
+- **Règle de résolution** : contenu exigé (définition opérationnelle, sources d'arbitrage, date limite, divergence).
+- **Différé** : rapport Markdown, registre chaîné, rapport d'écarts, table ACH, import CSV, saisie Druckman.
+- 157 autotests.
 
 ## 0.7.31 — 2026-11-01 · attribution dans le moteur
 

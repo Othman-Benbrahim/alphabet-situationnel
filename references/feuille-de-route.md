@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.31
+> Version : 0.7.33
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,9 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.33 (faite) | Druckman lu | le corpus des 34 négociations : cadre d'échantillonnage, unité = le cas ; correction du §26 (codes consensuels, aucun accord mesuré) ; faits à prendre dans les études Pew ; probabilités identiques à la 0.7.9 | — |
+| 0.7.32 (faite) | Acquérir le matériau | `recolter` (carnet de faits, brouillon de dossier) ; grille des sources A–F × 1–6, F exige A–C et 1–3 ; `depouiller` (κ depuis deux codages) ; test cp1252 étendu ; contenu exigé de la règle de résolution ; probabilités identiques à la 0.7.9 | — |
+| Rapport Markdown d'un calcul ; registre des sceaux chaîné ; rapport d'écarts (apparitions non atteignables) ; table ACH depuis le dossier ; import d'un CSV de fréquences (UCDP, MID) au schéma strict ; fichier de saisie des 34 négociations de Druckman, après lecture et double codage | après le premier cas réel | — |
 | 0.7.31 (faite) | Attribution dans le moteur | `attribuer` : Shapley exact par mot et interaction par paire en logit (Mogia, *Agent-Causality*) ; premier constat : la démonstration n'est pas additive (+1,51 en logit) ; probabilités identiques à la 0.7.9 | — |
 | 0.7.30 (faite) | Formulation | `v4_effectif_equivalence` = point de lecture d'une non-supériorité ; erreur contrôlée par énoncé, énoncés publiés ensemble ; fin de la boucle de relecture ; probabilités identiques à la 0.7.9 | — |
 | 0.7.29 (faite) | Deux énoncés | énoncés séparés C (cartes) et A (appareil), table des quatre issues ; non-supériorité unilatérale et énoncé de nuisance (`v4.decision`) ; puissance par énoncé ; ce que la conclusion négative n'exclut pas ; troncature différentielle ; relecture par un méthodologue extérieur avant l'épisode 1 ; probabilités identiques à la 0.7.9 | — |
@@ -349,6 +352,7 @@ Chaque élément attend une condition de données ; le coder avant serait coder 
 | Qualificateur explicite de la conclusion (Toulmin) ; position du cas entre « histoire lâche » et argument formel (Wong 2014) ; cadrage de la question déclaré | quand un critère opérationnel existera | — |
 | Test du relais : p à trois pas contexte figé contre p en faisant bouger la carte relais, sur un cas connu | cas réels à trois états au moins | `pas_max` |
 | Lecture idiographique de huit à dix situations, sans agrégation ; panel d'experts publié avec sa composition | après le premier double codage | — |
+| **Lu en 0.7.33** (`apports-theoriques.md` §32) : codes consensuels, sans accord mesuré ; les faits sont dans les *Pew Case Studies in International Affairs* (1999), à obtenir avant toute saisie ; l'article ne suffit pas | — | — |
 | Corpus de cas candidats pour la strate 7 : les 34 négociations comparées par Druckman (2001, *Journal of Conflict Resolution* 45(4), 519-544 ; sécurité, commerce, politique et environnement), tracées en précipitant, départ et conséquences ; les bases américano-espagnoles (1986) et les FNI (1991) | étape 2 : à recoder sous les règles courantes, avant tout usage ; codes de Walcott et Hopmann (1979) à comparer aux cartes | — |
 | Lectures à faire : Grossetti (2004), *Sociologie de l'imprévisible*, PUF (le livre ; seule une recension a été lue) ; Abbott (1997), « On the concept of turning point » ; Knight (1921) ; Munck (2019) sur les conjonctures critiques | — | — |
 | Lecture faite (0.7.20) : Grossetti (2004), version auteur, chapitres 1, 2 et 4 et début du 3, avec ses articles de 2003, 2006 et 2011 (`apports-theoriques.md` §27) ; restent Abbott (1997), Knight (1921), Munck (2019), et la fin du chapitre 3 de Grossetti (encastrement et découplage) | — | — |

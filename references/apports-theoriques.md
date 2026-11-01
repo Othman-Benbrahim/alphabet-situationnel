@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.31
+> Version : 0.7.33
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1416,3 +1416,55 @@ Multi-Agent Systems », Psionics, 2026 ; lu en entier. Préprint d'ingénierie ;
 
 **Refusé** : la capture d'événements, les adaptateurs et l'étude de l'incident Replit, propres aux pipelines d'agents ;
 le découpage minimal par *delta debugging*, sans objet sur des états de quelques mots.
+
+## 31. Audit pratique de DeepSeek V4 (0.7.32)
+
+**Document.** Audit de la 0.7.31 sur clone, contrôles exécutés. Treize pistes, classées P0 à P3. **Aucune probabilité ne
+change.**
+
+| Piste | Vérification | Décision |
+|---|---|---|
+| P0.1 `recolter` | manquait | versé (carnet, brouillon de dossier) |
+| P0.2 grille A–F × 1–6 | `classe_source` et `independance` existaient, pas la grille | versée, facultative, contrôlée pour F |
+| P0.3 saisie des cas réels, fichier Druckman pré-rempli | impossible sans lire et coder les sources | différé |
+| P1.4 `depouiller` | A4 le disait différé | versé |
+| P1.5 rapport Markdown | utile, non bloquant | différé |
+| P1.6 registre des sceaux chaîné | `partage.jsonl` et sceaux existent, pas de chaînage | différé |
+| P1.7 sceau d'adjudication | la règle est déjà scellée dans le dossier | contenu exigé écrit (`validation.md` §13) |
+| P2.8 provenance des sorties | **déjà présente** (`contexte.empreintes`) | rien |
+| P2.9 test cp1252 de tous les glyphes | correction déjà générale, test limité | test étendu à `accord` |
+| P2.10 rapport d'écarts | `confronter` le contient en partie | différé |
+| P3.11 table ACH | questions discriminantes existantes | différé |
+| P3.12 import de fréquences CSV | méthodologie prête, outil absent | différé |
+| P3.13 pas de web, d'API ni de modèle branché | conforme à la posture | retenu comme règle |
+
+## 32. Druckman (2001) lu : le corpus des 34 négociations (0.7.33)
+
+**Document.** Daniel Druckman, « Turning Points in International Negotiation: A Comparative Analysis », *Journal of
+Conflict Resolution* 45(4), 2001, p. 519-544 ; numérisation sans couche texte, lue par reconnaissance de caractères.
+**Aucune probabilité ne change.**
+
+**Ce que l'article contient.** 34 cas : 13 de sécurité, 11 politiques (environnement compris), 10 commerciaux ; 30 tirés
+des *Pew Case Studies in International Affairs* (1999) par un tirage stratifié par région et par type, **avec
+remplacement** quand un cas manquait de détail chronologique ; 2 des *Foreign Relations of the United States* (1942,
+1946) ; 2 d'études antérieures de l'auteur. Environ 110 tournants codés en trois temps (précipitant procédural,
+substantiel ou extérieur ; départ abrupt ou non ; conséquence escalatoire ou désescalatoire). **L'unité d'analyse est
+le cas, non le tournant**, parce que les tournants d'un même cas ne sont pas indépendants : c'est la règle du skill
+(`graphe.md` §3.1, un cas pèse au plus une observation).
+
+**Correction du §26 (0.7.19).** Le tableau du §26 attribuait aux codes de ce corpus une « fidélité inter-codeurs
+acceptable ». L'article ne le dit pas. Les 34 cas internationaux ont été codés par des étudiants (deux cas chacun),
+revus par l'auteur et son assistant, qui ont confirmé ou réduit les séquences, puis fixés **par consensus** (à la façon
+d'un panel Delphi). Aucune mesure d'accord indépendant n'est publiée. Seuls les 11 cas de négociations sociales du
+transport aérien, en fin d'article, ont été codés par deux analystes indépendants, sans statistique rapportée. Les codes
+de Druckman ne peuvent donc servir ni de second codeur (B3) ni de faits : ce sont des lectures consensuelles.
+
+**Ce qui se transpose, et à quelle condition.**
+
+| Point | Lecture | Versé |
+|---|---|---|
+| Cadre d'échantillonnage : 34 cas, trois types, sources nommées | une liste tirée selon une règle publiée avant codage, au sens du §11.8 ; mais **les faits sont dans les études Pew**, non dans l'article, qui ne donne que six cas en annexe, sans dates ni sources assez détaillées | feuille de route : obtenir les études Pew avant toute saisie |
+| Sécurité : 12 cas sur 13 à précipitant surtout extérieur ; commerce et politique, surtout intérieur (χ² = 15,36, ddl 2, C = 0,67) | converge avec SEUIL@7 et la propagation depuis une autre strate ; un constat sur 34 cas, non une fréquence par fenêtre | écrit ici |
+| 75 % des conséquences sont désescalatoires ; une escalade est suivie d'une désescalade dans 20 séquences sur 25 (17 cas) | fréquences **par tournant**, non par fenêtre de 3 mois : unités incompatibles avec `calculer` (`frequences-externes.md`) ; corpus biaisé vers les négociations documentées, souvent conclues (médiation : 6 accords sur 9) | référence d'appui seulement, aucun chiffre versé |
+| Négociations sociales aériennes : escalades répétées avant accord, que l'auteur attribue au cadre légal américain | même forme de tournant, dynamique opposée selon le cadre institutionnel : un argument pour des fréquences par strate et pour l'abaissement entre strates | écrit ici |
+| L'auteur lui-même : la population des cas ne se définit que par les cas documentés, et l'on manque les cas non documentés ou classifiés (le « tiroir », Rosenthal 1984) | c'est le biais de troncature déclaré au §10 de `validation.md` | écrit ici |

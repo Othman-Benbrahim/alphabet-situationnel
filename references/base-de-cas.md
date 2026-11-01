@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.31
+> Version : 0.7.33
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -217,6 +217,16 @@ deux cartes, ou un `mecanisme` de `garantie` qui en mobilise deux, décrit une c
 additionne leurs effets dans l'a priori ; seule la fréquence des homologues peut porter la trace d'une
 interaction, sans la nommer. Voir `dynamiques.md`, paragraphe « Additif, pas configurationnel », près de
 la loi de composition.
+
+**Carnet de faits et grille des sources (0.7.32).** Avant tout codage, `recolter` ajoute au carnet (JSONL) un fait
+observé : texte, source, adresse, date du fait, date de disponibilité, date de consultation, `classe_source`, et,
+facultatifs, l'indépendance et la **grille à deux axes** du renseignement (code de l'Amirauté, STANAG 2511) :
+`fiabilite_source` de A (sûre) à E (peu sûre), F (non évaluable), et `credibilite` de 1 (confirmée par d'autres
+sources) à 5 (improbable), 6 (non évaluable). Le carnet ne code rien : ni carte, ni strate, ni force. `recolter
+--jusqu-au` liste les faits disponibles à une date d'information, brouillon d'un dossier qui ne peut citer que ce qui
+était connu. Les deux champs de la grille sont admis dans un mot de fiche ou de dossier ; s'ils sont remplis, **un
+ancrage F exige une source A à C et une information 1 à 3** (`valider`, `dossier`). Ils n'ont aucun effet sur le
+calcul. Ils précisent, sans la remplacer, la règle de `corroboration`.
 
 ---
 

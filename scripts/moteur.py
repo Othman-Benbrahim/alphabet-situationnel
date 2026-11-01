@@ -383,6 +383,24 @@ def controle_classe_source(k, item, requis):
     return [] if v in CLASSES_SOURCE else [f'{k} : classe_source = {", ".join(CLASSES_SOURCE)}']
 
 
+FIABILITES = ('A','B','C','D','E','F')
+
+
+def controle_grille(k, item):
+    """0.7.32 (audit DeepSeek, P0.2). Grille à deux axes du renseignement (code de l'Amirauté, repris par
+    l'OTAN, STANAG 2511) : fiabilité de la source, A (sûre) à E (peu sûre), F (non évaluable) ; crédibilité de
+    l'information, 1 (confirmée par d'autres sources) à 5 (improbable), 6 (non évaluable). Facultative ; si elle
+    est remplie, un ancrage F exige une source A à C **et** une information 1 à 3 : une source douteuse ou une
+    information non recoupée n'ancre pas fort. Aucun effet sur le calcul."""
+    fs,cr=item.get('fiabilite_source'),item.get('credibilite')
+    err=[]
+    if fs is not None and fs not in FIABILITES:err.append(f'{k} : fiabilite_source = A à F')
+    if cr is not None and (type(cr) is not int or not 1<=cr<=6):err.append(f'{k} : credibilite = entier de 1 à 6')
+    if not err and item.get('intensite')=='F' and ((fs is not None and fs not in 'ABC') or (cr is not None and cr>3)):
+        err.append(f'{k} : ancrage F refusé, source {fs or "?"}{cr or "?"} (F exige une source A à C et une information 1 à 3)')
+    return err
+
+
 CRITERES_INDEPENDANCE = ('origine', 'producteur', 'transmission')
 
 
@@ -1080,7 +1098,7 @@ def valider_base(base, registre=None):
                 for field in ('fait','source','contre_observation','objet'):
                     texte_requis(item.get(field), f'{cid}.{k}.{field}')
                 pr=None if prev is None or k not in forces(prev) else (forces(prev)[k], origine_f.get(k))
-                errs=controle_a7(k,item,pr)+controle_source(k,item)+controle_classe_source(k,item,not c['fictif'] and c.get('statut_donnees')=='actif')
+                errs=controle_a7(k,item,pr)+controle_source(k,item)+controle_classe_source(k,item,not c['fictif'] and c.get('statut_donnees')=='actif')+controle_grille(k,item)
                 exiger(not errs, f'{cid} : '+' ; '.join(errs))
                 if fm[k]=='F':
                     # A6 : F qualifie la lecture (fait précis, voisines tranchées), pas la bibliographie (A3).
@@ -1361,6 +1379,7 @@ def dossier_valider(d):
             errs+=controle_corroboration(k,item,True)+controle_passage(k,item,'F',True)
         if isinstance(item,dict):
             errs+=controle_classe_source(cle_valide(f"{item.get('carte')}@{item.get('strate')}"),item,True)
+            errs+=controle_grille(cle_valide(f"{item.get('carte')}@{item.get('strate')}"),item)
     exiger(not errs,'dossier refusé — '+' ; '.join(errs))
     errs,manques=controle_recherches(d.get('recherches'),set(fm),keys)
     exiger(not errs,'dossier refusé — '+' ; '.join(errs))
@@ -1880,6 +1899,57 @@ def graine_placebo(etat,typ,cible,asof):
     """0.7.4 (décision 3). Graine dérivée de la question (état, événement, date d'information), non
     choisie : on ne peut pas essayer des graines jusqu'à obtenir le placebo qui arrange."""
     return int(hashlib.sha256(f'{texte(etat)}|{cible} {typ}|{asof}'.encode()).hexdigest()[:12],16)
+
+
+def depouiller(premier,second):
+    """0.7.32 (audit DeepSeek, P1.4 ; A4 : « le calcul depuis deux fiches d'un même cas reste différé »). Deux
+    codages indépendants des mêmes cas (fichiers JSONL, mêmes id, mêmes dates d'états) donnent, pour chaque carte,
+    la table 2×2 de leurs décisions sur chaque état et chaque strate déclarée par l'un ou l'autre ; `accord` la
+    lit. Rend aussi la table **groupée** (toutes cartes), celle de l'accord prospectif (validation.md §11.10).
+    Les décisions d'un même état ne sont pas indépendantes : intervalles optimistes."""
+    A={c['id']:c for c in premier};B={c['id']:c for c in second}
+    exiger(A and set(A)==set(B),'depouiller : les deux fichiers doivent porter les mêmes cas (mêmes id)')
+    tab={c:[0,0,0,0] for c in NOMS};etats=0
+    for i in sorted(A):
+        ea={x['date']:x for x in A[i]['sequence']+[A[i]['issue']]};eb={x['date']:x for x in B[i]['sequence']+[B[i]['issue']]}
+        exiger(set(ea)==set(eb),f'depouiller : {i}, dates d’états différentes entre les deux codages')
+        strates=sorted(set(A[i].get('strates') or [])|set(B[i].get('strates') or []))
+        exiger(strates,f'depouiller : {i}, aucune strate déclarée')
+        for d in sorted(ea):
+            ka={cle(m) for m in lire_etat(ea[d]['etat'])['mots']};kb={cle(m) for m in lire_etat(eb[d]['etat'])['mots']};etats+=1
+            for c in NOMS:
+                for s in strates:
+                    k=f'{c}@{s}';x,y=k in ka,k in kb
+                    tab[c][0 if x and y else 1 if x else 2 if y else 3]+=1
+    par={c:accord(*v) for c,v in tab.items() if v[0]+v[1]+v[2]>0}
+    g=[sum(v[j] for v in tab.values()) for j in range(4)]
+    return {'cas':len(A),'etats':etats,'par_carte':par,'groupe':accord(*g),
+            'cartes_sans_ancrage':sorted(c for c,v in tab.items() if v[0]+v[1]+v[2]==0),
+            'lecture':'table par carte : a les deux ancrent, b le premier seul, c le second seul, d aucun ; '
+                      'décisions d’un même état non indépendantes, intervalles optimistes (§11.10 : bootstrap par états)'}
+
+
+def recolter_ligne(fait,source,source_url,date_fait,disponible_le,date_consultation,classe_source,fiabilite=None,credibilite=None,
+                   critere=None,motif=None):
+    """0.7.32 (audit DeepSeek, P0.1). Une ligne de carnet : un fait observé, daté, sourcé, avant tout codage. Le
+    carnet ne code rien (ni carte, ni strate, ni force) : il garde le matériau brut et la date à laquelle il était
+    disponible, pour qu'un dossier ne puisse citer que ce qui était connu à sa date d'information."""
+    texte_requis(fait,'fait');texte_requis(source,'source')
+    exiger(re.match(r'https?://\S+',source_url or '') is not None,'source_url : adresse http(s) requise')
+    for v,n in ((date_fait,'date'),(disponible_le,'disponible_le'),(date_consultation,'date_consultation')):date_iso(v)
+    exiger(jour(date_fait)<=jour(disponible_le)<=jour(date_consultation),'dates : fait ≤ disponible_le ≤ date_consultation')
+    exiger(classe_source in CLASSES_SOURCE,f'classe_source = {", ".join(CLASSES_SOURCE)}')
+    x={'fait':fait.strip(),'source':source.strip(),'source_url':source_url,'date':date_fait,'disponible_le':disponible_le,
+       'date_consultation':date_consultation,'classe_source':classe_source}
+    if fiabilite is not None:x['fiabilite_source']=fiabilite
+    if credibilite is not None:x['credibilite']=credibilite
+    err=controle_grille('carnet',x);exiger(not err,'; '.join(err))
+    if critere or motif:
+        exiger(critere in ('origine','producteur','transmission') and isinstance(motif,str) and motif.strip(),
+               'independance : critere = origine, producteur ou transmission, avec un motif')
+        x['independance']={'critere':critere,'motif':motif.strip()}
+    x['id']='F-'+hashlib.sha256(f"{x['fait']}|{x['source_url']}|{x['date']}".encode()).hexdigest()[:12]
+    return x
 
 
 def attribuer(etat,typ,cible,base,refs=None,asof=None,n_max=8):
@@ -3098,7 +3168,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3335,7 +3405,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.31','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.33','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3661,6 +3731,11 @@ def main():
     sc.add_argument('--p',type=float,required=True);sc.add_argument('--aveugle',action='store_true')
     sc.add_argument('--vu',action='append',default=[]);sc.add_argument('--contexte',choices=CONTEXTES_COMPARATEUR,required=True)
     ex=subs.add_parser('export-codeur');ex.add_argument('--base',required=True);ex.add_argument('--cas',required=True)
+    dp=subs.add_parser('depouiller');dp.add_argument('--premier',required=True);dp.add_argument('--second',required=True);dp.add_argument('--json',action='store_true')
+    rc=subs.add_parser('recolter');rc.add_argument('--carnet',required=True);rc.add_argument('--fait');rc.add_argument('--source');rc.add_argument('--source-url')
+    rc.add_argument('--date');rc.add_argument('--disponible-le');rc.add_argument('--date-consultation');rc.add_argument('--classe-source')
+    rc.add_argument('--fiabilite',choices=FIABILITES);rc.add_argument('--credibilite',type=int);rc.add_argument('--independance-critere');rc.add_argument('--independance-motif')
+    rc.add_argument('--jusqu-au',help='lister les faits disponibles à cette date (brouillon de dossier)')
     ac=subs.add_parser('accord');[ac.add_argument(k,type=int,required=True) for k in ('--a','--b','--c','--d')];ac.add_argument('--json',action='store_true')
     ac.add_argument('--repetabilite',action='store_true');ac.add_argument('--ecart-jours',type=int);ac.add_argument('--llm',action='store_true')
     cv=subs.add_parser('conservativite');cv.add_argument('--base',required=True);cv.add_argument('--sortie');cv.add_argument('--contre');cv.add_argument('--empreinte')
@@ -3807,6 +3882,27 @@ def main():
             print('empreinte attendue : '+('identique' if ok_ else 'DIFFÉRENTE'))
             if not ok_:raise SystemExit(1)
         return
+    if a.cmd=='depouiller':
+        r=depouiller(charger(a.premier),charger(a.second))
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        g=r['groupe'];print(f"Dépouillement · {r['cas']} cas · {r['etats']} états · groupé : PABAK {g['pabak']:.3f} "
+              f"[{g['pabak_intervalle_95_approche'][0]:.3f} ; {g['pabak_intervalle_95_approche'][1]:.3f}] · verdict {g['verdict']}")
+        for c,v in sorted(r['par_carte'].items()):print(f"  {NOMS[c]} : a={v['table']['a']} b={v['table']['b']} c={v['table']['c']} · PABAK {v['pabak']:.3f} · {v['verdict']}")
+        if r['cartes_sans_ancrage']:print('  sans ancrage chez aucun codeur : '+', '.join(r['cartes_sans_ancrage']))
+        print('! '+r['lecture']);return
+    if a.cmd=='recolter':
+        chemin=Path(a.carnet)
+        if a.jusqu_au:
+            date_iso(a.jusqu_au);faits=[x for x in (charger(chemin) if chemin.exists() else []) if jour(x['disponible_le'])<=jour(a.jusqu_au)]
+            print(json.dumps({'date_information':a.jusqu_au,'faits':faits,
+                'lecture':'brouillon : faits disponibles à la date ; carte, strate, force, objet et passage restent à coder dans le dossier'},
+                ensure_ascii=False,indent=2));return
+        x=recolter_ligne(a.fait,a.source,a.source_url,a.date,a.disponible_le,a.date_consultation,a.classe_source,a.fiabilite,a.credibilite,
+                         a.independance_critere,a.independance_motif)
+        anciens=charger(chemin) if chemin.exists() else []
+        exiger(all(y.get('id')!=x['id'] for y in anciens),f"recolter : fait déjà au carnet ({x['id']})")
+        with open(chemin,'a',encoding='utf-8',newline='\n') as f_:f_.write(json.dumps(x,ensure_ascii=False,sort_keys=True)+'\n')
+        print(f"carnet {chemin.name} : {x['id']} ajouté · {len(anciens)+1} fait(s)");return
     if a.cmd=='accord':
         r=accord(a.a,a.b,a.c,a.d,a.repetabilite,a.ecart_jours,a.llm)
         if a.llm and not a.json:print('répétabilité d’un modèle : deux exécutions en contextes séparés (fiabilité, pas validité)')
@@ -4380,6 +4476,9 @@ def autotest():
             r=subprocess.run([sys.executable,__file__,'calculer','--etat','[2026-09 | 3 mois] POLARITÉ@7[F]','--evenement','SEUIL@7 apparait','--temporalite','generique'],
                              capture_output=True,stdin=subprocess.DEVNULL,env=env)
             self.assertEqual(r.returncode,0);self.assertIn('⚠ ρ4',r.stdout.decode('utf-8'))
+            # 0.7.32 (audit DeepSeek, P2.9) : les glyphes de `accord` (κ, π, α, ₒ, ·) passent aussi.
+            r=subprocess.run([sys.executable,__file__,'accord','--a','90','--b','5','--c','5','--d','20'],capture_output=True,stdin=subprocess.DEVNULL,env=env)
+            self.assertEqual(r.returncode,0);self.assertIn('κ',r.stdout.decode('utf-8'))
         def test_sortie_doree(self):
             # Sortie humaine de l'exemple 1 : ouverture constitutionnelle, ligne S5, marquage « large ».
             e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
@@ -5218,6 +5317,24 @@ def autotest():
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
+        def test_depouiller_recolter_grille(self):
+            # 0.7.32 : deux codages des mêmes cas → tables par carte et groupée ; carnet ; grille A–F × 1–6.
+            c1={'id':'X','strates':[7],'sequence':[{'date':'2026-01-01','etat':'[2026-01-01 | 3 mois] POLARITÉ@7[F]'}],
+                'issue':{'date':'2026-04-01','etat':'[2026-04-01 | 3 mois] POLARITÉ@7[F] + SEUIL@7[f]'}}
+            c2=json.loads(json.dumps(c1));c2['issue']['etat']='[2026-04-01 | 3 mois] POLARITÉ@7[F]'
+            r=depouiller([c1],[c2]);self.assertEqual(r['etats'],2)
+            self.assertEqual(r['par_carte']['POL']['table'],{'a':2,'b':0,'c':0,'d':0})
+            self.assertEqual(r['par_carte']['SEU']['table'],{'a':0,'b':1,'c':0,'d':1})
+            self.assertEqual(r['groupe']['n'],2*len(NOMS))
+            with self.assertRaises(ValueError):depouiller([c1],[dict(c2,id='Y')])
+            x=recolter_ligne('A annonce des représailles.','communiqué de A','https://exemple.invalid/a','2026-09-03','2026-09-03','2026-09-15','contemporain','B',2)
+            self.assertTrue(x['id'].startswith('F-'));self.assertEqual(x,recolter_ligne('A annonce des représailles.','communiqué de A','https://exemple.invalid/a','2026-09-03','2026-09-03','2026-09-15','contemporain','B',2))
+            with self.assertRaises(ValueError):recolter_ligne('f','s','https://e.invalid','2026-09-05','2026-09-03','2026-09-15','contemporain')   # disponible avant le fait
+            self.assertEqual(controle_grille('k',{'intensite':'F','fiabilite_source':'B','credibilite':2}),[])
+            self.assertTrue(controle_grille('k',{'intensite':'F','fiabilite_source':'E'}))
+            self.assertTrue(controle_grille('k',{'intensite':'F','credibilite':4}))
+            self.assertEqual(controle_grille('k',{'intensite':'f','fiabilite_source':'E','credibilite':5}),[])
+            self.assertTrue(controle_grille('k',{'credibilite':7}))
         def test_attribuer(self):
             # 0.7.31 : Shapley exact (efficacité : la somme vaut p complet − p vide), interactions par paire.
             base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')

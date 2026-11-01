@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.31
+> Version : 0.7.33
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1301,3 +1301,39 @@ valeur de Shapley élevée n'est pas un apport prédictif : celui-ci ne se mesur
 l'article (une entrée suffit ; l'une ou l'autre ; les deux ensemble ; l'une change la lecture de l'autre) se lisent ici
 comme des formes du **calcul**. Limites : sans liaisons ni positions (refusées) ; un pas ; temporalité générique ;
 au-delà de 8 mots, refus plutôt qu'approximation par échantillonnage.
+
+---
+
+## 13. Audit pratique : acquérir le matériau (0.7.32)
+
+**Source.** Audit du dépôt par DeepSeek V4, sur un clone de la 0.7.31 (commit `876d3ee`), avec exécution des contrôles
+et des commandes. Son constat rejoint `bilan` : l'instrumentation est achevée, la calibration n'a pas commencé, et le
+goulot n'est plus la méthode mais **l'acquisition** du matériau (dossiers, cas réels). Vérifié ici contre le code.
+
+**Versé.**
+- `recolter` : carnet de faits datés et sourcés, avant tout codage ; `--jusqu-au` en tire le brouillon d'un dossier
+  (`base-de-cas.md` §2).
+- Grille à deux axes des sources (A à F, 1 à 6) : facultative, contrôlée, et un ancrage F l'exige bonne (même endroit).
+- `depouiller` : le κ depuis deux codages des mêmes cas, par carte et groupé (A4). C'est la pièce qui manquait à
+  l'étude d'accord, condition de l'épisode 1 (§11.8).
+- Le test de sortie Windows (cp1252) couvre aussi les glyphes d'`accord` (κ, π, α, ₒ). La correction de 0.7.1 était
+  déjà indépendante du glyphe (`backslashreplace`) ; le test le prouve maintenant.
+
+**Déjà présent, contrairement à ce que l'audit suggère.**
+- **Provenance de chaque sortie** : tout JSON de `calculer` porte `contexte.empreintes` (moteur, paramètres, base) et
+  la version.
+- **Sceau d'adjudication** : la règle de résolution est déjà dans le dossier scellé (`evenements[].resolution`,
+  texte requis), publié avant `calculer --dossier`, et la prévision journalisée est scellée avec tous ses champs
+  (`sceller`). Ce qui manquait est le **contenu exigé** de cette règle : une définition opérationnelle de l'événement,
+  la ou les sources d'arbitrage, la date limite d'arbitrage, et ce qui se passe si les sources divergent (question
+  annulée, comptée et publiée comme telle). Exigé par écrit depuis 0.7.32 ; le moteur contrôle la présence du texte,
+  non son contenu.
+
+**Différé, avec la raison.**
+- **Saisie des 34 négociations de Druckman** pour la strate 7 : il faut lire l'article de 2001 et coder chaque cas à
+  deux ; aucun fichier pré-rempli ne se fabrique sans source lue (aucun fait inventé).
+- **Rapport Markdown exportable, registre des sceaux chaîné, rapport d'écarts, table ACH, import d'un CSV de
+  fréquences** : utiles, mais aucun ne débloque l'étude d'accord ni le premier cas. Feuille de route.
+
+**Retenu comme règle.** Pas d'interface web, pas d'API, pas de modèle de langage branché sur le moteur : chacun
+ouvrirait une surface d'attaque et affaiblirait la discipline hors ligne de l'outil.

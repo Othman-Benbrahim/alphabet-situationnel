@@ -1,6 +1,6 @@
 # Alphabet situationnel — Dynamiques des cartes (couche 4, a priori)
 
-> Version : 0.7.30
+> Version : 0.7.31
 
 > Ce que chaque structure **tend à produire au pas suivant**, proposé comme hypothèse à partir de sa représentation structurelle.
 > Ces intensités **modulent** une fréquence de base (T2) : elles ne sont pas des probabilités. Valeurs
@@ -285,6 +285,10 @@ interaction, mais ce n'est pas une configuration établie : rien ne l'a nommée 
 « SEUIL **avec** POLARITÉ produit… » décrit une hypothèse de configuration ; il l'écrit dans la `garantie` ou
 au journal des lacunes, et le calcul ne la lit pas. Le mot « configuration » de l'étape 1 du mode CODER
 (`base-de-cas.md` §3) désigne la situation à étudier, non une cause conjointe.
+
+**Mesurer la non-additivité (0.7.31).** `attribuer` rend, pour un état donné, l'interaction de chaque paire de mots
+en logit (`validation.md` §12). Sur la démonstration, POLARITÉ@7 × CONTRAINTE@6 vaut +1,51 : le choix des homologues y
+rend le calcul non additif. C'est une propriété du calcul sur cette base, non une configuration causale établie.
 
 **Une carte est un mécanisme ; une bifurcation n'est pas une carte (0.7.19).** Elster (1998) définit les
 mécanismes comme des « structures causales récurrentes et facilement identifiables dont les conditions

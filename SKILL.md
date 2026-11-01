@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.30'
+  version: '0.7.31'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.30. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.31. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -85,6 +85,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… sceller-comparateur --question "…" --evenement "…" --p 0.34 --date AAAA-MM-JJ --methode "…" --source https://… --contexte separe [--aveugle] [--vu question …]` | scellé du **comparateur externe aveugle**, à produire **avant** le moteur, hors de la session de lecture ; à recopier dans `comparateur_externe` (`validation.md` §1) |
 | `… accord --a A --b B --c C --d D [--json]` | accord de deux codeurs sur une carte : κ (indéfini si pₑ = 1), PABAK, accords spécifiques, deux taux de manque, verdict (`base-de-cas.md` §6) |
 | `… accord … --repetabilite --ecart-jours N` | répétabilité : le même codeur, deux passes aveugles sur les mêmes cas ; non recevable sous `repetabilite_ecart_min_jours` ; publiée à part de κ |
+| `… attribuer --etat "…" --evenement "SEUIL@7 apparait" --temporalite generique` | attribution **dans le moteur** : Shapley exact par mot et interaction par paire (en logit), sur les 2ⁿ sous-ensembles de l'état ; explique le calcul, pas l'événement (`validation.md` §12) |
 | `… accord … --llm` | répétabilité d'un modèle : deux exécutions en contextes séparés (ou une paraphrase, publiée à part) ; fiabilité, pas validité (`validation.md` §11) |
 | `… rejets --dossier D [--audit A.json]` | feuille de relecture aveugle des rejets d'un dossier (tirage fixé par le sceau), ou contrôle de l'audit rempli (`validation.md` §6) |
 | `… valider-references R.json` | forme des références externes, refus du gabarit et de la classe tautologique (`frequences-externes.md`) |

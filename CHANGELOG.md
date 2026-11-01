@@ -1,9 +1,21 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.30
+> Version : 0.7.31
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.31 — 2026-11-01 · attribution dans le moteur
+
+*Agent-Causality* (Mogia, 2026) trié (`apports-theoriques.md` §30). **Aucune probabilité ne change, vérifié par clôture.**
+Aucun texte retiré.
+
+- **`attribuer`** : p recalculé sur tous les sous-ensembles des mots de l'état (n ≤ 8) ; valeur de Shapley exacte par
+  mot, en points (somme = p complet − p sans mots) ; indice d'interaction par paire en logit, où l'a priori est additif.
+  Explique le calcul, pas l'événement (`validation.md` §12).
+- **Premier constat** : sur la démonstration, POLARITÉ@7 × CONTRAINTE@6 vaut +1,51 en logit ; le choix des homologues
+  rend le calcul non additif (`dynamiques.md`).
+- 156 autotests.
 
 ## 0.7.30 — 2026-11-01 · formulation
 

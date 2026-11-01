@@ -1882,6 +1882,49 @@ def graine_placebo(etat,typ,cible,asof):
     return int(hashlib.sha256(f'{texte(etat)}|{cible} {typ}|{asof}'.encode()).hexdigest()[:12],16)
 
 
+def attribuer(etat,typ,cible,base,refs=None,asof=None,n_max=8):
+    """0.7.31 (validation.md §12 ; Mogia, *Agent-Causality*). Attribution **dans le moteur** : le moteur est un
+    évaluateur déterministe ; on recalcule p sur tous les sous-ensembles des mots de l'état (la cible reste pour
+    persiste et disparait), puis on rend la valeur de Shapley exacte de chaque mot (en points de probabilité) et
+    l'indice d'interaction de chaque paire (Grabisch 1997), en logit : l'a priori est additif en logit, un indice
+    non nul y signale une interaction introduite par le choix des homologues. Ces nombres expliquent le **calcul**,
+    jamais l'événement. Sans liaisons ni positions (refusées) ; au plus n_max mots, soit 2^n calculs."""
+    from itertools import combinations
+    asof=asof or etat['date'];cible=cle_valide(cible)
+    joueurs=sorted(cle(x) for x in etat['mots'] if not (typ!='apparait' and cle(x)==cible))
+    n=len(joueurs);exiger(1<=n<=n_max,f'attribuer : 1 à {n_max} mots attribuables (hors cible), reçu {n}')
+    garde=[x for x in etat['mots'] if typ!='apparait' and cle(x)==cible]
+    lg=lambda q:math.log(min(max(q,1e-12),1-1e-12)/(1-min(max(q,1e-12),1-1e-12)))
+    v={}
+    for k in range(n+1):
+        for S in combinations(joueurs,k):
+            e=dict(etat,mots=garde+[x for x in etat['mots'] if cle(x) in S])
+            if not e['mots']:v[S]=calculer(etat,typ,cible,base,refs=refs,asof=asof,sans_cartes=True)['p']
+            else:v[S]=calculer(e,typ,cible,base,refs=refs,asof=asof)['p']
+    f_=math.factorial
+    def val(S):return v[tuple(sorted(S))]
+    shap={}
+    for i in joueurs:
+        autres=[j for j in joueurs if j!=i];s=0.
+        for k in range(n):
+            for S in combinations(autres,k):s+=f_(k)*f_(n-k-1)/f_(n)*(val(S+(i,))-val(S))
+        shap[i]=s
+    inter=[]
+    for i,j in combinations(joueurs,2):
+        autres=[x for x in joueurs if x not in (i,j)];s=0.
+        for k in range(n-1):
+            for S in combinations(autres,k):
+                s+=f_(k)*f_(n-k-2)/f_(n-1)*(lg(val(S+(i,j)))-lg(val(S+(i,)))-lg(val(S+(j,)))+lg(val(S)))
+        forme=('additive' if abs(s)<1e-9 else 'conjointe (renforcement)' if s>0 else 'concurrente (redondance)')
+        inter.append({'paire':[i,j],'interaction_logit':s,'forme':forme})
+    inter.sort(key=lambda x:-abs(x['interaction_logit']))
+    return {'evenement':cible+' '+typ,'joueurs':joueurs,'calculs':len(v),'p_complet':val(tuple(joueurs)),'p_vide':val(()),
+            'shapley_points':shap,'somme_shapley':sum(shap.values()),'interactions':inter,
+            'non_additif':any(abs(x['interaction_logit'])>=1e-9 for x in inter),
+            'lecture':'explique le calcul, pas l’événement : ce que chaque mot pèse dans p sous ce moteur et cette base ; '
+                      'une interaction non nulle vient du choix des homologues, l’a priori étant additif en logit'}
+
+
 def placebo_homologie(base,typ,cible,etat,asof,c_A,p0,graine,p_reel=None):
     """0.7.4 (décision 3). Placebo d'homologie : autant de cas distincts que la classe retenue, tirés au
     hasard dans la même strate et la même fenêtre (sans regarder les cartes), sous le même a priori p0 et
@@ -3055,7 +3098,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3292,7 +3335,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.30','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.31','version du moteur et des paramètres différente')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
     for k in ('f_defaut','plafond_p0','w_emprunt','jaccard_H15','seuil_affichage','intervalle','double_codage_part','kappa_min','v4_gain_abs','v4_alpha','v4_puissance','delta_discriminant','fnr_max','alerte_R2','ecart_niveaux_max','kappa_rapportable','ratio_duree_fenetre','attenuation_w_f'):
         proba(P[k],k)
@@ -3628,7 +3671,7 @@ def main():
     ds=subs.add_parser('dossier');ds.add_argument('--fichier',required=True);ds.add_argument('--json',action='store_true')
     q=subs.add_parser('equivalences');q.add_argument('--carte',required=True);q.add_argument('--json',action='store_true')
     b=subs.add_parser('bilan');b.add_argument('--base');b.add_argument('--references');b.add_argument('--journal')
-    for name in ('calculer','trajectoires','sonde','noyau'):
+    for name in ('calculer','trajectoires','sonde','noyau','attribuer'):
         c=subs.add_parser(name);c.add_argument('--base');c.add_argument('--etat',required=True)
         c.add_argument('--date-information');c.add_argument('--liaison',action='append',default=[])
         c.add_argument('--bouge',action='append',default=[]);c.add_argument('--manque',action='append',default=[])
@@ -3639,7 +3682,7 @@ def main():
         c.add_argument('--json',action='store_true');c.add_argument('--demo',action='store_true')
         c.add_argument('--sans-cartes',action='store_true')
         c.add_argument('--temporalite',choices=TEMPORALITES,default=None)
-        if name in ('calculer','sonde'):c.add_argument('--evenement',required=True)
+        if name in ('calculer','sonde','attribuer'):c.add_argument('--evenement',required=True)
         if name=='noyau':c.add_argument('--evenement',action='append',required=True);c.add_argument('--exclusion',action='append',default=[])
         if name=='calculer':c.add_argument('--dossier')
         if name=='sonde':c.add_argument('--tirage',choices=('aretes','intensites','inerties'),default='aretes');c.add_argument('--tirages',type=int)
@@ -3851,6 +3894,18 @@ def main():
         print(r['lecture']+f" ; révision par les cas : {r['apport_cas']*100:+.1f} points".replace('.',','))
         print('! Base fictive : la sonde décrit la mécanique du calcul, pas la valeur de la matrice. Un seul événement, un seul état.' if a.demo else
               '! Un seul événement, un seul état : répéter sur plusieurs cibles avant toute conclusion sur la matrice.')
+        return
+    if a.cmd=='attribuer':
+        exiger(a.pas==1 and not (links or bouge or manque) and not a.sans_cartes,'attribuer : un pas, sans liaisons, positions ni --sans-cartes')
+        exiger(a.temporalite=='generique','attribuer : --temporalite generique')
+        cible,typ=evenement_lire(a.evenement)
+        exiger(typ in ('apparait','persiste','disparait'),'attribuer : événement simple seulement')
+        r=attribuer(etat,typ,cible,active,refs,asof);r['contexte']=metadata(base,asof,a.demo)
+        if a.json:print(json.dumps(r,ensure_ascii=False,indent=2));return
+        print(f"Attribution dans le moteur · {r['evenement']} · {r['calculs']} calculs · p complet {pct(r['p_complet'])} · sans ces mots {pct(r['p_vide'])}")
+        for k_,s_ in sorted(r['shapley_points'].items(),key=lambda x:-abs(x[1])):print(f"  {k_} : {s_*100:+.2f} points (Shapley)".replace('.',','))
+        for x in r['interactions'][:10]:print(f"  {x['paire'][0]} × {x['paire'][1]} : interaction {x['interaction_logit']:+.3f} en logit · {x['forme']}".replace('.',','))
+        print('! '+r['lecture'])
         return
     if a.cmd=='noyau':
         exiger(a.pas==1,'noyau : un pas (frontière jointe d’un pas ; plusieurs pas : version ultérieure)')
@@ -5163,6 +5218,17 @@ def autotest():
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
+        def test_attribuer(self):
+            # 0.7.31 : Shapley exact (efficacité : la somme vaut p complet − p vide), interactions par paire.
+            base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            r=attribuer(e,'apparait','SEU@7',base,asof='2026-09-20')
+            self.assertEqual(r['calculs'],4);self.assertAlmostEqual(r['somme_shapley'],r['p_complet']-r['p_vide'],places=12)
+            self.assertAlmostEqual(r['p_complet'],calculer(e,'apparait','SEU@7',base,asof='2026-09-20')['p'],places=12)
+            self.assertEqual(len(r['interactions']),1)
+            self.assertAlmostEqual(r['p_vide'],calculer(e,'apparait','SEU@7',base,asof='2026-09-20',sans_cartes=True)['p'],places=12)
+            # sans base : pas d'homologue, l'a priori seul est additif en logit, aucune interaction
+            r0=attribuer(e,'apparait','SEU@7',[],asof='2026-09-20');self.assertFalse(r0['non_additif'])
         def test_inertie_strate(self):
             # 0.7.28 : mêmes tirages que le placebo (graine, nombre de cas), p₀ = f ; p inchangé.
             base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')

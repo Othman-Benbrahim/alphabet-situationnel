@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.30
+> Version : 0.7.31
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1267,3 +1267,37 @@ amass a relu le §11.13 : plus de marge qui laisse une décision ouverte après 
   de 2,5 points » sont chacun testés à `v4_alpha`. L'erreur est contrôlée **par énoncé**, non pour la famille : plusieurs
   énoncés donnent plus d'occasions d'affirmer à tort au moins l'un d'eux. En contrepartie, **les énoncés se publient
   toujours ensemble**, y compris ceux qui échouent, et aucun ne se cite sans les autres.
+
+---
+
+## 12. Attribution dans le moteur (0.7.31)
+
+**Source.** Vasant Kumar Mogia, « Agent-Causality: Declared Dependency Tracing and Counterfactual Sensitivity Analysis
+for Multi-Agent Systems », Psionics, 2026 (préprint, non relu par des pairs ; preuves : cinq cas construits et un essai
+réel où les pannes injectées ne se sont pas produites). L'article rejoue une décision **déterministe** en remplaçant
+ses entrées, seules ou ensemble, par une valeur neutre, et en tire des valeurs de Shapley et un indice d'interaction
+par paire. Il répète que ces nombres ne disent rien de la causalité réelle. Le moteur du skill est un évaluateur de ce
+type : déterministe, et un état n'a que quelques mots.
+
+**Ce que fait `attribuer`.** Pour un état et un événement simple, le moteur recalcule p sur **tous les sous-ensembles**
+des mots de l'état (2ⁿ calculs, n ≤ 8 ; la cible reste présente pour « persiste » et « disparait » ; l'ensemble vide
+vaut p_sans_cartes). Il rend :
+- la **valeur de Shapley exacte** de chaque mot, en points de probabilité ; leur somme vaut exactement p complet − p
+  sans mots (propriété d'efficacité, contrôlée par l'autotest) ;
+- l'**indice d'interaction** de chaque paire (Grabisch 1997), calculé **en logit** : l'a priori est additif en logit
+  (`dynamiques.md`, « La loi de composition, nommée »), donc un indice non nul ne peut venir que du choix des homologues.
+  Positif : les deux mots se renforcent (forme « conjointe ») ; négatif : ils sont redondants ; nul : additifs.
+
+**Premier constat, sur la démonstration.** POLARITÉ@7 + CONTRAINTE@6 → SEUIL@7 apparaît : p = 22,0 %, sans ces mots
+12,1 % ; CONTRAINTE@6 pèse +7,6 points et POLARITÉ@7 +2,3 ; leur interaction vaut **+1,51 en logit**. Sur ce cas, le
+moteur n'est donc **pas** additif : les homologues retenus quand les deux cartes sont présentes font plus que la somme
+de chacune. Le §« Additif, pas configurationnel » de la 0.7.22 l'admettait comme possible ; `attribuer` le mesure. Sur
+une base vide, l'interaction est nulle (autotest). C'est une base fictive : le constat décrit la mécanique du calcul,
+pas le monde.
+
+**Ce que ces nombres ne disent pas.** Ils expliquent **pourquoi le moteur a rendu ce p**, sous cette base, cette
+matrice et ces paramètres ; ils ne disent ni pourquoi l'événement arrivera, ni qu'une carte en est la cause. Une
+valeur de Shapley élevée n'est pas un apport prédictif : celui-ci ne se mesure qu'en V4 (§11). Les quatre formes de
+l'article (une entrée suffit ; l'une ou l'autre ; les deux ensemble ; l'une change la lecture de l'autre) se lisent ici
+comme des formes du **calcul**. Limites : sans liaisons ni positions (refusées) ; un pas ; temporalité générique ;
+au-delà de 8 mots, refus plutôt qu'approximation par échantillonnage.

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.30
+> Version : 0.7.31
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,7 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.31 (faite) | Attribution dans le moteur | `attribuer` : Shapley exact par mot et interaction par paire en logit (Mogia, *Agent-Causality*) ; premier constat : la démonstration n'est pas additive (+1,51 en logit) ; probabilités identiques à la 0.7.9 | — |
 | 0.7.30 (faite) | Formulation | `v4_effectif_equivalence` = point de lecture d'une non-supériorité ; erreur contrôlée par énoncé, énoncés publiés ensemble ; fin de la boucle de relecture ; probabilités identiques à la 0.7.9 | — |
 | 0.7.29 (faite) | Deux énoncés | énoncés séparés C (cartes) et A (appareil), table des quatre issues ; non-supériorité unilatérale et énoncé de nuisance (`v4.decision`) ; puissance par énoncé ; ce que la conclusion négative n'exclut pas ; troncature différentielle ; relecture par un méthodologue extérieur avant l'épisode 1 ; probabilités identiques à la 0.7.9 | — |
 | Avant l'épisode 1 : étude d'accord sur des cas réels ; fiche d'étude remplie ; tiers nommé ; relecture de la fiche et du §11 par un méthodologue extérieur | conditions de l'épisode 1 | — |

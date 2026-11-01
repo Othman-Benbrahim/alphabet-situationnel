@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.30
+> Version : 0.7.31
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1400,3 +1400,19 @@ devient une condition de l'épisode 1.
 amass, sur le §11.13 : aucune marge de décision, deux précisions de formulation, versées au §11.14 (le paramètre
 `v4_effectif_equivalence` fixe le point de lecture d'une non-supériorité ; erreur contrôlée par énoncé, énoncés publiés
 ensemble). La boucle de relecture s'arrête là, comme le §11.13 le prévoit.
+
+## 30. Attribution contrefactuelle dans un évaluateur déterministe : *Agent-Causality* (0.7.31)
+
+**Document.** V. K. Mogia, « Agent-Causality: Declared Dependency Tracing and Counterfactual Sensitivity Analysis for
+Multi-Agent Systems », Psionics, 2026 ; lu en entier. Préprint d'ingénierie ; preuves faibles, déclarées par l'auteur.
+**Aucune probabilité ne change.**
+
+| Point | Vérification | Versé | Où |
+|---|---|---|---|
+| Rejouer un évaluateur déterministe en remplaçant ses entrées ; Shapley et interaction par paire | transposable : le moteur est déterministe, un état a peu de mots | `attribuer` (2ⁿ calculs, n ≤ 8) | `moteur.py`, `validation.md` §12 |
+| L'interaction mesure une sensibilité conjointe, pas une causalité | même discipline que le skill | écrit | §12 |
+| Quatre formes (seule, l'une ou l'autre, conjointe, dépendante) | lues comme formes du calcul | écrit | §12 |
+| Ascendance structurelle ≠ influence ; lien exact ou grossier quand une valeur passe par un modèle | déjà présents en substance (`liaisons` et preuves ; codeur `modele` à confirmer) | rien de nouveau | — |
+
+**Refusé** : la capture d'événements, les adaptateurs et l'étude de l'incident Replit, propres aux pipelines d'agents ;
+le découpage minimal par *delta debugging*, sans objet sur des états de quelques mots.

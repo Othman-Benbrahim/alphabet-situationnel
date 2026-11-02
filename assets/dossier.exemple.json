@@ -179,7 +179,8 @@
    "evenement": "SEUIL@7 apparait",
    "semantique": "presence",
    "temporalite": "generique",
-   "resolution": "présence d'un franchissement de seuil reconnu par les parties au 2026-12-01, mesurée sur le marqueur local « franchissement d'un seuil reconnu par les parties », journal officiel de A et communiqués de B"
+   "resolution": "présence d'un franchissement de seuil reconnu par les parties au 2026-12-01, mesurée sur le marqueur local « franchissement d'un seuil reconnu par les parties », journal officiel de A et communiqués de B",
+  "vue_exterieure": {"frequence": 0.08, "classe_de_reference": "crises bilatérales à deux blocs, franchissement d'un seuil d'escalade en 3 mois (classe fictive de démonstration)", "source": "valeur fictive de démonstration ; une vue extérieure réelle cite une base (MID, UCDP) et sa période"}
   }
  ]
 }

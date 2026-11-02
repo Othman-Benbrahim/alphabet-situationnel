@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.34'
+  version: '0.7.35'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.34. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.35. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -144,6 +144,12 @@ modifier un ancien pari. Les données fictives exigent `--demo` et sont exclues 
 Sans base éligible, ρ3 avec référence externe, ρ4 sinon ; afficher également l'absence de calibration.
 
 ## Procédure — mode PRÉVOIR
+
+**Vue extérieure d'abord (0.7.35, obligatoire).** Avant toute carte, écrire dans le dossier, pour chaque événement,
+`vue_exterieure` : le taux de base de la classe de référence (`frequence`), cette classe et sa source. `calculer
+--dossier` l'affiche avant le reste, à côté de f et de p₀, et **refuse de chiffrer** si p₀ s'en écarte de plus d'un
+facteur 10 en cotes (contrôle prédictif a priori : les paramètres posés à la main sont alors incompatibles avec le
+domaine). `validation.md` §15.
 
 **Avant de coder, facultatif : le gabarit de formulation (0.7.18).** Six questions, dans l'ordre où une
 idée se forme ; elles n'ajoutent aucune obligation, elles rendent visibles celles qui existent. (1) **Quelle

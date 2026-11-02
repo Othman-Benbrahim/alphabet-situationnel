@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.34 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.35 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -1339,6 +1339,13 @@ def dossier_valider(d):
                        'dossier.evenements.programmation {qui, engagement} requis pour « programmee » : qui a la capacité de fixer '
                        'l’événement, et à quoi voit-on qu’il s’y est engagé (texte, calendrier publié) ; sans réponse, l’événement n’est pas programmé')
             texte_requis(x.get('resolution'),'dossier.evenements.resolution')
+            # 0.7.35 (vue extérieure d'abord, Tetlock et Gardner 2015) : le taux de base de la classe de référence,
+            # écrit par l'analyste avant tout calcul, avec sa classe et sa source. Requis.
+            ve=x.get('vue_exterieure')
+            exiger(isinstance(ve,dict) and type(ve.get('frequence')) in (int,float) and 0<ve['frequence']<1
+                   and all(isinstance(ve.get(c),str) and ve[c].strip() for c in ('classe_de_reference','source')),
+                   'dossier.evenements.vue_exterieure {frequence dans ]0 ; 1[, classe_de_reference, source} requise : le taux de base, '
+                   'écrit avant le calcul (« vue extérieure d’abord »)')
             # 0.7.5 : la fenêtre est le levier le plus fort du calcul (inertie^(durée/91,3 j)) ; rien ne la
             # reliait à la durée du phénomène. Facultatif : une durée en jours, vérifiable contre une source.
             dc=x.get('duree_caracteristique_jours')
@@ -1912,7 +1919,10 @@ def fiche_test(prev,score_=None):
        f"- Probabilité : {'non estimée (abstention)' if p is None else pct(p)+' — bande : '+bande_verbale(p)}"
        +('' if prev.get('p_sans_cartes') is None else f" · sans cartes : {pct(prev['p_sans_cartes'])}"),
        f"- Résolution : {res.get('critere','') if isinstance(res,dict) else res} · source : {res.get('source','') if isinstance(res,dict) else ''}",
-       '- Non calibré : paramètres posés à la main ; ce test sert à mesurer, non à conclure.','',
+       '- Non calibré : paramètres posés à la main ; ce test sert à mesurer, non à conclure.']
+    ve_=(prev.get('calcul') or {}).get('vue_exterieure')
+    if ve_:l.append(f"- Vue extérieure (déclarée avant le calcul) : {pct(ve_['declaree'])} · {ve_['classe_de_reference']} · source : {ve_['source']}")
+    l+=['',
        f"Empreinte de la prévision : `{e}`",'','```json alphabet-test',json.dumps(prev,ensure_ascii=False,sort_keys=True),'```','']
     return '\n'.join(l)
 
@@ -3219,7 +3229,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3456,7 +3466,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.34','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.35','version du moteur et des paramètres différente')
     # 0.7.34 (audit Open Science) : la docstring du moteur annonçait 0.7.9 sans que l'audit la lise.
     exiger(f"Alphabet situationnel {P['version']} " in (__doc__ or ''),'docstring du moteur : version différente de parametres.json')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
@@ -3596,6 +3606,32 @@ def texte_probabilite(p,itv):
     return f'~{pct(p)} (large : {a}–{b})' if itv[1]-itv[0]>P['largeur_max_affichage'] else f'{pct(p)} [{a}–{b}]'
 
 
+def controle_vue_exterieure(result, vue):
+    """0.7.35. Deux contrôles, avant que les cartes ne parlent.
+    (1) Vue extérieure d'abord (Tetlock et Gardner 2015) : le taux de base déclaré dans le dossier est rendu à côté de
+    f (la fréquence du moteur sans cartes), avec leur rapport de cotes.
+    (2) Contrôle prédictif a priori (McElreath, *Statistical Rethinking*) : p₀, ce que les paramètres posés à la main
+    (λ, inerties, f) impliquent avant toute révision par des cas, est comparé au taux de base. Si leurs cotes diffèrent de
+    plus de `vue_exterieure_rapport_max` (10, le plafond de LR : plus que des cartes ne pourraient justifier), l'a priori est
+    absurde pour ce domaine : non estimé."""
+    if not vue or result.get('p') is None:return result
+    cote=lambda q:min(max(q,1e-9),1-1e-9)/(1-min(max(q,1e-9),1-1e-9))
+    v=vue['frequence'];ap=result.get('a_priori') or {};p0=ap.get('p0');f_=result.get('p_sans_cartes')
+    rf=None if f_ is None else cote(f_)/cote(v);r0=None if p0 is None else cote(p0)/cote(v)
+    R=P['vue_exterieure_rapport_max']
+    absurde=r0 is not None and (r0>R or r0<1/R)
+    result['vue_exterieure']={'declaree':v,'classe_de_reference':vue['classe_de_reference'],'source':vue['source'],
+        'f_moteur':f_,'rapport_cotes_f':rf,'p0':p0,'rapport_cotes_p0':r0,'a_priori_absurde':absurde,
+        'lecture':'vue extérieure d’abord : le taux de base déclaré avant le calcul ; p₀ hors d’un facteur '+str(R)+' en cotes = paramètres incompatibles avec le domaine'}
+    if absurde:
+        result.update(p=None,intervalle=None,p_sans_cartes=None,apport_cartes=None,sensibilite=None,
+                      p_placebo=None,apport_homologie=None,p_inertie_strate=None,
+                      non_estime_motif=f'a priori incompatible avec la vue extérieure (p₀ {p0:.3f} contre {v:.3f}, rapport de cotes {r0:.1f})')
+        result.setdefault('drapeaux',[]).append('Non estimé : les paramètres posés à la main donnent un a priori hors d’un facteur '
+            f'{R:g} en cotes du taux de base déclaré ; corriger la référence (--fref, --references) ou la vue extérieure, sans retoucher le dossier scellé.')
+    return result
+
+
 def appliquer_temporalite(result, temporalite):
     """0.6.10. Le moteur ne sait pas reconnaître qu'une question porte sur une échéance programmée
     (scrutin, proclamation : test brésilien) ou sur un phénomène à durée de vie propre (cyclone : test
@@ -3664,6 +3700,10 @@ def afficher(result,as_json=False):
     if result.get('p') is not None:
         print(f"Non calibré : multiplicateurs, inerties, k₀ et demi-vie sont posés à la main, non dérivés de données ; "
               f"lire d’abord la bande ({bande_verbale(result['p'])}) et le taux sans cartes, le chiffre ensuite")
+    ve_=result.get('vue_exterieure')
+    if ve_:
+        print(f"Vue extérieure d’abord : taux de base déclaré {pct(ve_['declaree'])} ({ve_['classe_de_reference']}) · "
+              f"f du moteur {pct(ve_['f_moteur'])} · p₀ {pct(ve_['p0'])}"+(' · A PRIORI ABSURDE : non estimé' if ve_['a_priori_absurde'] else ''))
     rp_=result.get('resultat_principal')
     if rp_:print(f"À lire d’abord : sans cartes {pct(rp_['p_sans_cartes'])} → avec cartes {pct(rp_['p_avec_cartes'])} "
                  "(aucun cas réel actif : arêtes non éprouvées, P8 ; p seul n’est qu’un dérivé de cette paire"
@@ -4239,6 +4279,9 @@ def main():
                                                    'Les cas disponibles après cette date sont exclus du calcul.')
         for k_ in ('p_placebo','graine_placebo','apport_homologie','p_inertie_strate'):result.setdefault(k_,None)   # composés : null
         result=appliquer_temporalite(result,a.temporalite)
+        if dossier and dossier['evenements'] and typ in ('apparait','persiste','disparait'):
+            dcl_=next((x for x in dossier['evenements'] if evenement_lire(x['evenement'])==(cible,typ)),None)
+            if dcl_:result=controle_vue_exterieure(result,dcl_.get('vue_exterieure'))
     if a.cmd=='calculer':
         ml=marqueur_local(*cible.split('@'))
         st_=statuts().get((cible.split('@')[0],int(cible.split('@')[1])))
@@ -5406,6 +5449,18 @@ def autotest():
         def test_parametre_fantome(self):
             self.assertEqual(erreurs_parametres(),[])
             self.assertTrue(erreurs_parametres(list(P)+['parametre_fantome']))
+        def test_vue_exterieure(self):
+            # 0.7.35 : vue extérieure requise dans le dossier ; a priori absurde → non estimé.
+            base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            r=calculer(e,'apparait','SEU@7',base,asof='2026-09-20')
+            ok=controle_vue_exterieure(dict(r),{'frequence':r['a_priori']['p0'],'classe_de_reference':'c','source':'s'})
+            self.assertFalse(ok['vue_exterieure']['a_priori_absurde']);self.assertIsNotNone(ok['p'])
+            ko=controle_vue_exterieure(dict(r),{'frequence':0.001,'classe_de_reference':'c','source':'s'})
+            self.assertTrue(ko['vue_exterieure']['a_priori_absurde']);self.assertIsNone(ko['p']);self.assertIn('vue extérieure',ko['non_estime_motif'])
+            d=json.loads((RACINE/'assets/dossier.exemple.json').read_text(encoding='utf-8'))
+            d['evenements'][0].pop('vue_exterieure')
+            with self.assertRaises(ValueError):dossier_valider(d)
         def test_registre_tests(self):
             # 0.7.34 : fiche de test, fiche de résultat, ingestion avec contrôle d'empreinte.
             p=forecast();t=fiche_test(p);self.assertIn('```json alphabet-test',t);self.assertIn('Non calibré',t)

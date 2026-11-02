@@ -1,6 +1,6 @@
 # Alphabet situationnel — Apports théoriques et leur traduction en contrôles
 
-> Version : 0.7.34
+> Version : 0.7.35
 
 > Ce que trois analyses du corpus de Carlos E. Perez (*Intuition Machine* : essais 2016-2026 ; livres
 > *Artificial Fluency*, 2024, et *Artificial Empathy*, 2023), versées au projet le 27 octobre 2026, ont
@@ -1478,3 +1478,11 @@ strate 1 (physique) ne sont pas des métaphores ; la strate 7 cite ses référen
 empirique nulle (`bilan`), paramètres posés à la main (`graphe.md` §2.1, « hypothèses de travail »). **Non retenu
 maintenant** : découper `moteur.py` en paquet ; le fichier unique sans dépendance est un choix de distribution du skill, et
 le découpage serait encore du travail sans mesure.
+
+## 34. Vue extérieure et contrôle prédictif a priori (0.7.35)
+
+Demande de l'auteur, sur deux sources connues : Tetlock et Gardner (2015), la « vue extérieure d'abord » ; McElreath
+(2020), le contrôle prédictif a priori. **Retenu**, comme champ requis du dossier (`vue_exterieure`) et comme refus de
+chiffrer quand p₀ s'écarte de plus d'un facteur 10 en cotes du taux de base déclaré (`validation.md` §15). **Limite
+déclarée** : sans loi sur les paramètres, le contrôle est ponctuel, non une simulation. **Aucune probabilité ne change**
+sur la clôture, qui n'utilise pas de dossier ; un calcul avec dossier peut désormais rendre « non estimé ».

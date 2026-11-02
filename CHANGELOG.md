@@ -1,9 +1,21 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.34
+> Version : 0.7.35
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.35 — 2026-11-02 · vue extérieure d'abord
+
+Deux contrôles demandés par l'auteur (`validation.md` §15, `apports-theoriques.md` §34). **Aucune probabilité ne change
+sur la clôture.** Aucun texte retiré.
+
+- **Vue extérieure d'abord** (Tetlock) : `vue_exterieure` {frequence, classe_de_reference, source} requise pour chaque
+  événement du dossier ; affichée avant les cartes, à côté de f et de p₀, avec les rapports de cotes ; reportée dans la
+  fiche TEST.
+- **Contrôle prédictif a priori** (McElreath) : si les cotes de p₀ diffèrent de celles du taux de base de plus de
+  `vue_exterieure_rapport_max` (10), « non estimé », motif journalisé.
+- Dossier d'exemple complété ; 159 autotests.
 
 ## 0.7.34 — 2026-11-01 · registre des tests, gel
 

@@ -1,5 +1,5 @@
 {
- "version": "0.7.34",
+ "version": "0.7.35",
  "nombre_strates": 13,
  "cartes": {
   "SEU": "SEUIL",
@@ -85,6 +85,7 @@
  "v4_e_seuil_primaire": 20,
  "v4_effectif_equivalence": 0,
  "strates_prevision": [7],
+ "vue_exterieure_rapport_max": 10.0,
  "matrice": {
   "SEU": {
    "PER": "f",

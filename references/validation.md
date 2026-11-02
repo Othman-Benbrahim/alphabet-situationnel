@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.34
+> Version : 0.7.35
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1375,3 +1375,31 @@ TEST se publie aussi chez un tiers horodaté avant l'échéance (§11.9).
 
 **Gel.** Après cette version, plus de règle nouvelle ni d'outil nouveau sans données réelles. La prochaine version
 utile est celle qui contient un premier cas de la strate 7 codé à deux, ou les premières fiches du registre.
+
+---
+
+## 15. Vue extérieure d'abord, et contrôle prédictif a priori (0.7.35)
+
+Deux contrôles demandés par l'auteur après le gel de la 0.7.34. Ils ne sont ni des règles d'interprétation ni des outils
+de plus : ils portent sur l'enregistrement de chaque prévision, et se testent dès le premier dossier, sans attendre de cas
+réels. Le gel reste la règle pour tout le reste.
+
+**1. Vue extérieure d'abord** (Tetlock et Gardner, *Superforecasting*, 2015, ch. 5). Chaque événement d'un dossier porte
+désormais `vue_exterieure` : `frequence` (le taux de base de la classe de référence, dans ]0 ; 1[), `classe_de_reference`
+et `source`. Le champ est **requis** (`dossier`). Il s'écrit avant le calcul, puisque le dossier est scellé avant
+`calculer --dossier`. Le moteur l'affiche avant les cartes, à côté de f (sa propre fréquence sans cartes) et de p₀, avec
+les rapports de cotes. Ce chiffre est celui de l'analyste, non du moteur : un écart entre les deux dit lequel des deux
+ignore la classe de référence, et il se lit.
+
+**2. Contrôle prédictif a priori** (McElreath, *Statistical Rethinking*, 2e éd. 2020, ch. 4). p₀ est ce que les
+paramètres posés à la main (λ, inerties, fréquence par défaut) impliquent avant toute révision par des cas. Si ses cotes
+diffèrent de celles de la vue extérieure de plus de `vue_exterieure_rapport_max` (10, la valeur du plafond de LR, soit
+plus que des cartes ne pourraient justifier), l'a priori est **absurde pour ce domaine** : le calcul rend « non estimé »,
+motif journalisé, et la question compte comme abstention. On corrige la référence (`--fref`, `--references`), jamais le
+dossier scellé.
+
+**Ce que ce contrôle n'est pas.** McElreath simule des données à partir de la loi a priori. Ici, le moteur n'a pas de
+loi sur ses paramètres : le contrôle compare la valeur ponctuelle p₀ au domaine, et la bande de sensibilité (§2.3 de
+`graphe.md`) reste la seule variation des paramètres publiée. Le contrôle attrape les grossièretés (une fréquence par
+défaut de 5 % quand le domaine dit 60 %), pas les biais fins. Sur l'exemple de démonstration : vue extérieure 8 %, f 12 %,
+p₀ 23 % ; rapport de cotes de p₀ ≈ 3,4, admis.

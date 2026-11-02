@@ -1,9 +1,19 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.35
+> Version : 0.7.36
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.36 — 2026-11-02 · fiches systématiques
+
+Correction d'un oubli de la 0.7.34 : les commandes `fiche-test` et `fiche-resultat` existaient, mais la procédure ne
+demandait pas de les lancer. **Documentation seule ; aucune probabilité ne change.**
+
+- **`SKILL.md`** : étape 11 du mode PRÉVOIR, toute prévision journalisée (abstention comprise) se termine par sa fiche
+  TEST remise à l'utilisateur ; étape 0 du mode SCORER, chaque issue donne sa fiche RÉSULTAT, puis `ingerer`.
+- **Fichiers de l'utilisateur** : `registre-tests.md` et `carnet.jsonl` ajoutés ; ils vivent hors du dossier du skill
+  (contrôle `SHA256SUMS`, remplacement à chaque mise à jour), dans un dépôt séparé pour V4.
 
 ## 0.7.35 — 2026-11-02 · vue extérieure d'abord
 

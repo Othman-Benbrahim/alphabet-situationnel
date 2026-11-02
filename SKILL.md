@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.35'
+  version: '0.7.36'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.35. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.36. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -138,6 +138,12 @@ minimal est fixé (`simulation.md` §7) : un résumé est un index, jamais une p
 | `journal-previsions.jsonl` | prévisions figées puis scores ajoutés | `validation.md` §1 |
 | `partage.jsonl` | registre daté du partage apprentissage/test, écrit par `partager`, jamais réécrit ; à publier | `protocole.md` B5 |
 | `journal-lacunes.md` | motifs et difficultés de lecture, séparés des erreurs du moteur | `validation.md` §6 |
+| `registre-tests.md` | les fiches TEST et RÉSULTAT collées l'une sous l'autre ; copie du modèle `assets/registre-tests.md` | `validation.md` §14 |
+| `carnet.jsonl` | faits datés et sourcés, avant tout codage, écrit par `recolter` | `base-de-cas.md` §2 |
+
+Ces fichiers vivent **hors du dossier du skill**, par exemple dans un dossier frère `alphabet-donnees/` : le skill
+est contrôlé par `SHA256SUMS` (un fichier modifié fait échouer `audit`) et remplacé à chaque mise à jour. Pour V4,
+publier ce dossier dans un dépôt séparé, une release par fiche TEST avant son échéance.
 
 Produire les lignes à conserver ; écrire dans les fichiers si l'utilisateur le demande. Ne pas
 modifier un ancien pari. Les données fictives exigent `--demo` et sont exclues de toute évaluation.
@@ -271,6 +277,13 @@ successifs : du plus ancien au plus récent ; une issue déjà vue rend la quest
 **10. Sortie.** Suivre `simulation.md` : analytique, symbolique sans chiffre, lignes de journal,
 points à vérifier. Expliquer ce que les données permettent et ce qui reste non estimé.
 
+**11. Fiche TEST (0.7.36, systématique).** Toute prévision journalisée se termine par sa fiche, sans que
+l'utilisateur la demande : écrire la ligne de prévision dans le journal de l'utilisateur
+(`alphabet-donnees/journal-previsions.jsonl` par défaut, jamais dans le dossier du skill), lancer
+`moteur.py fiche-test --journal … --id …`, et remettre la fiche Markdown à l'utilisateur, prête à coller dans son
+`registre-tests.md`. Une abstention (« non estimé ») a aussi sa fiche : elle compte. Rappeler l'échéance, et que la
+fiche se publie chez un tiers avant cette date pour compter dans V4.
+
 ## Procédures — LIRE, CODER, SCORER
 
 **LIRE** (aucun calcul) : 1. recevabilité (étape 0) ; 2. strates et candidates (1–2) ; 3. ancrage et
@@ -286,7 +299,9 @@ signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une c
 `id` (`recodage_confirme`) ; 3. traceback : toute construction ad hoc va dans
 `assets/rabbits.jsonl` ; 4. `moteur.py valider` ; une fiche refusée se corrige ou s'archive avec motif.
 
-**SCORER** : 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
+**SCORER** : 0. **fiche RÉSULTAT (0.7.36, systématique)** : pour chaque issue constatée, lancer `moteur.py
+fiche-resultat --journal … --id … --issue 0|1 --preuve "…" --date …` et remettre la fiche à coller sous la fiche
+TEST du registre, puis `moteur.py ingerer` sur le registre ; 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
 3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement, chacun
 avec son différentiel par épisode, σ(d) et les tests exacts du signe et de Wilcoxon : un écart moyen non
 distinguable de zéro se dit tel ; l'e-processus (`e_amelioration`, `v4.sequentiel`) est la seule lecture

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Équivalents par strate (index, couche 1)
 
-> Version : 0.7.45
+> Version : 0.7.46
 
 > Les équivalents locaux des 16 cartes sont rangés **par strate**, un fichier par strate :
 > `equivalences/strate-01.md` à `equivalences/strate-13.md`. Raison : la procédure va des faits vers les
@@ -17,7 +17,7 @@
 | Équivalent | la traduction locale de la carte |
 | Marqueur local | ce qui ancre la carte dans cette strate (A1) ; il précise le marqueur abstrait du noyau (`cartes.md`), il ne le remplace pas |
 | Statut | Attesté, Documenté, Proposé ou Vide (§2) |
-| Référence | la référence bibliographique qui fonde un statut Documenté, ou l'identifiant du cas qui fonde un statut Attesté |
+| Référence | la référence bibliographique qui fonde un statut Documenté, ou les identifiants (deux au moins, d'événements distincts) des cas qui fondent un statut Attesté |
 
 ---
 
@@ -38,7 +38,7 @@ pas ce nom local entre guillemets « … ».
 
 | Statut | Définition | Ce que le statut permet (A3) |
 |---|---|---|
-| **Attesté** | un cas réel de la base l'ancre avec la force F ; colonne Référence = identifiant du cas | ancrage F ou f ; emprunt T4 |
+| **Attesté** | deux cas réels au moins de la base, d'**événements distincts**, l'ancrent avec la force F sur des faits corroborés par des sources indépendantes (0.7.46, `protocole.md` A3) ; colonne Référence = identifiants des cas | ancrage F ou f ; emprunt T4 |
 | **Documenté** | connu de la littérature **de la discipline** ; colonne Référence = référence vérifiable d'un texte du champ (manuel, revue), suivie du **nom local** entre guillemets : la phrase par laquelle le champ nomme le phénomène dans son propre vocabulaire, sans le mot de la carte | ancrage F ou f ; emprunt T4 |
 | **Proposé** | plausible, non vérifié | ancrage F ou f, signalé ; aucun emprunt |
 | **Vide** | rien de convaincant trouvé ; l'ancrage passe par le noyau seul | ancrage f ; aucun emprunt |

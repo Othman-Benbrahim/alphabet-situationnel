@@ -1,6 +1,6 @@
 # Alphabet situationnel — Protocole
 
-> Version : 0.7.45
+> Version : 0.7.46
 >
 > **Source de vérité des règles.** Chaque règle est définie une seule fois, ici. Les autres fichiers
 > donnent des données (cartes, équivalents, dynamiques), des formats (fiche de cas, journal, sortie)
@@ -78,11 +78,22 @@ scores sur des questions résolues. Tant que cette mesure n'a pas commencé, l'o
 
 | Statut | Condition | Ce que le statut permet |
 |---|---|---|
-| **Attesté** | source vérifiée, cas réel recodé selon la version courante, contrôle A6/A7 ; identifiant du cas cité | ancrage F ou f ; emprunt entre strates (T4) |
+| **Attesté** | **deux cas réels au moins, d'événements distincts** (0.7.46), recodés selon la version courante, chacun ancrant la carte en F avec une corroboration « independantes », contrôle A6/A7 ; identifiants des cas cités | ancrage F ou f ; emprunt entre strates (T4) |
 | **Documenté** | référence vérifiée soutenant la correspondance précise et ses marqueurs | ancrage F ou f ; emprunt entre strates (T4) |
 | **Proposé** | correspondance plausible, référence absente ou non vérifiée | ancrage F ou f, signalé « équivalent non vérifié » ; aucun emprunt |
 | **Vide** | aucune correspondance locale convaincante **trouvée** | ancrage f seulement, par le marqueur du noyau ; aucun emprunt |
 | **Hors domaine** | décision d'auteur motivée : la structure de la carte ne s'applique pas aux objets de la strate ; colonne Référence = motif | **aucun ancrage** dans cette strate ; aucun emprunt |
+
+**Attesté : deux cas, deux événements (0.7.46, décision d'auteur).** Un seul cas atteste une lecture, pas une
+correspondance : la carte peut y tenir à la façon dont l'événement a été raconté. Il faut donc au moins **deux cas
+réels portant sur des événements distincts** (deux épisodes, pas deux strates ni deux dates d'un même événement :
+`C-0001-S05` et `C-0001-S07` comptent pour un), chacun ancrant la carte en F dans la strate. Dans chaque cas, le fait
+d'ancrage repose sur une corroboration « independantes » (A6, 0.7.11 : origine, producteur ou transmission) ; une
+« source unique », admise pour F, ne suffit pas à fonder une attestation, et deux relais d'une même origine restent une
+seule source. *Ce qui ne compte pas* : deux reformulations d'une même source, un même événement recodé, ou un second
+cas retenu parce qu'il ressemblait au premier, sans recherche du contraire (A7). `audit` exige au moins deux
+identifiants de cas de numéros distincts dans la colonne Référence ; il ne vérifie ni l'indépendance réelle des
+sources ni celle des événements. Aucune case n'étant Attestée, la règle ne rétrograde rien.
 
 **Vide et Hors domaine (0.4.8).** Vide dit qu'on n'a rien trouvé ; Hors domaine dit qu'il n'y a rien à
 trouver. Le second est une affirmation plus forte : il ne s'attribue que par décision d'auteur motivée,
@@ -671,7 +682,7 @@ modification impose une version et une nouvelle évaluation, sans réécriture d
 <!-- PARAMETRES:BEGIN -->
 | Paramètre | Valeur |
 |---|---|
-| `version` | `"0.7.45"` |
+| `version` | `"0.7.46"` |
 | `nombre_strates` | `13` |
 | `cartes.SEU` | `"SEUIL"` |
 | `cartes.REC` | `"RÉCIPROCITÉ"` |

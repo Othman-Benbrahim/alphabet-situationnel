@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.45
+> Version : 0.7.46
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1734,3 +1734,48 @@ sanctions exclues. Issue : 0, par absence de trace ; épisode le plus proche, la
   p₀, le moteur et sa référence seraient le même chiffre.
 - **Cosmétique** : extraits coupés au mot, sans parenthèse ouverte ; message d'un dossier refusé sans l'identifiant de
   fiche interne ; `ingerer` affiche moteur contre jugement et le bilan régressif.
+
+## 24. Test « deux sources, un événement » : la lecture tient-elle au récit ? (0.7.46)
+
+**Décision d'auteur.** Une lecture peut dépendre de la manière dont la source raconte l'événement (son vocabulaire,
+son cadrage, ce qu'elle choisit de nommer) plus que de l'événement lui-même. Rien jusqu'ici ne le mesurait : A4 compare
+deux **codeurs** sur les mêmes pièces, A6 exige des sources indépendantes pour chaque **fait** ; aucun contrôle ne
+compare deux **lectures complètes** faites chacune à partir d'un seul récit. Ce test le fait. Il n'ajoute ni paramètre
+ni probabilité ; il est descriptif et ne compte pas dans V4.
+
+**Procédure.**
+1. Choisir un événement et deux sources **indépendantes** au sens de `protocole.md` A6 (origine, producteur ou
+   transmission), au **cadrage différent** : deux pays, deux lignes éditoriales, ou une source primaire et un récit
+   de presse. Écrire, avant de coder, en quoi les cadrages diffèrent.
+2. Coder le cas deux fois, en mode CODER, **chaque codage ne lisant que sa source**, dans deux sessions séparées et sans
+   voir l'autre codage. Mêmes `id`, mêmes dates d'états, mêmes strates déclarées ; seules les pièces changent. Deux
+   fichiers : `source-A.jsonl`, `source-B.jsonl`.
+3. `python3 scripts/moteur.py depouiller --premier source-A.jsonl --second source-B.jsonl` : table par carte et table
+   groupée (κ, PABAK, taux de manque). Le premier « codeur » est ici la source A, le second la source B.
+4. En mode PRÉVOIR, facultatif : calculer la même question sur chacun des deux états et publier l'écart de p.
+
+**Lire le résultat.**
+- **Accord élevé** : les cartes retenues tiennent à l'événement plutôt qu'au récit, pour ce cas et ces deux sources.
+  Rien de plus : un même biais partagé par les deux sources passe inaperçu.
+- **Accord faible** : la lecture suit le récit. Ouvrir les cases b et c de `depouiller` (cartes ancrées par une seule
+  source) et, pour chacune, dire si l'autre source ignore le fait, le formule autrement ou le contredit. Les deux
+  premiers cas relèvent du choix des sources (§22) ; le troisième va en A7.
+- Les repères `kappa_min` et `kappa_rapportable` se lisent à titre indicatif : ils ont été fixés pour deux codeurs,
+  pas pour deux sources. Les décisions d'un même état ne sont pas indépendantes ; sur un seul cas, l'intervalle est
+  très large. Le test devient informatif sur une série.
+
+**Ce que le test ne mesure pas.** La justesse de la lecture ; un biais commun aux deux sources ; l'accord entre
+codeurs. Un même codeur (ou un même modèle) code les deux versions : l'écart mesuré mêle la sensibilité à la source et
+l'instabilité du codeur. Pour séparer les deux, refaire un codage de la même source A dans une troisième session : si
+A contre A' s'accorde autant que A contre B, l'écart vient du codeur, pas du récit.
+
+**Où consigner.** Le résultat se consigne dans cette section, à la suite des tests (§16 à §23), avec l'événement, les
+deux sources, la ligne sur les cadrages et la sortie de `depouiller`. Il ne va pas dans `assets/registre-tests.md`, qui
+ne reçoit que des prévisions (TEST puis RÉSULTAT) ; si le test comporte l'étape 4, chaque prévision y suit son propre
+parcours.
+
+**Origine.** Balestriero et LeCun (2026, arXiv 2610.39302), sur les représentations apprises : deux observations
+indépendantes d'une même scène alignent des représentations ; deux variantes d'une même observation gardent la
+« nuisance » propre à cette observation. Le papier ne porte ni sur un alphabet construit à la main ni sur la
+prévision ; il fournit seulement l'analogie qui a suggéré le test. La règle tient sans lui : c'est le principe ancien
+de la multiplicité des sources indépendantes.

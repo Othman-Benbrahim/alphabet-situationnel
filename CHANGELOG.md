@@ -1,9 +1,22 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.45
+> Version : 0.7.46
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.46 — 2026-11-03 · sources indépendantes : l'attestation et le récit
+
+Décision d'auteur (multiplicité et indépendance des sources), suggérée par Balestriero et LeCun 2026 (arXiv 2610.39302)
+sans en dépendre. **Aucun paramètre touché, aucune probabilité changée ; aucune case rétrogradée (0 Attesté).**
+
+- **Attesté** (`protocole.md` A3, `equivalences.md`) : deux cas réels au moins, d'événements distincts, chacun ancrant
+  la carte en F sur un fait corroboré par des sources indépendantes ; une « source unique » ne fonde pas une
+  attestation. `audit` exige deux identifiants de cas de numéros distincts (`cas_attestation`).
+- **Test « deux sources, un événement »** (`validation.md` §24) : même cas codé deux fois, une source indépendante
+  chacun, comparé par `depouiller` ; descriptif, hors V4, hors registre des prévisions. `SKILL.md` : paragraphe et
+  ligne de table.
+- 167 autotests.
 
 ## 0.7.45 — 2026-11-03 · test FR-RU
 

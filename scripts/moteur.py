@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.45 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.46 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -2137,6 +2137,13 @@ def depouiller(premier,second):
                       'décisions d’un même état non indépendantes, intervalles optimistes (§11.10 : bootstrap par états)'}
 
 
+def cas_attestation(reference):
+    """0.7.46 (décision d'auteur ; `protocole.md` A3). Un équivalent Attesté cite au moins deux cas réels d'événements
+    distincts. Rend les numéros d'événement distincts lus dans la colonne Référence (`C-0001-S05` et `C-0001-S07` sont
+    un seul événement). Contrôle de forme : ni l'indépendance des sources ni celle des événements n'est vérifiée."""
+    return sorted(set(re.findall(r'\bC-(\d{4})(?:-S\d{2})?\b',reference or '')))
+
+
 def recolter_ligne(fait,source,source_url,date_fait,disponible_le,date_consultation,classe_source,fiabilite=None,credibilite=None,
                    critere=None,motif=None):
     """0.7.32 (audit DeepSeek, P0.1). Une ligne de carnet : un fait observé, daté, sourcé, avant tout codage. Le
@@ -3523,7 +3530,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('validation.md','16'):'Premier test', ('validation.md','17'):'Deuxième série', ('validation.md','18'):'Test T6', ('validation.md','19'):'référence de V4', ('validation.md','20'):'Test T7', ('validation.md','21'):'Classe alternative', ('validation.md','22'):'Sources', ('validation.md','23'):'Test FR-RU', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('validation.md','16'):'Premier test', ('validation.md','17'):'Deuxième série', ('validation.md','18'):'Test T6', ('validation.md','19'):'référence de V4', ('validation.md','20'):'Test T7', ('validation.md','21'):'Classe alternative', ('validation.md','22'):'Sources', ('validation.md','23'):'Test FR-RU', ('validation.md','24'):'deux sources', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3760,7 +3767,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.45','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.46','version du moteur et des paramètres différente')
     # 0.7.34 (audit Open Science) : la docstring du moteur annonçait 0.7.9 sans que l'audit la lise.
     exiger(f"Alphabet situationnel {P['version']} " in (__doc__ or ''),'docstring du moteur : version différente de parametres.json')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
@@ -3811,6 +3818,8 @@ def audit():
                 exiger(cells[4].lower() not in ('à fournir','—',''),f'équivalent non sourcé : {cells[0]}@{s}')
                 exiger(cells[3]=='Attesté' or re.search(r'«[^»]+»',cells[4]) is not None,
                        f'équivalent Documenté sans nom local « … » : {cells[0]}@{s} (objet-frontière, equivalences.md §2)')
+                exiger(cells[3]!='Attesté' or len(cas_attestation(cells[4]))>=2,
+                       f'équivalent Attesté sur moins de deux événements distincts : {cells[0]}@{s} (protocole.md A3, 0.7.46)')
             if len(cells)==5 and cells[3]=='Hors domaine':
                 exiger(cells[4].lower() not in ('à fournir','—',''),f'Hors domaine sans motif : {cells[0]}@{s} (A3 : décision d’auteur motivée)')
     # Check actual local Markdown paths; numbered sections are checked where explicit.
@@ -4744,6 +4753,11 @@ def autotest():
         def test_calendar_invalid(self):
             for d in ('2026-99-99','2026-02-29','2026-04-31'):
                 with self.assertRaises(ValueError):date_iso(d)
+        def test_attestation_deux_evenements(self):
+            # 0.7.46 : deux cas d'événements distincts ; deux strates d'un même événement comptent pour un.
+            self.assertEqual(cas_attestation('C-0001-S05 ; C-0001-S07'),['0001'])
+            self.assertEqual(cas_attestation('C-0001-S05, C-0004-S05'),['0001','0004'])
+            self.assertEqual(cas_attestation('à fournir'),[])
         def test_leap(self):self.assertEqual(date_iso('2024-02-29').day,29)
         def test_calendar_month_end(self):self.assertEqual(fin_fenetre('2026-01-31','1 mois').isoformat(),'2026-02-28')
         def test_window_invalid(self):

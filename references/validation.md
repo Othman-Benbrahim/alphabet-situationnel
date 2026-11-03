@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.37
+> Version : 0.7.38
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1403,3 +1403,35 @@ loi sur ses paramètres : le contrôle compare la valeur ponctuelle p₀ au doma
 `graphe.md`) reste la seule variation des paramètres publiée. Le contrôle attrape les grossièretés (une fréquence par
 défaut de 5 % quand le domaine dit 60 %), pas les biais fins. Sur l'exemple de démonstration : vue extérieure 8 %, f 12 %,
 p₀ 23 % ; rapport de cotes de p₀ ≈ 3,4, admis.
+
+---
+
+## 16. Premier test régressif (0.7.38)
+
+**Le test.** Le 2026-11-03, une session de Claude a joué un test rétrospectif sur la strate 7 : « le Conseil de l'UE
+adopte-t-il au moins un nouveau paquet de sanctions contre la Russie entre le 1er juillet et le 30 septembre 2026 ? »,
+date d'information 30 juin 2026. Issue : 1 (21e paquet adopté le 23 juillet). Jugement de l'analyste scellé avant
+recherche : 0,55 ; vue extérieure reconstituée de mémoire, non vérifiée : 0,79 (11 trimestres sur 14). Le moteur a
+refusé la question (G6) ; sur la seule reformulation qu'il acceptait (la persistance), il a rendu 0,90, par la seule
+inertie. L'issue s'étant affichée avant le codage, le passage au moteur était un **rejeu**, hors V4.
+
+**Ce qui en est retenu.**
+1. **Ce n'était pas une lacune d'expressivité, mais d'orientation.** La question se pose en « s'intensifie » sur le
+   nombre cumulé de paquets (`simulation.md` §4, « Nouvelle occurrence »). Vérifié : p = 0,71 avec l'inertie par
+   défaut, 0,78 avec une référence de persistance. Le défaut était que le message de G6 ne le disait pas : il le dit
+   depuis 0.7.38. Aucun type d'événement nouveau n'est créé.
+2. **Sept itérations pour trouver les champs du journal : du frottement sans valeur.** `squelette` produit d'un coup
+   une ligne complète ; ce que l'analyste doit écrire porte « À REMPLIR », et la validation refuse la ligne en listant
+   **tous** ces champs à la fois. Le mode « test de fonctionnement » qui aurait mis ces champs à null n'est pas
+   retenu : un champ vide qui passe la validation est un champ qu'on oublie.
+3. **La vue extérieure aurait fait mieux que le jugement**, et c'est l'argument de la 0.7.35 : 0,55 contre 0,79,
+   Brier 0,20 contre 0,04. Le test n'utilisait pas de dossier, donc pas de `vue_exterieure`. Avec un dossier, la
+   reformulation en persistance (p₀ 0,90) aurait été confrontée à un taux de base proche de 0,99 : rapport de cotes
+   d'environ 11, au-delà de 10, donc refus de chiffrer. **Un test se joue avec un dossier.**
+4. **Un défaut d'affichage** : la ligne « Bande » écrivait « de None à None » pour un composé sans intervalle. Corrigé.
+
+**Ce que le test ne dit pas.** Rien sur la calibration : un seul cas, et un rejeu. La demande de « modification pour
+calibrage » ne se traite pas sur un cas : un paramètre ne bouge que sur des dizaines de questions résolues, par une
+version séparée (§11 ; feuille de route, D1). Ce test est un test de **fonctionnement**, et il a rempli son rôle :
+deux défauts réels, corrigés, et un garde-fou (le refus d'une fiche TEST sur un jugement qui ne portait pas sur la
+question) qui a tenu.

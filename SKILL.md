@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.37'
+  version: '0.7.38'
   author: Othman Ben Brahim
 ---
 
@@ -18,7 +18,7 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 
 ## Contrôle d'intégrité
 
-Version 0.7.37. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.38. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
@@ -91,6 +91,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… accord --a A --b B --c C --d D [--json]` | accord de deux codeurs sur une carte : κ (indéfini si pₑ = 1), PABAK, accords spécifiques, deux taux de manque, verdict (`base-de-cas.md` §6) |
 | `… accord … --repetabilite --ecart-jours N` | répétabilité : le même codeur, deux passes aveugles sur les mêmes cas ; non recevable sous `repetabilite_ecart_min_jours` ; publiée à part de κ |
 | `… attribuer --etat "…" --evenement "SEUIL@7 apparait" --temporalite generique` | attribution **dans le moteur** : Shapley exact par mot et interaction par paire (en logit), sur les 2ⁿ sous-ensembles de l'état ; explique le calcul, pas l'événement (`validation.md` §12) |
+| `… squelette --calcul C.json --id P-xxxx` | ligne de journal complète tirée du JSON de `calculer` : ce que le moteur sait est recopié, ce que l'analyste doit dire porte « À REMPLIR », refusé par la validation qui liste tous les champs d'un coup |
 | `… fiche-test --journal J.jsonl --id P-xxxx` puis, après l'échéance, `… fiche-resultat --journal J.jsonl --id P-xxxx --issue 0\|1 --preuve "…" --date J` | les deux parties Markdown d'un test, chacune avec son bloc JSON et l'empreinte de la prévision ; à coller dans `assets/registre-tests.md` (`validation.md` §14) |
 | `… ingerer assets/registre-tests.md [--journal-sortie J.jsonl]` | relit le registre, refuse une prévision retouchée, reconstitue le journal et le score |
 | `… recolter --carnet C.jsonl --fait "…" --source "…" --source-url URL --date J --disponible-le J --date-consultation J --classe-source contemporain [--fiabilite A-F --credibilite 1-6]` | carnet de faits datés et sourcés, avant tout codage ; `--jusqu-au J` liste les faits disponibles à une date (brouillon de dossier) (`base-de-cas.md` §2) |

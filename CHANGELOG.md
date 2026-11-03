@@ -1,9 +1,21 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.37
+> Version : 0.7.38
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.38 — 2026-11-03 · premier test régressif
+
+Corrections tirées du premier test de fonctionnement (`validation.md` §16). **Aucune probabilité ne change, vérifié par
+clôture ; aucun paramètre touché** : un cas rejoué ne calibre rien.
+
+- **Nouvelle occurrence** d'une structure présente : posée en « s'intensifie » sur une grandeur cumulée, avec la
+  référence « CARTE@strate hausse|persiste » (`simulation.md` §4) ; le message de refus G6 l'indique.
+- **`squelette`** : ligne de journal complète depuis le JSON de `calculer` ; « À REMPLIR » refusé par la validation, qui
+  liste tous les champs à remplir d'un coup.
+- **Affichage** : la bande d'un composé sans intervalle ne s'écrit plus « de None à None ».
+- 160 autotests.
 
 ## 0.7.37 — 2026-11-02 · un README d'une page
 

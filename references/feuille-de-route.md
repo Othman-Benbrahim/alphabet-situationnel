@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.37
+> Version : 0.7.38
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,8 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.38 (faite) | Premier test régressif | « nouvelle occurrence » posée en « s'intensifie » sur une grandeur cumulée, message G6 orienté ; `squelette` et refus de « À REMPLIR » listant tous les champs ; affichage de la bande corrigé ; aucun paramètre touché (un cas rejoué ne calibre rien) | — |
+| Champ facultatif `occurrences` {CARTE@strate: nombre d'actes} dans les états des cas, pour que la base puisse un jour estimer une nouvelle occurrence au lieu de la référence seule | premiers cas réels de la strate 7 | — |
 | 0.7.37 (faite) | Présentation | README d'une page, historique et ancien README dans le CHANGELOG, parcours contributeur (`CONTRIBUER.md`) ; aucune règle nouvelle | — |
 | 0.7.36 (faite) | Fiches systématiques | la procédure produit la fiche TEST à chaque prévision et la fiche RÉSULTAT à chaque issue ; fichiers de l'utilisateur hors du skill ; probabilités identiques à la 0.7.9 | — |
 | 0.7.35 (faite) | Vue extérieure d'abord | `vue_exterieure` requise dans le dossier ; contrôle prédictif a priori (p₀ hors d'un facteur 10 en cotes : non estimé) ; le gel reste la règle pour tout le reste ; probabilités identiques à la 0.7.9 sur la clôture | — |

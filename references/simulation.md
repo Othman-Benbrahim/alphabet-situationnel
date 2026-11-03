@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.37
+> Version : 0.7.38
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -197,6 +197,18 @@ Ce que chaque case demande au skill, sans rien changer au calcul :
   lit (LIRE), ne chiffre pas, et le dit. Grossetti note que la plupart des crises se **resserrent** ensuite
   en un petit nombre d'options : une crise devient un carrefour quand les acteurs ont construit les
   branches. C'est à ce moment, et pas avant, qu'une prévision peut être rédigée.
+
+**Nouvelle occurrence (0.7.38).** « Le Conseil adoptera-t-il un **nouveau** paquet de sanctions ce trimestre ? » ne
+se pose ni en « apparaît » (la structure CONTRAINTE@7 est déjà présente, G6), ni en « se renforce » (F/f est une
+confiance, non une intensité). Elle se pose en **« s'intensifie »** sur une **grandeur cumulée** : le nombre d'actes
+(paquets adoptés, frappes, expulsions). `--resolution` porte la grandeur, l'unité, la comparaison (« supérieur à
+l'échéance à sa valeur à la date d'information ») et au moins deux observations datées ; `--references` porte la
+fréquence conditionnelle « CTR@7 hausse|persiste », c'est-à-dire la part des trimestres où un nouvel acte a eu lieu,
+sachant la structure présente. Le moteur rend p = P(persiste) × P(hausse | persiste). **Si la persistance est quasi
+certaine dans le domaine** (un régime de sanctions en vigueur depuis douze ans), donner aussi sa référence (« CTR@7
+persiste ») : sinon l'inertie par défaut (0,90 sur 3 mois) tire p vers le bas. Sur le test du 2026-11-03 : 0,90 × 0,79
+= 0,71 avec l'inertie par défaut ; 0,99 × 0,79 = 0,78 avec la référence. Les cartes n'y ajoutent rien tant que les cas
+de la base ne comptent pas les actes : la prévision est celle de la classe de référence, dite comme telle.
 
 Une situation change de case en cours de route : une négociation bien cadrée tourne à la crise, un match
 à la catastrophe, une crise se resserre en alternative (le paradigme ancien ou le nouveau, chez Kuhn). Une

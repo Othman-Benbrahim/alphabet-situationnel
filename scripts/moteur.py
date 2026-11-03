@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.37 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.38 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -1908,6 +1908,27 @@ def graine_placebo(etat,typ,cible,asof):
     return int(hashlib.sha256(f'{texte(etat)}|{cible} {typ}|{asof}'.encode()).hexdigest()[:12],16)
 
 
+A_REMPLIR='À REMPLIR'
+
+
+def squelette_prevision(calc,ident):
+    """0.7.38 (test régressif du 2026-11-03 : sept itérations pour découvrir les champs du journal). Une ligne de
+    prévision complète, tirée du JSON de `calculer` : ce que le moteur sait est recopié ; ce que seul l'analyste peut
+    dire porte « À REMPLIR », que `valider_journal` refuse. Rien n'est mis à null pour passer : un champ non rempli
+    reste visible."""
+    ctx=calc.get('contexte') or {};R=A_REMPLIR
+    res=calc.get('resolution') if isinstance(calc.get('resolution'),dict) else {k:R for k in ('source','critere','seuil','marqueur','objet')}
+    return {'type':'prevision','id':ident,'date':ctx.get('date_information',R),'echeance':calc.get('echeance',R),
+            'version_regles':P['version'],'question':R,'evenement':calc.get('evenement',R),'episode_id':R,'pas':calc.get('pas',1),
+            'indicateur_bascule':R,'refutation':R,'semantique':calc.get('semantique') or R,'etat_present':calc.get('etat',R),
+            'probabilite':calc.get('p'),'intervalle':calc.get('intervalle'),'rho':'ρ'+str(calc.get('rho')) if calc.get('rho') is not None else R,
+            'resolution':res,'resolution_verifiee':R+' (true ou false)','frequence_de_base':None,'p_sans_cartes':calc.get('p_sans_cartes'),
+            'probabilite_jugement':None,'temporalite':calc.get('temporalite',R),'rejeu':R+' (true si une issue a pu être vue)',
+            'fictif':bool(ctx.get('demo')),'partition':None,'p_placebo':calc.get('p_placebo'),'graine_placebo':calc.get('graine_placebo'),
+            'apport_homologie':calc.get('apport_homologie'),'comparateur_externe':None,'calcul':calc,
+            'empreintes':ctx.get('empreintes'),'preuve_prepublication':None}
+
+
 def fiche_test(prev,score_=None):
     """0.7.34. Fiche Markdown d'une prévision journalisée (mode TEST) : lisible par un humain, et portant la ligne
     JSON exacte du journal dans un bloc `alphabet-test`, avec son empreinte. Coller la fiche dans le registre ;
@@ -2092,7 +2113,10 @@ def calculer(etat,typ,cible,base,liaisons=(),bouge=(),manque=(),refs=None,ctr_ma
     exiger((cible not in fm) if typ=='apparait' else (cible in fm),
            f'{cible} déjà présent dans l’état : « apparaît » est impossible. Un mot par carte et par strate (G6) : '
            'si le mot présent ne remplit pas vraiment le marqueur local, le retirer de l’état ; sinon la '
-           'question porte sur sa persistance ou sa disparition' if typ=='apparait' else
+           'question porte sur sa persistance ou sa disparition. Une **nouvelle occurrence** d’une structure déjà présente '
+           '(un autre paquet, une autre frappe, une autre expulsion) se pose avec « s’intensifie » sur une grandeur cumulée '
+           '(nombre d’actes), avec --resolution et la référence conditionnelle « CARTE@strate hausse|persiste » '
+           '(simulation.md §4, « Nouvelle occurrence »)' if typ=='apparait' else
            f'{cible} absent de l’état : seul « apparaît » est possible')
     exiger(not hors_domaine(cible), f'{cible} : carte Hors domaine dans cette strate, aucun événement à prévoir (A3)')
     ap=apriori(etat,typ,cible,base,liaisons,bouge,manque,refs,ctr_materielle,asof,sans_cartes)
@@ -2528,6 +2552,9 @@ def valider_journal(data):
     for x in data:
         exiger(isinstance(x,dict),'ligne de journal : objet JSON requis')
         typ=x.get('type');exiger(typ in ('prevision','score'),'type de ligne : prevision ou score')
+        # 0.7.38 : un squelette non rempli ne passe pas ; on liste tous les champs à remplir d'un coup.
+        vides=sorted(k for k,v in x.items() if (isinstance(v,str) and A_REMPLIR in v) or (isinstance(v,dict) and any(isinstance(w,str) and A_REMPLIR in w for w in v.values())))
+        exiger(not vides,f"{x.get('id')} : champs à remplir — "+', '.join(vides))
         ident=texte_requis(x.get('id'),'id');date_iso(x.get('date'))
         dest=prev if typ=='prevision' else scores
         exiger(ident not in dest,f'doublon {typ} : {ident}');dest[ident]=x
@@ -3229,7 +3256,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('validation.md','16'):'Premier test', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3466,7 +3493,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.37','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.38','version du moteur et des paramètres différente')
     # 0.7.34 (audit Open Science) : la docstring du moteur annonçait 0.7.9 sans que l'audit la lise.
     exiger(f"Alphabet situationnel {P['version']} " in (__doc__ or ''),'docstring du moteur : version différente de parametres.json')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
@@ -3720,7 +3747,7 @@ def afficher(result,as_json=False):
     except (ValueError,KeyError):pass
     print(f"Événement : {ev} · ρ = provenance du chiffre, pas sa fiabilité")
     bv_=result.get('bande_verbale')
-    if bv_:print(f"Bande : {bv_['p']} (intervalle de {bv_['intervalle'][0]} à {bv_['intervalle'][1]}) — échelle en sept bandes ; "
+    if bv_:print(f"Bande : {bv_['p']}"+(f" (intervalle de {bv_['intervalle'][0]} à {bv_['intervalle'][1]})" if bv_['intervalle'][0] else ' (intervalle non estimé)')+" — échelle en sept bandes ; "
                  "une fréquence conditionnelle, pas une certitude")
     if (result.get('barreau') or P['barreau']['defaut'])=='A':
         print("Lecture : association — si le motif observé dans les cas et les inerties se répète, alors cette fréquence ;"
@@ -3829,6 +3856,7 @@ def main():
     sc.add_argument('--p',type=float,required=True);sc.add_argument('--aveugle',action='store_true')
     sc.add_argument('--vu',action='append',default=[]);sc.add_argument('--contexte',choices=CONTEXTES_COMPARATEUR,required=True)
     ex=subs.add_parser('export-codeur');ex.add_argument('--base',required=True);ex.add_argument('--cas',required=True)
+    sq=subs.add_parser('squelette');sq.add_argument('--calcul',required=True);sq.add_argument('--id',required=True)
     ft=subs.add_parser('fiche-test');ft.add_argument('--journal',required=True);ft.add_argument('--id',required=True)
     fr=subs.add_parser('fiche-resultat');fr.add_argument('--journal',required=True);fr.add_argument('--id',required=True)
     fr.add_argument('--issue',type=int,choices=(0,1));fr.add_argument('--preuve',required=True);fr.add_argument('--date',required=True);fr.add_argument('--note')
@@ -3984,6 +4012,8 @@ def main():
             print('empreinte attendue : '+('identique' if ok_ else 'DIFFÉRENTE'))
             if not ok_:raise SystemExit(1)
         return
+    if a.cmd=='squelette':
+        print(json.dumps(squelette_prevision(lire_json(a.calcul,'--calcul'),a.id),ensure_ascii=False));return
     if a.cmd in ('fiche-test','fiche-resultat'):
         data=charger(a.journal);valider_journal(data)
         pr_=[x for x in data if x.get('type')=='prevision' and x.get('id')==a.id];exiger(pr_,f'prévision {a.id} absente du journal')
@@ -5461,6 +5491,16 @@ def autotest():
             d=json.loads((RACINE/'assets/dossier.exemple.json').read_text(encoding='utf-8'))
             d['evenements'][0].pop('vue_exterieure')
             with self.assertRaises(ValueError):dossier_valider(d)
+        def test_squelette_et_occurrence(self):
+            # 0.7.38 : squelette de prévision ; « À REMPLIR » refusé et listé ; message G6 orienté vers s'intensifie.
+            base=charger(RACINE/'assets/base-de-cas.exemple.jsonl')
+            e=lire_etat('[2026-09 | 3 mois] POLARITÉ@7[F] + CONTRAINTE@6[F]')
+            c=calculer(e,'apparait','SEU@7',base,asof='2026-09-20');c.update(contexte=metadata(base,'2026-09-20',True),echeance='2026-12-01',etat=texte(e))
+            s=squelette_prevision(c,'P-9')
+            with self.assertRaises(ValueError) as cm:valider_journal([s])
+            self.assertIn('champs à remplir',str(cm.exception));self.assertIn('question',str(cm.exception))
+            with self.assertRaises(ValueError) as cm:calculer(e,'apparait','POL@7',base)
+            self.assertIn('s’intensifie',str(cm.exception))
         def test_registre_tests(self):
             # 0.7.34 : fiche de test, fiche de résultat, ingestion avec contrôle d'empreinte.
             p=forecast();t=fiche_test(p);self.assertIn('```json alphabet-test',t);self.assertIn('Non calibré',t)

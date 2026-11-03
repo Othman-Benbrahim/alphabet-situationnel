@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.47'
+  version: '0.7.48'
   author: Othman Ben Brahim
 ---
 
@@ -23,7 +23,7 @@ ce `SKILL.md`), puis `python3 scripts/moteur.py audit`.
 
 ## Contrôle d'intégrité
 
-Version 0.7.47. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.48. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. *Le dossier du skill est celui qui
@@ -73,6 +73,7 @@ prévision chiffrée est limitée à la strate 7 (`strates_prevision`, décision
 | Modifier le skill, comparer deux versions, évaluer une règle nouvelle | `validation.md` §9 (banc d'essai) |
 | La lecture tient-elle à l'événement ou au récit ? Deux sources indépendantes, un même cas | `validation.md` §24 |
 | Le codeur suit-il la fiche ou le nom de la carte ? Noms neutres, recouvrement lexical | `validation.md` §25 |
+| Test régressif : pièces figées, contrôle de fuite, choix de la question | `validation.md` §26 |
 | Politique intérieure (gouvernement, Parlement, partis, élections, mobilisations) | strate 13 : `strates.md` §2 et §4, `equivalences/strate-13.md` |
 
 Lire par rubrique (`rg -n '^##|^\*\*[OAGBTSV][0-9]' references/protocole.md`, ou `grep -nE` avec le même
@@ -104,7 +105,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… squelette --calcul C.json --id P-xxxx` | ligne de journal complète tirée du JSON de `calculer` : ce que le moteur sait est recopié, ce que l'analyste doit dire porte « À REMPLIR », refusé par la validation qui liste tous les champs d'un coup |
 | `… fiche-test --journal J.jsonl --id P-xxxx` puis, après l'échéance, `… fiche-resultat --journal J.jsonl --id P-xxxx --issue 0\|1 --preuve "…" --date J --source-utilisee "…" --source-conforme oui\|non --mode positif\|absence` (0.7.44) | les deux parties Markdown d'un test, chacune avec son bloc JSON et l'empreinte de la prévision ; à coller dans `assets/registre-tests.md` (`validation.md` §14) |
 | `… ingerer assets/registre-tests.md [--journal-sortie J.jsonl]` | relit le registre, refuse une prévision retouchée, reconstitue le journal et le score |
-| `… recolter --carnet C.jsonl --fait "…" --source "…" --source-url URL --date J --disponible-le J --date-consultation J --classe-source contemporain [--fiabilite A-F --credibilite 1-6]` | carnet de faits datés et sourcés, avant tout codage ; `--jusqu-au J` liste les faits disponibles à une date (brouillon de dossier) (`base-de-cas.md` §2) |
+| `… recolter --carnet C.jsonl --fait "…" --source "…" --source-url URL --date J --disponible-le J --date-consultation J --classe-source contemporain [--fiabilite A-F --credibilite 1-6] [--archive URL-Wayback]` | carnet de faits datés et sourcés, avant tout codage ; `--jusqu-au J` liste les faits disponibles à une date (brouillon de dossier) (`base-de-cas.md` §2) |
 | `… depouiller --premier A.jsonl --second B.jsonl` | deux codages indépendants des mêmes cas : table 2×2 et `accord` par carte, et table groupée (A4 ; `validation.md` §11.10) |
 | `… accord … --llm` | répétabilité d'un modèle : deux exécutions en contextes séparés (ou une paraphrase, publiée à part) ; fiabilité, pas validité (`validation.md` §11) |
 | `… rejets --dossier D [--audit A.json]` | feuille de relecture aveugle des rejets d'un dossier (tirage fixé par le sceau), ou contrôle de l'audit rempli (`validation.md` §6) |
@@ -209,6 +210,12 @@ codeur. *Noms neutres* : coder un cas avec des fiches où les noms sont remplac�
 le codage normal. *Recouvrement lexical* : pour chaque ancrage F, chercher dans le passage cité la racine du nom de la
 carte ; si elle y est, vérifier que le fait remplit encore un marqueur sans ce mot. Descriptifs, hors V4.
 `validation.md` §25.
+
+**Fuites temporelles (0.7.48, test régressif).** Une page lue aujourd'hui peut contenir ce qui s'est passé après la date
+d'information (page mise à jour, encadrés, horodatage faux, chronologie qui tait l'événement). Lire de préférence un
+instantané Wayback antérieur, déclaré au carnet par `--archive` ; noter de 0 à 4 toute pièce lue en direct et écarter
+celles notées 2 ou plus ; lister les questions candidates avant toute recherche sur la fenêtre ; ne lire aucune cote de
+marché ni prévision publiée avant le jugement scellé. Le score d'un test régressif est une borne haute. `validation.md` §26.
 
 **Requêtes exécutées, test régressif déclaré (0.7.45).** Chaque requête de `recherches` porte `executee` (true ou false)
 et, si elle a été lancée, `date_execution` : une requête non lancée est consignée mais ne couvre rien, et le dossier reste

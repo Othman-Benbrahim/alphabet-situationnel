@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.47
+> Version : 0.7.48
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1862,3 +1862,55 @@ ainsi : les tests portent sur ses décisions, pas sur ses justifications.
 
 **Où consigner.** Dans cette section, à la suite des tests, comme au §24 : cas, pièces, sortie de `depouiller` (25.1),
 liste des recouvrements et verdicts (25.2).
+
+## 26. Fuites temporelles dans les tests régressifs (0.7.48)
+
+**Pourquoi.** Les tests T6, T7, P-0001 et FR-RU (§18 à §23) sont régressifs : date d'information au 30 juin 2026,
+limite de connaissance du modèle qui les a joués, issue déjà acquise au moment du test, pièces récoltées après coup
+par recherche en direct. P-0001 a déjà été marqué `rejeu`, des résultats de septembre étant apparus pendant la récolte.
+Deux travaux mesurent ce risque. El Lahib et al. (2026, arXiv 2602.00758) : sur 393 questions Metaculus, une recherche
+filtrée par date ramène pour 71 % des questions au moins une page contenant une information postérieure qui contraint
+fortement l'issue, et pour 41 % une page qui la donne ; un modèle qui prévoit avec ces pages obtient un Brier de 0,10,
+contre 0,24 avec des pages propres. Paleka et al. (ICLR 2026, arXiv 2506.00723) classent les pièges de l'évaluation
+rétrospective. Le skill tenait les tests régressifs hors V4 (0.7.45) ; il ne disait pas comment réduire la fuite qui en
+gonfle les scores.
+
+**Quatre voies de fuite par les pièces** (El Lahib et al. ; Paleka et al. §2.2) :
+1. **Page mise à jour** : l'article ou la base consultée a été complété après sa date affichée.
+2. **Encadrés** : « articles liés », barres latérales, commentaires, publicités injectent l'actualité dans une page
+   ancienne.
+3. **Horodatage faux** : la date affichée (« mis à jour en mai 2020 ») ne correspond pas au contenu.
+4. **Absence parlante** : une chronologie publiée après coup qui ne mentionne pas l'événement dit qu'il n'a pas eu lieu.
+
+S'y ajoute une fuite plus difficile à voir : le moteur de recherche **classe** les pages d'aujourd'hui avec son savoir
+d'aujourd'hui, et fait remonter ce qui est devenu important après la date d'information.
+
+**Procédure (test régressif).**
+- **Pièces figées.** Lire chaque pièce dans un instantané daté au plus tard à la date d'information (Wayback Machine),
+  et le déclarer au carnet : `recolter … --archive https://web.archive.org/web/AAAAMMJJ…/adresse`. Le moteur lit la date
+  de l'instantané et refuse un `disponible_le` antérieur : un instantané ne prouve que ce qui existait à sa date.
+  `recolter --jusqu-au` liste les faits `sans_archive`. Une pièce lue en direct reste admise ; elle est exposée, et se voit.
+- **Contrôle de fuite.** Avant de coder une pièce lue en direct, la noter de 0 à 4 (échelle d'El Lahib et al.) :
+  0 aucune information postérieure ; 1 postérieure mais sans rapport avec l'issue ; 2 indice faible ; 3 indice fort ;
+  4 issue donnée. **Une pièce notée 2 ou plus sort du dossier** ; si elle a été lue avant le scellement du jugement, le
+  test devient `rejeu`. La note se consigne dans le texte du dossier ; le moteur ne la contrôle pas.
+- **Limite de connaissance du codeur.** `date_limite_connaissance` est une déclaration, pas une garantie : un modèle peut
+  savoir des choses postérieures à sa limite annoncée (Paleka et al. §2.3). Une fenêtre qui s'ouvre au lendemain de cette
+  limite, comme dans T6, T7, P-0001 et FR-RU, est la plus exposée. Le score d'un tel test se lit comme une **borne
+  haute** de la performance, jamais comme une mesure.
+- **Choix de la question (fuite logique, Paleka et al. §2.1).** (a) Lister les questions candidates **avant** toute
+  recherche portant sur la fenêtre, puis tirer au sort, comme pour P-0001. (b) Ne pas tirer les candidates de
+  l'actualité de la fenêtre : la presse parle des événements qui ont eu lieu, pas de ceux qui n'ont pas eu lieu, et la
+  série penche vers le « oui ». (c) Fixer la fin de fenêtre à la date d'information, sans regarder l'issue. (d) Écarter
+  une question dont le fait même qu'elle soit déjà résolue trahit l'issue (« … avant 2030 ? » résolu en 2026 : « oui »).
+- **Pas de prévisions humaines avant le scellement.** Cotes de marché (Polymarket, Kalshi), prévisions Metaculus ou
+  avis d'experts publiés ne se lisent qu'**après** le jugement scellé et le calcul figé. Un bras qui les a vues les
+  recopie peut-être (Paleka et al., « piggybacking »). Les lire pour **trancher l'issue** reste admis (§22).
+
+**Ce que le skill avait déjà** : tests régressifs hors V4 et bilan séparé (0.7.45) ; `rejeu` ; résolutions par absence
+comptées comme fragiles (0.7.44) ; difficulté par question et Brier non comparable entre questions de fréquences de
+base différentes (§1, §23 point 3) ; score logarithmique en regard du Brier (0.7.5). Ces deux papiers ne les changent pas.
+
+**Limites.** Un instantané peut lui-même porter des encadrés chargés plus tard par le navigateur ; les instantanés
+manquent pour beaucoup de pages, surtout hors des grands médias ; la note de fuite est un jugement du codeur, non
+vérifié. La seule évaluation sans fuite reste le test **prospectif**, publié avant l'échéance (§14).

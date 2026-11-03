@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Alphabet situationnel 0.7.47 — calcul expérimental, validation et traçabilité.
+"""Alphabet situationnel 0.7.48 — calcul expérimental, validation et traçabilité.
 Bibliothèque standard Python 3.8+. `autotest` exécute les contrôles de régression.
 Les analogies structurales sont des hypothèses, jamais une calibration acquise.
 Auteur : Othman Ben Brahim · Licence MIT (voir LICENSE).
@@ -2144,8 +2144,18 @@ def cas_attestation(reference):
     return sorted(set(re.findall(r'\bC-(\d{4})(?:-S\d{2})?\b',reference or '')))
 
 
+ARCHIVE_WAYBACK = re.compile(r'^https?://web\.archive\.org/web/(\d{4})(\d{2})(\d{2})\d{0,6}[a-z_]*/\S+$')
+
+
+def date_archive(url):
+    """0.7.48 (validation.md §26 ; El Lahib et al. 2026). Date d'un instantané de la Wayback Machine, lue dans son
+    adresse (`web.archive.org/web/AAAAMMJJ…/`). Rend None pour une adresse qui n'en est pas une."""
+    m=ARCHIVE_WAYBACK.match(url or '')
+    return f'{m[1]}-{m[2]}-{m[3]}' if m else None
+
+
 def recolter_ligne(fait,source,source_url,date_fait,disponible_le,date_consultation,classe_source,fiabilite=None,credibilite=None,
-                   critere=None,motif=None):
+                   critere=None,motif=None,archive=None):
     """0.7.32 (audit DeepSeek, P0.1). Une ligne de carnet : un fait observé, daté, sourcé, avant tout codage. Le
     carnet ne code rien (ni carte, ni strate, ni force) : il garde le matériau brut et la date à laquelle il était
     disponible, pour qu'un dossier ne puisse citer que ce qui était connu à sa date d'information."""
@@ -2163,6 +2173,17 @@ def recolter_ligne(fait,source,source_url,date_fait,disponible_le,date_consultat
         exiger(critere in ('origine','producteur','transmission') and isinstance(motif,str) and motif.strip(),
                'independance : critere = origine, producteur ou transmission, avec un motif')
         x['independance']={'critere':critere,'motif':motif.strip()}
+    if archive is not None:
+        # 0.7.48 (validation.md §26). Une page lue en direct peut avoir été mise à jour, porter des encadrés récents ou un
+        # horodatage faux : sa date affichée ne prouve pas ce qu'elle contenait. Un instantané figé le prouve, à sa date.
+        # Le contenu lu dans l'instantané n'est établi qu'à la date de l'instantané : disponible_le ne peut pas la précéder.
+        da=date_archive(archive)
+        exiger(da is not None,'archive : adresse d’instantané Wayback requise (https://web.archive.org/web/AAAAMMJJ…/adresse)')
+        date_iso(da)
+        exiger(jour(da)<=jour(disponible_le),f'archive : instantané du {da}, postérieur à disponible_le ({disponible_le}) ; '
+               'l’instantané ne prouve que ce qui existait à sa date : déclarer disponible_le au plus tôt à cette date, ou citer un instantané antérieur')
+        exiger(jour(da)<=jour(date_consultation),f'archive : instantané du {da}, postérieur à la consultation ({date_consultation})')
+        x['archive']=archive;x['archive_le']=da
     x['id']='F-'+hashlib.sha256(f"{x['fait']}|{x['source_url']}|{x['date']}".encode()).hexdigest()[:12]
     return x
 
@@ -3530,7 +3551,7 @@ def parametres_markdown():
 # Renvois « fichier.md §N » attendus → mot qui doit figurer dans le titre de la section visée.
 # L'audit vérifie l'existence ET la pertinence ; un renvoi absent de cette table est signalé.
 RENVOIS = {
-    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('validation.md','16'):'Premier test', ('validation.md','17'):'Deuxième série', ('validation.md','18'):'Test T6', ('validation.md','19'):'référence de V4', ('validation.md','20'):'Test T7', ('validation.md','21'):'Classe alternative', ('validation.md','22'):'Sources', ('validation.md','23'):'Test FR-RU', ('validation.md','24'):'deux sources', ('validation.md','25'):'Tests du codeur', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
+    ('base-de-cas.md','4'):'sans événement', ('apports-theoriques.md','27'):'Grossetti lu', ('apports-theoriques.md','28'):'Simmel', ('apports-theoriques.md','16.3'):'attend', ('validation.md','11'):'Règles de décision', ('apports-theoriques.md','29'):'Deux relectures', ('validation.md','12'):'Attribution', ('apports-theoriques.md','30'):'Agent-Causality', ('validation.md','13'):'Audit pratique', ('validation.md','11.10'):'Cinquième relecture', ('apports-theoriques.md','31'):'DeepSeek', ('apports-theoriques.md','32'):'Druckman', ('graphe.md','3.1'):'Unité de comptage', ('validation.md','14'):'Registre des tests', ('validation.md','15'):'Vue extérieure', ('validation.md','16'):'Premier test', ('validation.md','17'):'Deuxième série', ('validation.md','18'):'Test T6', ('validation.md','19'):'référence de V4', ('validation.md','20'):'Test T7', ('validation.md','21'):'Classe alternative', ('validation.md','22'):'Sources', ('validation.md','23'):'Test FR-RU', ('validation.md','24'):'deux sources', ('validation.md','25'):'Tests du codeur', ('validation.md','26'):'Fuites temporelles', ('apports-theoriques.md','34'):'Vue extérieure', ('apports-theoriques.md','33'):'Open Science', ('validation.md','11.9'):'Quatrième relecture',
     ('antagonismes.md','3'):'incompatibilités', ('apports-theoriques.md','4'):'attend', ('apports-theoriques.md','7'):'Deux apports', ('apports-theoriques.md','8'):'Intuition Machine', ('antagonismes.md','4'):'Tensions',
     ('antagonismes.md','4bis'):'Inclusions', ('antagonismes.md','6'):'même objet',
     ('base-de-cas.md','2'):'Fiche', ('base-de-cas.md','3'):'Coder', ('base-de-cas.md','5'):'Partage',
@@ -3767,7 +3788,7 @@ def erreurs_manifeste(texte=None):
 
 
 def audit():
-    exiger(P['version']=='0.7.47','version du moteur et des paramètres différente')
+    exiger(P['version']=='0.7.48','version du moteur et des paramètres différente')
     # 0.7.34 (audit Open Science) : la docstring du moteur annonçait 0.7.9 sans que l'audit la lise.
     exiger(f"Alphabet situationnel {P['version']} " in (__doc__ or ''),'docstring du moteur : version différente de parametres.json')
     errs=erreurs_parametres();exiger(not errs,' ; '.join(errs))
@@ -4210,6 +4231,7 @@ def main():
     rc.add_argument('--date');rc.add_argument('--disponible-le');rc.add_argument('--date-consultation');rc.add_argument('--classe-source')
     rc.add_argument('--fiabilite',choices=FIABILITES);rc.add_argument('--credibilite',type=int);rc.add_argument('--independance-critere');rc.add_argument('--independance-motif')
     rc.add_argument('--jusqu-au',help='lister les faits disponibles à cette date (brouillon de dossier)')
+    rc.add_argument('--archive',help='instantané Wayback de la pièce (0.7.48) : prouve son contenu à la date de l’instantané')
     ac=subs.add_parser('accord');[ac.add_argument(k,type=int,required=True) for k in ('--a','--b','--c','--d')];ac.add_argument('--json',action='store_true')
     ac.add_argument('--repetabilite',action='store_true');ac.add_argument('--ecart-jours',type=int);ac.add_argument('--llm',action='store_true')
     cv=subs.add_parser('conservativite');cv.add_argument('--base',required=True);cv.add_argument('--sortie');cv.add_argument('--contre');cv.add_argument('--empreinte')
@@ -4408,10 +4430,12 @@ def main():
         if a.jusqu_au:
             date_iso(a.jusqu_au);faits=[x for x in (charger(chemin) if chemin.exists() else []) if jour(x['disponible_le'])<=jour(a.jusqu_au)]
             print(json.dumps({'date_information':a.jusqu_au,'faits':faits,
-                'lecture':'brouillon : faits disponibles à la date ; carte, strate, force, objet et passage restent à coder dans le dossier'},
+                'sans_archive':sorted(x['id'] for x in faits if not x.get('archive')),
+                'lecture':'brouillon : faits disponibles à la date ; carte, strate, force, objet et passage restent à coder dans le dossier ; '
+                          'en test régressif, un fait sans archive repose sur une page lue en direct, exposée aux fuites (validation.md §26)'},
                 ensure_ascii=False,indent=2));return
         x=recolter_ligne(a.fait,a.source,a.source_url,a.date,a.disponible_le,a.date_consultation,a.classe_source,a.fiabilite,a.credibilite,
-                         a.independance_critere,a.independance_motif)
+                         a.independance_critere,a.independance_motif,a.archive)
         anciens=charger(chemin) if chemin.exists() else []
         exiger(all(y.get('id')!=x['id'] for y in anciens),f"recolter : fait déjà au carnet ({x['id']})")
         with open(chemin,'a',encoding='utf-8',newline='\n') as f_:f_.write(json.dumps(x,ensure_ascii=False,sort_keys=True)+'\n')
@@ -6058,6 +6082,12 @@ def autotest():
             x=recolter_ligne('A annonce des représailles.','communiqué de A','https://exemple.invalid/a','2026-09-03','2026-09-03','2026-09-15','contemporain','B',2)
             self.assertTrue(x['id'].startswith('F-'));self.assertEqual(x,recolter_ligne('A annonce des représailles.','communiqué de A','https://exemple.invalid/a','2026-09-03','2026-09-03','2026-09-15','contemporain','B',2))
             with self.assertRaises(ValueError):recolter_ligne('f','s','https://e.invalid','2026-09-05','2026-09-03','2026-09-15','contemporain')   # disponible avant le fait
+            # 0.7.48 : instantané Wayback ; le contenu n'est prouvé qu'à la date de l'instantané.
+            w='https://web.archive.org/web/20260601120000/https://exemple.invalid/a'
+            y=recolter_ligne('f','s','https://exemple.invalid/a','2026-05-30','2026-06-01','2026-09-15','contemporain',archive=w)
+            self.assertEqual(y['archive_le'],'2026-06-01');self.assertEqual(date_archive('https://exemple.invalid/a'),None)
+            with self.assertRaises(ValueError):recolter_ligne('f','s','https://exemple.invalid/a','2026-05-30','2026-05-30','2026-09-15','contemporain',archive=w)
+            with self.assertRaises(ValueError):recolter_ligne('f','s','https://exemple.invalid/a','2026-05-30','2026-06-01','2026-09-15','contemporain',archive='https://exemple.invalid/copie')
             self.assertEqual(controle_grille('k',{'intensite':'F','fiabilite_source':'B','credibilite':2}),[])
             self.assertTrue(controle_grille('k',{'intensite':'F','fiabilite_source':'E'}))
             self.assertTrue(controle_grille('k',{'intensite':'F','credibilite':4}))

@@ -1,9 +1,22 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.47
+> Version : 0.7.48
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.48 — 2026-11-03 · fuites temporelles des tests régressifs
+
+Décision d'auteur, d'après El Lahib et al. 2026 (arXiv 2602.00758) et Paleka et al. 2026 (ICLR, arXiv 2506.00723),
+appliqués aux tests régressifs T6, T7, P-0001 et FR-RU. **Aucun paramètre touché, aucune probabilité changée.**
+
+- **Carnet** : `recolter --archive` déclare un instantané Wayback ; `archive_le` lu dans l'adresse ; `disponible_le`
+  refusé s'il précède l'instantané ; `recolter --jusqu-au` liste les faits `sans_archive`.
+- **Procédure** (`validation.md` §26) : quatre voies de fuite par les pièces ; note de fuite 0–4, pièce écartée à 2 ou
+  plus ; limite de connaissance du codeur tenue pour une déclaration, score régressif lu comme borne haute ; questions
+  candidates listées avant toute recherche sur la fenêtre ; aucune cote de marché ni prévision publiée lue avant le
+  scellement. `SKILL.md`, `base-de-cas.md` : paragraphes, ligne de table, commande.
+- 167 autotests (le test du carnet couvre l'instantané).
 
 ## 0.7.47 — 2026-11-03 · tests du codeur : la fiche ou le nom
 

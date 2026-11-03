@@ -1,6 +1,6 @@
 # Alphabet situationnel — Base de cas (couche 3)
 
-> Version : 0.7.47
+> Version : 0.7.48
 
 > Format, codage et contrôles. `valider` et `calculer` appellent le même validateur. Une base valide
 > syntaxiquement n'est pas une base factuellement certifiée. Règles : B1–B5.
@@ -226,7 +226,9 @@ sources) à 5 (improbable), 6 (non évaluable). Le carnet ne code rien : ni cart
 --jusqu-au` liste les faits disponibles à une date d'information, brouillon d'un dossier qui ne peut citer que ce qui
 était connu. Les deux champs de la grille sont admis dans un mot de fiche ou de dossier ; s'ils sont remplis, **un
 ancrage F exige une source A à C et une information 1 à 3** (`valider`, `dossier`). Ils n'ont aucun effet sur le
-calcul. Ils précisent, sans la remplacer, la règle de `corroboration`.
+calcul. Ils précisent, sans la remplacer, la règle de `corroboration`. **Depuis 0.7.48**, `--archive` déclare un instantané Wayback de la pièce
+(`archive`, `archive_le` lu dans l'adresse) ; `disponible_le` ne peut pas précéder la date de l'instantané, et
+`--jusqu-au` liste les faits `sans_archive` (`validation.md` §26).
 
 ---
 

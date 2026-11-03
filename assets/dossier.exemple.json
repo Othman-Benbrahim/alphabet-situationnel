@@ -134,7 +134,9 @@
    "cartes": [
     "POL@7"
    ],
-   "requete": "déclarations officielles de A et de B sur leurs relations, septembre 2026"
+   "requete": "déclarations officielles de A et de B sur leurs relations, septembre 2026",
+   "executee": true,
+   "date_execution": "2026-09-14"
   },
   {
    "famille": "discrimination",
@@ -142,21 +144,27 @@
     "POL@7",
     "SEU@7"
    ],
-   "requete": "représailles annoncées par A : exécutées ou seulement annoncées, et à quelle date"
+   "requete": "représailles annoncées par A : exécutées ou seulement annoncées, et à quelle date",
+   "executee": true,
+   "date_execution": "2026-09-14"
   },
   {
    "famille": "contradiction",
    "cartes": [
     "POL@7"
    ],
-   "requete": "canaux de médiation acceptés par A et B depuis août 2026"
+   "requete": "canaux de médiation acceptés par A et B depuis août 2026",
+   "executee": true,
+   "date_execution": "2026-09-14"
   },
   {
    "famille": "observation",
    "cartes": [
     "CTR@6"
    ],
-   "requete": "décret tarifaire de A du 2026-08-28 : texte et date d'entrée en vigueur"
+   "requete": "décret tarifaire de A du 2026-08-28 : texte et date d'entrée en vigueur",
+   "executee": true,
+   "date_execution": "2026-09-14"
   },
   {
    "famille": "discrimination",
@@ -164,14 +172,18 @@
     "CTR@6",
     "HIE@6"
    ],
-   "requete": "le plafond de prix du bien X distingue-t-il des catégories d'opérateurs"
+   "requete": "le plafond de prix du bien X distingue-t-il des catégories d'opérateurs",
+   "executee": true,
+   "date_execution": "2026-09-14"
   },
   {
    "famille": "contradiction",
    "cartes": [
     "CTR@6"
    ],
-   "requete": "dérogations ou mesures d'exception au plafond de prix du bien X"
+   "requete": "dérogations ou mesures d'exception au plafond de prix du bien X",
+   "executee": true,
+   "date_execution": "2026-09-14"
   }
  ],
  "evenements": [
@@ -180,7 +192,23 @@
    "semantique": "presence",
    "temporalite": "generique",
    "resolution": "présence d'un franchissement de seuil reconnu par les parties au 2026-12-01, mesurée sur le marqueur local « franchissement d'un seuil reconnu par les parties », journal officiel de A et communiqués de B",
-  "vue_exterieure": {"frequence": 0.08, "classe_de_reference": "crises bilatérales à deux blocs, franchissement d'un seuil d'escalade en 3 mois (classe fictive de démonstration)", "source": "valeur fictive de démonstration ; une vue extérieure réelle cite une base (MID, UCDP) et sa période"}
+   "source_resolution": {
+    "emetteur": "ministère des affaires étrangères de A (fictif)",
+    "document": "journal officiel de A et communiqués du ministère, 2026-09-15 au 2026-12-01",
+    "regle_ambiguite": "seul compte un acte publié et daté (rupture, rappel, mesure exécutée) ; une déclaration orale ou une menace ne compte pas (fictif : exemple de format)"
+   },
+   "vue_exterieure": {
+    "frequence": 0.08,
+    "classe_de_reference": "crises bilatérales à deux blocs, franchissement d'un seuil d'escalade en 3 mois (classe fictive de démonstration)",
+    "source": "valeur fictive de démonstration ; une vue extérieure réelle cite une base (MID, UCDP) et sa période",
+    "classe_alternative": {
+     "frequence": 0.15,
+     "classe_de_reference": "crises bilatérales avec représailles déjà annoncées, franchissement en 3 mois (classe fictive de démonstration)",
+     "source": "valeur fictive de démonstration",
+     "pourquoi_ecartee": "classe plus étroite, choisie d'après un trait de l'état présent : effectif plus faible, risque de sélection sur l'issue (fictif : exemple de format)"
+    },
+    "ecart_critere": "la classe compte les franchissements reconnus par les deux parties ; la résolution compte aussi un acte publié par une seule (fictif : la question est un peu plus large que la classe, qui la sous-estime)"
+   }
   }
  ]
 }

@@ -6,6 +6,8 @@
 >    `python3 scripts/moteur.py fiche-test --journal J.jsonl --id P-xxxx`.
 > 2. **Partie RÉSULTAT**, après l'échéance : la sortie de
 >    `python3 scripts/moteur.py fiche-resultat --journal J.jsonl --id P-xxxx --issue 0|1 --preuve "…" --date AAAA-MM-JJ`.
+>    Depuis 0.7.44, ajouter `--source-utilisee "…" --source-conforme oui|non --mode positif|absence`
+>    (et `--ecart-source "…"` si la source n'est pas celle du dossier).
 >
 > Puis : `python3 scripts/moteur.py ingerer assets/registre-tests.md` relit les blocs JSON, vérifie que chaque résultat
 > correspond bien à sa prévision (empreinte), et score le registre. Le texte autour des blocs peut se lire et

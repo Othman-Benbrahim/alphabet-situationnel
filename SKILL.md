@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.38'
+  version: '0.7.45'
   author: Othman Ben Brahim
 ---
 
@@ -16,12 +16,20 @@ conditions de chaque calcul. Les règles sont dans `references/protocole.md` ; l
 > ⚠ Outil expérimental : calcul reproductible ne signifie pas probabilité calibrée. Ne jamais
 > convertir un résultat « non estimé » en chiffre ni présenter le niveau ρ comme un taux de fiabilité.
 
+**Étape 0, avant toute commande (0.7.45) : localiser le skill.** Son chemin dépend de l'installation et de la
+synchronisation ; un chemin annoncé ailleurs peut ne pas exister. Lancer d'abord
+`find / -name moteur.py -path '*alphabet-situationnel*' 2>/dev/null`, puis `cd` dans le dossier trouvé (celui qui contient
+ce `SKILL.md`), puis `python3 scripts/moteur.py audit`.
+
 ## Contrôle d'intégrité
 
-Version 0.7.38. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.45. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
-du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. Si `python3` manque
+du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. *Le dossier du skill est celui qui
+contient ce `SKILL.md` ; son chemin dépend de l'installation (0.7.42) : le repérer d'abord (par exemple
+`find / -name moteur.py -path '*alphabet-situationnel*' 2>/dev/null`), puis `cd` dedans, ou appeler le moteur par son
+chemin complet : le moteur trouve ses propres fichiers où qu'il soit lancé.* Si `python3` manque
 ou échoue, travailler « sans shell » (`simulation.md` §6) : lecture et commandes à exécuter, aucun
 chiffre présenté comme sortie du moteur.
 Exécuter `python3 scripts/moteur.py audit` ; après modification, `python3 scripts/moteur.py autotest`.
@@ -92,7 +100,7 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… accord … --repetabilite --ecart-jours N` | répétabilité : le même codeur, deux passes aveugles sur les mêmes cas ; non recevable sous `repetabilite_ecart_min_jours` ; publiée à part de κ |
 | `… attribuer --etat "…" --evenement "SEUIL@7 apparait" --temporalite generique` | attribution **dans le moteur** : Shapley exact par mot et interaction par paire (en logit), sur les 2ⁿ sous-ensembles de l'état ; explique le calcul, pas l'événement (`validation.md` §12) |
 | `… squelette --calcul C.json --id P-xxxx` | ligne de journal complète tirée du JSON de `calculer` : ce que le moteur sait est recopié, ce que l'analyste doit dire porte « À REMPLIR », refusé par la validation qui liste tous les champs d'un coup |
-| `… fiche-test --journal J.jsonl --id P-xxxx` puis, après l'échéance, `… fiche-resultat --journal J.jsonl --id P-xxxx --issue 0\|1 --preuve "…" --date J` | les deux parties Markdown d'un test, chacune avec son bloc JSON et l'empreinte de la prévision ; à coller dans `assets/registre-tests.md` (`validation.md` §14) |
+| `… fiche-test --journal J.jsonl --id P-xxxx` puis, après l'échéance, `… fiche-resultat --journal J.jsonl --id P-xxxx --issue 0\|1 --preuve "…" --date J --source-utilisee "…" --source-conforme oui\|non --mode positif\|absence` (0.7.44) | les deux parties Markdown d'un test, chacune avec son bloc JSON et l'empreinte de la prévision ; à coller dans `assets/registre-tests.md` (`validation.md` §14) |
 | `… ingerer assets/registre-tests.md [--journal-sortie J.jsonl]` | relit le registre, refuse une prévision retouchée, reconstitue le journal et le score |
 | `… recolter --carnet C.jsonl --fait "…" --source "…" --source-url URL --date J --disponible-le J --date-consultation J --classe-source contemporain [--fiabilite A-F --credibilite 1-6]` | carnet de faits datés et sourcés, avant tout codage ; `--jusqu-au J` liste les faits disponibles à une date (brouillon de dossier) (`base-de-cas.md` §2) |
 | `… depouiller --premier A.jsonl --second B.jsonl` | deux codages indépendants des mêmes cas : table 2×2 et `accord` par carte, et table groupée (A4 ; `validation.md` §11.10) |
@@ -114,7 +122,8 @@ Tout chiffre vient du moteur ; le modèle choisit les événements et contrôle 
 | `… audit` / `… autotest` / `… parametres` | intégrité / tests / table documentaire générée ; l'audit vérifie la forme et les recoupements internes, pas la justesse du contenu |
 
 `--fref` n'est admis que pour un événement simple, avec `--source-ref`, `--periode-ref`,
-`--disponible-ref`. Pour les composés, utiliser `--references` et `--resolution` (formats :
+`--disponible-ref`. Depuis 0.7.39, aussi `--definition-ref` : la classe de la référence, dans le vocabulaire de la
+source (jamais le nom d'une carte) ; sans lui, `--fref` était refusé quelle que soit la référence. Pour les composés, utiliser `--references` et `--resolution` (formats :
 `graphe.md`). L'horizon multiple des composés est refusé. F/f est une confiance, pas une grandeur :
 `se renforce` et `s'affaiblit` sont refusés en prévision. **Deux échelles portent les mêmes lettres** :
 le F/f d'un mot est la confiance de l'ancrage, le F/M/f d'une case de matrice est la force postulée
@@ -158,6 +167,44 @@ Sans base éligible, ρ3 avec référence externe, ρ4 sinon ; afficher égaleme
 facteur 10 en cotes (contrôle prédictif a priori : les paramètres posés à la main sont alors incompatibles avec le
 domaine). `validation.md` §15.
 
+**Dossier obligatoire, source de résolution nommée, inertie de l'objet (0.7.39).** Hors `--demo`, `calculer` refuse
+de tourner sans `--dossier`. Chaque événement du dossier porte `source_resolution` : l'émetteur (nommé, jamais « la
+presse »), le document, et la règle si la source est ambiguë (ce qui compte, ce qui ne compte pas). Une persistance ou
+une disparition se chiffre avec une référence **de l'objet** (`--fref` avec `--definition-ref`, ou `--references`) ;
+sans elle, non estimé : l'inertie du moteur est celle de la carte, pas de la doctrine, de la trêve ou de l'embargo en
+question. Une abstention ne publie aucun chiffre, et un événement programmé n'a pas de bande d'horizon.
+`validation.md` §17.
+
+**Dater l'état au jour, vue extérieure scorée (0.7.40).** Un état daté au mois (« [2026-06 | 3 mois] ») se lit au 1er :
+son échéance tombe le 2026-09-01. Pour une question qui court jusqu'au 30 septembre, écrire « [2026-06-30 | 3 mois] » ;
+le journal refuse une question ou une résolution datées après l'échéance. La ligne de journal porte `vue_exterieure`
+(le taux de base du dossier, recopié par `squelette`) : `scorer` et `ingerer` le scorent comme un bras, à côté du
+moteur, hors décision V4. Le sceau du jugement accepte l'événement en forme courte ou longue. `validation.md` §18.
+*Depuis 0.7.41, la vue extérieure est la référence de V4 (`v4_reference`) : le statut V4 se lit contre elle.*
+`validation.md` §19.
+
+**Classe alternative (0.7.43, obligatoire).** Dans `vue_exterieure`, déclarer aussi `classe_alternative` : une seconde
+classe de référence plausible, avec `frequence`, `classe_de_reference`, `source` et `pourquoi_ecartee` ; ou `null` avec
+`motif_sans_alternative` quand aucune n'est honnête. Elle est scellée avec le dossier, affichée avec l'écart entre les
+deux classes, recopiée au journal (`vue_exterieure_alternative`) et scorée à côté. V4 décide sur la classe retenue ;
+`scorer` publie le même verdict contre l'alternative et dit s'ils concordent. `validation.md` §21.
+
+**Sources : ce qu'elles peuvent constater (0.7.44, obligatoire).** Trois questions avant de calculer, une après.
+(1) La classe de référence compte-t-elle ce que compte le critère de résolution ? Écrire la réponse dans
+`vue_exterieure.ecart_critere` (« identique : … », ou l'écart et son sens). (2) La source de résolution déclarée
+peut-elle constater tout ce que le critère inclut ? Sinon, resserrer le critère ou changer de source. (3) Cette question
+est-elle déjà suivie sous un autre épisode ? Après l'échéance : dire quelle source a tranché, si c'est celle du dossier,
+et si l'issue repose sur un document ou sur une absence de trace. `validation.md` §22.
+
+**Requêtes exécutées, test régressif déclaré (0.7.45).** Chaque requête de `recherches` porte `executee` (true ou false)
+et, si elle a été lancée, `date_execution` : une requête non lancée est consignée mais ne couvre rien, et le dossier reste
+Spéculatif. Une ligne de journal porte `mode_test` : `prospectif`, ou `regressif` avec `date_limite_connaissance` (la
+limite de connaissance du codeur, au plus la date d'information ; un modèle de langage la connaît). Un test régressif est
+hors V4 par construction ; `scorer` et `ingerer` le bilantent à part (`registre_regressif`). `sceller-jugement` rend la
+question et l'événement exacts : les recopier mot pour mot. La vue extérieure ne modifie pas p : c'est le bras de
+référence de V4, indépendant du moteur ; une fréquence sourcée entre dans le calcul par `--fref` ou `--references`.
+`validation.md` §23.
+
 **Avant de coder, facultatif : le gabarit de formulation (0.7.18).** Six questions, dans l'ordre où une
 idée se forme ; elles n'ajoutent aucune obligation, elles rendent visibles celles qui existent. (1) **Quelle
 chose** change d'état ? Un objet nommé, une strate ; s'il ne peut ni apparaître, ni persister, ni
@@ -188,7 +235,7 @@ exploration des suites, sans faire passer celle-ci pour une prescription.
 fait précis et **suffisant** (`test` : pistolet ou double ; un fait qui remplit seulement le marqueur
 est un cerceau et donne f), la **corroboration** déclarée pour une lecture réelle comme pour une fiche
 (deux sources indépendantes nommées, et ce qui les rend indépendantes : origine, producteur ou
-transmission, 0.7.11 ; une source unique est admise si elle est primaire, texte officiel
+transmission, 0.7.11 ; *valeurs exactes du champ `corroboration` : `"independantes"` ou `"unique"` (0.7.45)* ; une source unique est admise si elle est primaire, texte officiel
 ou donnée publiée, et signalée « source unique » dans « À vérifier » ; un fait repris d'un seul relais
 secondaire donne f : un fait forgé bien formé ne doit pas suffire à porter F), une ligne A6 qui passe **toutes** les voisines de la carte (`cartes.md`), sans `?`, une
 **garantie** (mécanisme, attendu, contredirait : forme type dans la fiche), une **option** (acteur,
@@ -302,7 +349,10 @@ signature (`simulation.md` §1 et §6). État nul : le dire, ne pas forcer une c
 
 **SCORER** : 0. **fiche RÉSULTAT (0.7.36, systématique)** : pour chaque issue constatée, lancer `moteur.py
 fiche-resultat --journal … --id … --issue 0|1 --preuve "…" --date …` et remettre la fiche à coller sous la fiche
-TEST du registre, puis `moteur.py ingerer` sur le registre ; 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
+TEST du registre, puis `moteur.py ingerer` sur le registre. *Depuis 0.7.44, `fiche-resultat` exige aussi
+`--source-utilisee "…"` (la source qui a vraiment tranché), `--source-conforme oui|non` (est-ce celle du dossier ? si
+non, `--ecart-source "…"`) et `--mode positif|absence` (un document établit l'issue, ou aucune trace n'a été trouvée) ;
+`ingerer` et `scorer` comptent les résolutions fragiles, et signalent un même événement suivi sous deux épisodes.* 1. ajouter les lignes de score sans modifier les prévisions ; 2. `moteur.py scorer J.jsonl` ;
 3. restituer ensemble Brier, comparateurs, abstentions, difficulté et moteur contre jugement, chacun
 avec son différentiel par épisode, σ(d) et les tests exacts du signe et de Wilcoxon : un écart moyen non
 distinguable de zéro se dit tel ; l'e-processus (`e_amelioration`, `v4.sequentiel`) est la seule lecture
@@ -334,6 +384,7 @@ lit juste.
 
 Un `audit` ou un `valider` conformes ne disent donc rien de la lecture : ils disent qu'elle est complète
 et bien formée. Sans `--dossier`, le calcul ne contrôle ni A6, ni A7, ni les questions — et le dit.
+Depuis 0.7.39, hors `--demo`, il refuse simplement de calculer sans dossier.
 
 ## Limites
 

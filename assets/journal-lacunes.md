@@ -63,3 +63,14 @@ trancher avant leur activation (`feuille-de-route.md` §4 et §5.1).
 Correction du CHANGELOG 0.6.4 : il comptait trois ancrages « qui ne remplissent plus le marqueur
 local » ; deux seulement posent problème (les F). Le troisième, déjà f, est conforme à A1.
 Source : audit de la version 0.6.4 (constat O3) et relecture des fiches, 2026-10-27.
+
+## Lacune 4 — 2026-11-03 · CONTRAINTE@7 sans effet sur RÉCIPROCITÉ@7
+
+Situation : test FR-RU (`validation.md` §23), date d'information 2026-06-30. État : CONTRAINTE@7[f] (sanctions de l'UE
+contre la Russie en vigueur). Événement : RÉCIPROCITÉ@7 apparaît (expulsions de diplomates en miroir France–Russie).
+Constat : la matrice n'a pas d'arête CONTRAINTE → RÉCIPROCITÉ en strate 7 ; produit des λ = 1, p = fréquence par défaut.
+Or le marqueur local de RÉCIPROCITÉ@7 inclut les « sanctions en miroir » : une sanction en vigueur est un terrain
+de réciprocité, et le moteur ne la voit pas. Nature : **manque de données** plutôt que de vocabulaire ; aucune arête
+n'est ajoutée sans cas (P1). À `confronter` dès qu'existeront des cas réels où une contrainte précède, ou non, une
+réciprocité. Issue du test : 0 (aucune expulsion), donc aucune indication sur le sens de l'arête.
+Source : test régressif du 2026-11-03 (registre de l'utilisateur, ligne P-0001 FR-RU).

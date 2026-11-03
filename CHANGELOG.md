@@ -1,9 +1,116 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.38
+> Version : 0.7.45
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.45 — 2026-11-03 · test FR-RU
+
+Corrections tirées du test FR-RU (`validation.md` §23). **Aucun paramètre touché ; clôture vérifiée.**
+
+- **`SKILL.md`** : étape 0, localiser le skill ; valeurs exactes de `corroboration`.
+- **`sceller-jugement`** : rend `question` et `evenement` à recopier mot pour mot.
+- **Dossier** : `recherches[].executee` et `date_execution` obligatoires ; une requête non lancée ne couvre rien.
+  `assets/dossier.exemple.json` complété.
+- **Journal** : `mode_test` (`prospectif` | `regressif`) requis depuis 0.7.45, `date_limite_connaissance` pour un test
+  régressif (au plus la date d'information) ; régressif hors V4, bilan `registre_regressif`.
+- **Sortie** : la vue extérieure ne modifie pas p, et la sortie le dit.
+- **Cosmétique** : extraits coupés au mot ; message de dossier sans identifiant interne ; `ingerer` affiche moteur contre
+  jugement et bilan régressif.
+- `assets/journal-lacunes.md` : lacune 4 (CONTRAINTE@7 sans effet sur RÉCIPROCITÉ@7).
+- 166 autotests.
+
+## 0.7.44 — 2026-11-03 · sources : ce qu'elles peuvent constater
+
+Décision d'auteur après le test P-0001 (`validation.md` §22) : un parcours obligatoire sur les sources. **Aucun
+paramètre touché ; clôture vérifiée.**
+
+- **Dossier** : `vue_exterieure.ecart_critere` obligatoire (en quoi la classe compte autre chose que le critère de
+  résolution) ; affiché au calcul et sur la fiche TEST. `assets/dossier.exemple.json` complété.
+- **`fiche-resultat`** : `--source-utilisee`, `--source-conforme oui|non` (+ `--ecart-source`), `--mode positif|absence`
+  obligatoires ; contrôlés dans le journal s'ils sont présents.
+- **`scorer` / `ingerer`** : `resolutions` (positives, par absence, hors source, fragiles) ; `episodes_suspects` (même
+  événement, fenêtres chevauchantes, épisodes différents).
+- `SKILL.md` : trois questions avant de calculer, une après ; `assets/registre-tests.md` : commande à jour.
+- 165 autotests.
+
+## 0.7.43 — 2026-11-03 · classe de référence alternative
+
+Décision d'auteur (option a), avant le premier épisode prospectif (`validation.md` §21). **Aucune probabilité ne
+change ; clôture vérifiée.**
+
+- **Dossier** : `vue_exterieure.classe_alternative` obligatoire ({frequence, classe_de_reference, source,
+  pourquoi_ecartee}, ou null avec `motif_sans_alternative`) ; une classe différente de la classe retenue.
+  `assets/dossier.exemple.json` complété.
+- **Calcul** : alternative et écart entre classes affichés ; fiche TEST les reprend.
+- **Journal** : `vue_exterieure_alternative` requis depuis 0.7.43, égal au calcul figé, recopié par `squelette`.
+- **Score** : `brier_vue_alternative`, bilan descriptif, `v4_vue_alternative`, `v4_robustesse_classe` ; V4 décide sur la
+  classe retenue ; fiche RÉSULTAT et `ingerer` affichent l'alternative.
+- 164 autotests.
+
+## 0.7.42 — 2026-11-03 · test T7
+
+Corrections de fonctionnement tirées du test T7, sanctions de l'UE (`validation.md` §20). **Aucun paramètre touché ;
+clôture vérifiée.**
+
+- **Vue extérieure d'un composé** contrôlée et recopiée dans le calcul (puis `squelette`, score) ; temporalité d'un
+  composé comparée au dossier.
+- **Dossier** : sémantique « compose » exigée pour « s'intensifie » et « se transforme », comme au journal.
+- **A6** : découpage hors parenthèses.
+- **`sceller-jugement`** : `--date` = date d'information (alias `--date-information`), sortie explicite, `scelle_le_utc`.
+- **Messages** : `resolution.ecart_marqueur` nommé ; apostrophe typographique acceptée dans les événements et les sceaux.
+- **`SKILL.md`** : repérer le dossier d'installation du skill.
+- Constat : un composé ne passe pas par les cartes et ne mesure que la classe de référence ; le choix de la classe décide
+  du chiffre (piste différée : classe alternative déclarée).
+- 163 autotests.
+
+## 0.7.41 — 2026-11-03 · la vue extérieure, référence de V4
+
+Décision d'auteur, prise avant le premier épisode prospectif (`validation.md` §19). **Aucune probabilité ne change ;
+clôture vérifiée.**
+
+- **`v4_reference` = `vue_exterieure`** (nouvelle valeur, devenue la valeur par défaut ; c'était `inertie`). Le statut
+  V4 se lit contre le taux de base déclaré dans le dossier avant le calcul.
+- Le bras de référence d'une abstention avec repli est sa vue extérieure ; le repli lui-même ne change pas.
+- Les énoncés C et A gardent leurs bras ; tous les autres bras restent publiés.
+- Tests de référence V4 mis à jour (lignes de test dotées d'une vue extérieure). 162 autotests.
+
+## 0.7.40 — 2026-11-03 · test T6
+
+Corrections tirées du test T6, Inde–Pakistan (`validation.md` §18). **Aucun paramètre touché ; clôture vérifiée.**
+
+- **Sceau du jugement** : la vérification accepte l'événement en forme courte ou longue (« SEU@7 apparait » ou
+  « SEUIL@7 apparaît ») ; le hachage ne change pas, et le message de refus dit quoi recopier.
+- **Vue extérieure scorée** : champ `vue_exterieure` du journal (requis depuis 0.7.40, null sans dossier), recopié par
+  `squelette`, lu dans le calcul figé pour les lignes antérieures ; `brier_vue_exterieure`, bilan descriptif et
+  `v4_vue_exterieure` dans `scorer`, ligne dédiée dans `ingerer` et dans la fiche RÉSULTAT. Hors décision V4.
+- **Échéance** : drapeau pour un état daté au mois ; le journal refuse une question ou une résolution datées après
+  l'échéance.
+- **`squelette`** recopie le comparateur dans `frequence_de_base`.
+- Constat consigné, sans correction : les cartes ne peuvent qu'augmenter une probabilité d'apparition (multiplicateurs
+  ≥ 1), d'où une surestimation des événements rares ; à mesurer par l'énoncé C.
+- 162 autotests.
+
+## 0.7.39 — 2026-11-03 · deuxième série de tests régressifs
+
+Corrections tirées de cinq tests rétrospectifs sur la strate 7 (`validation.md` §17). **Aucun paramètre touché ;
+clôture vérifiée.** Trois règles nouvelles, décidées par l'auteur sur cette série, font passer en abstention des
+calculs qui chiffraient : ce sont des refus, pas des probabilités modifiées.
+
+- **`--fref` réparé** : `--definition-ref` requis (la classe, dans les mots de la source). La définition reprenait le
+  nom de l'événement et le contrôle de classe tautologique la refusait toujours. Test positif ajouté.
+- **Abstention sans chiffres** : quand le moteur ne chiffre pas, bande d'horizon, variantes de codage, résultat
+  principal et bande verbale passent à null. Un événement programmé n'a jamais de bande d'horizon.
+- **Messages** : un refus de sémantique nomme les sémantiques admises et oriente vers « s'intensifie ».
+- **Inertie de l'objet** (décision) : hors démonstration, `persiste` et `disparait` exigent une référence de l'objet ;
+  sinon non estimé. En démonstration, un drapeau « inertie générique ».
+- **Dossier obligatoire** (décision) : hors `--demo`, `calculer` refuse de tourner sans `--dossier`.
+- **Source de résolution** (décision) : `source_resolution {emetteur, document, regle_ambiguite}` requise pour chaque
+  événement d'un dossier ; un émetteur vague (« la presse ») est refusé. `assets/dossier.exemple.json` complété.
+- Écartés : un sens `recurrence` (déjà exprimable en « s'intensifie »), la rétrogradation F → f sans dossier (elle
+  changerait p), une commande `journaliser` (c'est `squelette`).
+- 161 autotests.
 
 ## 0.7.38 — 2026-11-03 · premier test régressif
 

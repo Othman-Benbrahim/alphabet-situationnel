@@ -1,6 +1,6 @@
 # Alphabet situationnel — Simulation et sortie (couche 5)
 
-> Version : 0.7.38
+> Version : 0.7.45
 
 > Les chiffres et empreintes viennent du moteur. Format des restitutions, sans transformer une
 > simulation conditionnelle en prévision empiriquement validée.
@@ -218,6 +218,13 @@ réécrit pas le pari, §4). Le moment de la décision n'est pas pour autant le 
 Grossetti, le degré d'imprévisibilité d'une situation est « lui-même partiellement imprévisible ».
 
 ---
+
+**Persistance et disparition : l'inertie de l'objet (0.7.39).** L'inertie du moteur est celle d'une carte, un chiffre
+par trimestre (INCERTITUDE : 0,40), quel que soit l'objet. Une doctrine en place depuis des décennies et une trêve d'une
+semaine y persistent pareillement : sur le test T2 de la deuxième série (`validation.md` §17), 0,40 contre une issue
+réalisée. Hors démonstration, `persiste` et `disparait` exigent donc une référence de l'objet : `--fref` avec
+`--definition-ref` (la classe dans les mots de la source, par exemple « doctrines de défense publiques maintenues un
+trimestre »), ou `--references`. Sans elle : non estimé, motif journalisé, abstention. Les paramètres ne changent pas.
 
 ## 5. Bloc symbolique (P9)
 

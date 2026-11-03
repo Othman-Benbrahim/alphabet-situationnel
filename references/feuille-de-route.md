@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.38
+> Version : 0.7.45
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,13 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.45 (faite) | Test FR-RU | étape 0 (localiser le skill) ; requêtes exécutées et datées ; mode de test régressif déclaré et bilan séparé ; sceau qui rend question et événement ; vue extérieure sans effet sur p, dit en sortie ; lacune 4 ; aucune probabilité touchée | — |
+| 0.7.44 (faite) | Sources : ce qu'elles peuvent constater | décision d'auteur après P-0001 : écart classe/critère obligatoire ; source utilisée, conformité et mode de résolution obligatoires ; résolutions fragiles comptées ; épisodes en double signalés ; aucune probabilité touchée | — |
+| 0.7.43 (faite) | Classe de référence alternative | décision d'auteur (option a) : seconde classe obligatoire, scellée, scorée ; V4 décide sur la classe retenue, robustesse publiée ; aucune probabilité touchée | — |
+| 0.7.42 (faite) | Test T7 (sanctions UE, nouvelle occurrence) | vue extérieure des composés contrôlée et recopiée ; sémantique « compose » au dossier ; A6 et parenthèses ; `--date-information` ; apostrophe typographique ; chemin du skill ; constat : un composé ne mesure que la référence | — |
+| 0.7.41 (faite) | La vue extérieure, référence de V4 | décision d'auteur avant le premier épisode : `v4_reference` = `vue_exterieure` ; énoncés C et A inchangés ; aucune probabilité touchée | — |
+| 0.7.40 (faite) | Test T6 (Inde–Pakistan) | sceau du jugement indépendant de la forme du libellé ; vue extérieure scorée comme bras (hors décision V4) ; échéance contrôlée contre les dates de la question ; constat : multiplicateurs ≥ 1, surestimation des événements rares, à mesurer (énoncé C) | — |
+| 0.7.39 (faite) | Deuxième série de tests régressifs | `--fref` réparé (`--definition-ref`) ; abstention sans chiffres, pas de bande d'horizon pour un événement programmé ; messages de sémantique ; décisions : référence de l'objet pour `persiste`/`disparait`, dossier obligatoire hors démo, source de résolution nommée ; aucun paramètre touché | — |
 | 0.7.38 (faite) | Premier test régressif | « nouvelle occurrence » posée en « s'intensifie » sur une grandeur cumulée, message G6 orienté ; `squelette` et refus de « À REMPLIR » listant tous les champs ; affichage de la bande corrigé ; aucun paramètre touché (un cas rejoué ne calibre rien) | — |
 | Champ facultatif `occurrences` {CARTE@strate: nombre d'actes} dans les états des cas, pour que la base puisse un jour estimer une nouvelle occurrence au lieu de la référence seule | premiers cas réels de la strate 7 | — |
 | 0.7.37 (faite) | Présentation | README d'une page, historique et ancien README dans le CHANGELOG, parcours contributeur (`CONTRIBUER.md`) ; aucune règle nouvelle | — |
@@ -366,6 +373,8 @@ Chaque élément attend une condition de données ; le coder avant serait coder 
 | Champ facultatif `forme_imprevisibilite` (carrefour, transition programmée, risque anticipé, crise ; Grossetti 2004) dans le journal, pour comparer scores et abstentions par forme | accord mesuré entre deux codeurs sur 30 questions | — |
 | Règle des commencements (transition plus fréquente au début d'une entité, Grossetti 2004) | cas réels datés depuis la naissance de l'entité ; **version séparée** (change p) | — |
 | Lectures à faire : McFalls (2006), *Construire le politique* — causalité en science politique ; Seifert et al. (2022) ; Grossmann et al. (2023) ; Hill (1965) | — | — |
+| **Faite en 0.7.43** (option a, `validation.md` §21) : | — | — |
+| Classe de référence alternative : le dossier déclare, avec sa vue extérieure, une seconde classe plausible et son taux (T7 : 0,87 sur toutes les fenêtres de 4 mois, 0,50 sur les seules fenêtres juillet–octobre) ; le score est publié contre les deux, la référence V4 restant la première, scellée | décision d'auteur avant le premier épisode ; ne change aucun p (`validation.md` §20) | — |
 | Sortie de données pour figures (CSV) de `bande_horizon`, `niveaux`, distribution du placebo ; le moteur reste sans dépendance (Borwein et al. 2007, rôle de la visualisation) | à la demande | — |
 
 ---

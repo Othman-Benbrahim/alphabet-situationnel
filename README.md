@@ -4,7 +4,7 @@
 
 Auteur : Othman Ben Brahim · Licence MIT (`LICENSE`) · Skill Claude, moteur Python sans dépendance
 
-Version 0.7.38 · historique complet dans `CHANGELOG.md`
+Version 0.7.45 · historique complet dans `CHANGELOG.md`
 
 ---
 
@@ -52,7 +52,8 @@ python3 scripts/moteur.py calculer --demo --base assets/base-de-cas.exemple.json
 python3 scripts/moteur.py equivalences --carte SEUIL    # ce que SEUIL veut dire dans chaque strate
 ```
 
-`--demo` signale une base **fictive** : ses chiffres décrivent la mécanique du calcul, jamais le monde.
+`--demo` signale une base **fictive** : ses chiffres décrivent la mécanique du calcul, jamais le monde. Hors
+`--demo`, `calculer` exige un dossier de lecture (`--dossier`, modèle `assets/dossier.exemple.json`).
 
 Dans Claude, le skill s'utilise en conversation : « lis cette situation », « que peut-il se passer d'ici
 décembre ? ». La procédure est dans `SKILL.md`.
@@ -95,4 +96,4 @@ SHA256SUMS                  empreinte de chaque fichier livré
 
 `sha256sum -c SHA256SUMS` ou `python3 scripts/moteur.py audit` refusent un fichier modifié, ajouté ou retiré.
 Sur GitHub, chaque version a son étiquette `vX.Y.Z` et sa release, avec `SHA256SUMS` en pièce jointe. Le zip livré se
-nomme `alphabet-situationnel-0.7.38.zip`.
+nomme `alphabet-situationnel-0.7.45.zip`.

@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.38
+> Version : 0.7.45
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -289,7 +289,8 @@ dégradations comptées, différentiel par épisode et tests exacts), `v4_compar
 `v4_comparateur_discriminant` (questions où |p − p_ext| ≥ δ, avant l'issue). Lecture : un apport nul se
 publie comme tel ; les dégradations se comptent toujours ; le second rapport ne filtre jamais le premier.
 `v4_reference` (§H : `inertie` par défaut, `jugement`, `comparateur_externe`) choisit le bras contre
-lequel V4 se lit ; en changer est une décision d'auteur. **Quel bras externe (0.7.10).** Le skill s'exécute
+lequel V4 se lit ; en changer est une décision d'auteur. *(Correction 0.7.41 : quatrième valeur `vue_exterieure`,
+devenue la référence par défaut, §19 ; « `inertie` par défaut » ne vaut que jusqu'à la 0.7.40.)* **Quel bras externe (0.7.10).** Le skill s'exécute
 dans un modèle de langage ; le bras le plus proche et le plus exigeant est donc **le même modèle, sans le
 skill**, dans un contexte séparé, avec la seule question, la résolution et l'échéance (méthode à déclarer
 telle : « modèle de langage seul, sans le skill »). Sur un banc public de questions futures (ForecastBench,
@@ -1435,3 +1436,301 @@ calibrage » ne se traite pas sur un cas : un paramètre ne bouge que sur des di
 version séparée (§11 ; feuille de route, D1). Ce test est un test de **fonctionnement**, et il a rempli son rôle :
 deux défauts réels, corrigés, et un garde-fou (le refus d'une fiche TEST sur un jugement qui ne portait pas sur la
 question) qui a tenu.
+
+---
+
+## 17. Deuxième série de tests régressifs (0.7.39)
+
+**La série.** Le 2026-11-03, cinq questions rétrospectives sur la strate 7, jouées sur la 0.7.37 : date d'information
+30 juin 2026, résolution du 1er juillet au 30 septembre 2026. Jugements scellés avant calcul, calculs figés avant toute
+recherche d'issue. Une forme de question par test : apparition (T1, frappe directe Iran–Israël), persistance (T2,
+ambiguïté stratégique américaine sur Taïwan), disparition (T3, levée des sanctions sectorielles de l'UE), nouvelle
+occurrence (T4, expulsion de diplomates en miroir entre la Russie et un État de l'UE), échéance programmée (T5,
+déclaration du sommet de l'OTAN réaffirmant l'article 5).
+
+**Ce qu'elle vaut.** Rien sur la calibration : T1 non résolu, T2 de résolution contestable, T3 contaminé, T4 refusé par
+le moteur, T5 chiffré sur une référence prise de mémoire (son Brier de 0,003 ne mesure que cette mémoire). Aucun test
+propre où le moteur ait chiffré. Les tests ont été joués **sans dossier**, contre le protocole : c'est l'origine de deux
+défauts. Sur la conception, la série est riche.
+
+**Résultat, et non défaut : les cartes n'apportent rien.** Sur les cinq tests, l'écart entre « avec cartes » et « sans
+cartes » est nul, sauf T1 (+0,009). Sans cas réel actif, le moteur rend une inertie, un taux par défaut ou la référence
+fournie. C'est ce que l'énoncé C (§11) mesurera ; il ne se corrige pas, il se constate.
+
+**Corrections (aucun paramètre touché, clôture vérifiée).**
+1. **`--fref` était un chemin mort.** La définition de la référence reprenait le nom de l'événement, que le contrôle de
+   classe tautologique (0.7.8) refusait toujours ; le refus d'une échéance programmée conseillait pourtant `--fref`.
+   `--definition-ref` est désormais requis avec `--fref`, et un test positif couvre ce chemin.
+2. **Une abstention publiait des chiffres** : la bande d'horizon, les variantes de codage, la paire « résultat
+   principal », la bande verbale. Une abstention met désormais à null tout chiffre dérivé de p. Un événement programmé,
+   unique, n'a plus de bande d'horizon, même avec une référence.
+3. **Les refus de sémantique** nomment les sémantiques admises, et orientent vers « s'intensifie » pour une nouvelle
+   occurrence.
+
+**Décisions d'auteur (règles nouvelles, prises sur cette série).**
+4. **Inertie de l'objet.** Hors démonstration, `persiste` et `disparait` ne se chiffrent qu'avec une référence de l'objet ;
+   sinon non estimé (T2 : 0,40 pour une doctrine en place depuis 1979, Brier 0,36). En démonstration, un drapeau.
+   Le 0,40 d'INCERTITUDE n'est pas modifié : un paramètre ne bouge que par une version séparée, sur données réelles.
+5. **Dossier obligatoire.** Hors démonstration, `calculer` refuse de tourner sans `--dossier` (T1 : un état codé de
+   mémoire, faux, passait avec des mots en F et un avertissement).
+6. **Source de résolution nommée.** Chaque événement d'un dossier porte `source_resolution` : émetteur nommé (« la
+   presse » est refusé), document, et règle en cas d'ambiguïté (T2 ne se tranchait pas : une doctrine inchangée, minée
+   en paroles).
+
+**Écartés.** Un sens `recurrence` (taux λ par fenêtre) : la nouvelle occurrence s'exprime déjà en « s'intensifie » depuis
+0.7.38, et le λ viendrait de la même référence ; T4 est à rejouer sur cette forme. La rétrogradation automatique de F
+en f sans dossier : elle changerait p, et le dossier obligatoire règle la cause. Une commande `journaliser` : c'est
+`squelette` (0.7.38).
+
+---
+
+## 18. Test T6 : un cas propre, défavorable aux cartes (0.7.40)
+
+**Le test.** Le 2026-11-03, sur la 0.7.39 : « une frappe aérienne, de missile ou de drone de l'Inde sur le territoire
+pakistanais, ou l'inverse, au-delà de la ligne de contrôle, reconnue par l'un des deux gouvernements, survient-elle au
+moins une fois entre le 1er juillet et le 30 septembre 2026 ? ». Date d'information : 30 juin 2026, la limite de
+connaissances du modèle qui l'a joué, donc issue inconnue. Ordre suivi : jugement scellé (0,10), récolte des faits
+antérieurs, dossier contrôlé (sceau `0b0809d7…`, incomplet : trois paires sans requête de discrimination, lecture
+Spéculative), calcul figé, puis recherche de l'issue. Issue : 0. État : RÉCIPROCITÉ@7[f] + CONTRAINTE@7[f].
+
+| Bras | p | Brier |
+|---|---|---|
+| Vue extérieure (2 trimestres sur 102 depuis 2001, décompte de mémoire) | 0,02 | 0,0004 |
+| Moteur sans cartes | 0,05 | 0,0025 |
+| Jugement scellé | 0,10 | 0,0100 |
+| Moteur avec cartes | 0,102 | 0,0104 |
+
+**Ce qu'il vaut.** C'est le premier test de la série où l'ordre du protocole a tenu du début à la fin. Il reste un cas
+unique, hors V4 (registre non prépublié), avec une vue extérieure non vérifiée (à refaire sur UCDP ou ACLED) et une
+résolution indirecte (absence de signalement au CFR Global Conflict Tracker, communiqués PIB et ISPR non lus). Il ne
+valide ni n'invalide rien.
+
+**Ce qu'il montre, et qui était documenté.** Les cartes ont doublé p (0,05 → 0,10) dans le mauvais sens. Ce n'est pas un
+accident : tous les multiplicateurs de la matrice valent au moins 1, donc toute carte présente ne peut qu'augmenter une
+probabilité d'apparition. Sur des événements rares, c'est un biais structurel vers la surestimation. La fréquence par
+défaut (0,05) est déjà 2,5 fois le taux de base déclaré ; le contrôle a priori l'a vu (rapport de cotes de p₀ : 5,6) et
+l'a admis, sous le plafond de 10. Rien n'est corrigé : ce biais est ce que l'énoncé C (§11) doit mesurer sur des dizaines
+de questions, et un multiplicateur inférieur à 1 serait une règle et un paramètre nouveaux, donc une version séparée sur
+données réelles. Le constat est consigné ici pour être relu quand ces données existeront.
+
+**Corrections (aucun paramètre touché, clôture vérifiée).**
+1. **Sceau du jugement et libellé.** `sceller-jugement` hachait « SEUIL@7 apparait », `squelette` recopiait « SEU@7
+   apparait », et la validation refusait la ligne avec un message trompeur. Le hachage ne change pas (les sceaux publiés
+   restent valides) ; la vérification accepte toute forme équivalente de l'événement, et le message dit quoi recopier.
+2. **La vue extérieure devient un bras scoré.** Elle vivait dans le dossier et le calcul figé, mais aucun score ne la
+   lisait ; sur T6, c'est le bras qui gagnait. Champ `vue_exterieure` du journal, requis depuis 0.7.40 (null sans
+   dossier), égal à celui du calcul figé, recopié par `squelette` ; pour une ligne antérieure, lu dans le calcul figé.
+   `scorer` publie `brier_vue_exterieure` par question, un bilan descriptif (`vue_exterieure`) et `v4_vue_exterieure`,
+   à côté des autres bras. **Il n'entre pas dans la décision V4**, dont la référence est fixée d'avance ; en faire la
+   référence serait une décision d'auteur, à prendre avant le premier épisode.
+3. **Échéance plus courte que la question.** « [2026-06 | 3 mois] » se lit au 1er juin et finit le 1er septembre ; la
+   question courait jusqu'au 30. `calculer` signale un état daté au mois ; le journal (depuis 0.7.40) refuse une
+   question ou une résolution qui citent une date postérieure à l'échéance.
+4. **`squelette`** recopie aussi le comparateur du moteur dans `frequence_de_base`, que la validation exige égal.
+
+---
+
+## 19. Décision d'auteur : la vue extérieure, référence de V4 (0.7.41)
+
+**La décision.** Prise le 2026-11-03, avant le premier épisode prospectif : `v4_reference` vaut désormais
+`vue_exterieure`. Le statut V4 (`v4`, son différentiel par épisode, ses tests et sa décision, avec et sans repli) se lit
+contre le Brier du taux de base que l'analyste a déclaré dans le dossier **avant** le calcul, et non plus contre
+l'inertie du moteur (`frequence_de_base`).
+
+**Pourquoi.** L'inertie du moteur est une construction du moteur : sa fréquence par défaut et ses inerties sont posées à la
+main. Battre son propre défaut est une barre basse. Le taux de base d'une classe de référence sourcée est la barre
+que tout prévisionniste doit battre (« vue extérieure d'abord ») ; c'est aussi celle qui a gagné sur T6 (§18 : 0,0004,
+contre 0,0025 pour le moteur sans cartes et 0,0104 pour le moteur). Si l'alphabet ne fait pas mieux que le taux de base
+qu'on lui donne, il n'apporte rien à un analyste, quoi qu'il fasse contre lui-même.
+
+**Ce qui ne change pas.**
+- **Aucune probabilité** : la décision porte sur la lecture du score, pas sur le calcul (clôture vérifiée).
+- **Les énoncés C et A (§11.13)** gardent leurs bras : C se lit contre l'inertie de strate (effet des cartes, à base
+  de cas égale), A contre le dossier neutre ou le modèle nommé. Ils répondent à d'autres questions. Le statut V4 répond
+  désormais à celle-ci : **l'appareil bat-il le taux de base déclaré ?**
+- **Le repli des abstentions** reste la fréquence de base du moteur (règle §11.4, fixée d'avance) ; le bras de
+  référence d'une abstention est la vue extérieure de son dossier.
+- Les autres bras restent publiés : `brier_base`, `v4_inertie_strate`, `v4_comparateur`, et le bilan descriptif
+  `vue_exterieure` (0.7.40).
+
+**Conséquences.**
+- Une question éligible sans vue extérieure ne compte pas dans V4. Le dossier étant obligatoire hors démonstration
+  (0.7.39) et la vue extérieure obligatoire dans le dossier (0.7.35), cela ne devrait arriver que pour des lignes
+  antérieures, qui ne sont pas éligibles de toute façon (`v4_dossier_depuis`).
+- **La vue extérieure devient un bras qu'on peut manipuler** : un taux de base déclaré trop haut ou trop bas rend la
+  barre facile. Trois garde-fous existent déjà : elle est écrite et scellée dans le dossier avant le calcul ; elle porte
+  sa classe de référence et sa source ; le contrôle a priori (§15) refuse de chiffrer quand les paramètres s'en écartent
+  de plus d'un facteur 10. Le quatrième est humain : **une vue extérieure se source dans une base publique (UCDP, ACLED,
+  MID, séries officielles), jamais de mémoire** ; une vue de mémoire est un défaut de dossier, à signaler à la relecture
+  (§11.7).
+- La puissance prévue (§11.13, 171 épisodes à σ = 0,10) reste une hypothèse de planification : le σ du différentiel
+  contre la vue extérieure n'est pas connu, et il n'y a pas lieu de le deviner.
+
+---
+
+## 20. Test T7 : la nouvelle occurrence ne mesure que la référence (0.7.42)
+
+**Le test.** Le 2026-11-03, sur la 0.7.41 : « le Conseil de l'UE adopte-t-il au moins un nouveau paquet numéroté de
+sanctions contre la Russie entre le 2026-07-01 et le 2026-10-30 ? ». Date d'information : 30 juin 2026, limite de
+connaissances du modèle. Forme : nouvelle occurrence, « CTR@7 s'intensifie » sur le nombre cumulé de paquets (20 au
+30 juin), état « [2026-06-30 | 4 mois] » daté au jour. Ordre tenu : jugement scellé (0,72), récolte, dossier (sceau
+`c6391f06…`, incomplet : une paire sans requête de discrimination, lecture Spéculative), calcul figé et journalisé,
+puis issue : 1 (21e paquet adopté le 23 juillet 2026, après la levée d'un veto grec).
+
+| Bras | p | Brier |
+|---|---|---|
+| Vue extérieure (87 % des fenêtres de 4 mois depuis juillet 2022) | 0,87 | 0,017 |
+| Moteur, avec ou sans cartes | 0,861 | 0,019 |
+| Jugement scellé | 0,72 | 0,078 |
+
+**Ce qu'il montre.**
+1. **Un composé ne passe pas par les cartes.** « s'intensifie » vaut P(persiste) × P(hausse | persiste), deux références
+   externes (0,99 × 0,87) ; ni la matrice ni les homologues n'interviennent, et p avec cartes = p sans cartes par
+   construction. La forme « nouvelle occurrence » (0.7.38) rend la question exprimable, mais **elle mesure la classe de
+   référence, pas la lecture structurelle**. Contre la vue extérieure (référence de V4 depuis 0.7.41), un composé ne
+   peut gagner ou perdre que par le facteur de persistance. À savoir avant de composer une série : des questions de
+   nouvelle occurrence n'apporteront aucune donnée à l'énoncé C.
+2. **Le choix de la classe décide du chiffre.** Avec la seule fenêtre juillet–octobre des années passées (2 sur 4), p
+   aurait été 0,50. Depuis que la vue extérieure est la barre de V4, ce choix est le point le plus manipulable du
+   dispositif ; voir la feuille de route (§7, classe de référence alternative).
+3. **Deuxième fois, le jugement fait moins bien que le taux de base** (T6 était une coïncidence à 0,10 ; ici, 0,72
+   contre 0,87, le risque de veto surpondéré). Deux cas ne mesurent rien ; ils vont dans le sens de la 0.7.35.
+4. **Contamination filtrée par consigne, non par construction** : les pages lues pour la récolte contenaient des
+   informations postérieures au 30 juin. C'est la limite de tout test rétrospectif fait par un modèle qui cherche sur le
+   web ; seul un test prospectif l'élimine.
+
+**Corrections de fonctionnement (aucun paramètre touché, clôture vérifiée).**
+- **Vue extérieure d'un composé** : contrôlée (le p du composé tient lieu de p₀) et recopiée dans le calcul, donc dans
+  `squelette` et le score. Elle se perdait.
+- **Sémantique du dossier** : « compose » exigée pour un composé, comme au journal ; « presence » passait au dossier et
+  échouait au journal. La temporalité d'un composé est aussi comparée au dossier.
+- **Ligne A6** : un « ; » à l'intérieur d'une raison entre parenthèses ne coupe plus le segment.
+- **`sceller-jugement`** : `--date` est la date d'information (alias `--date-information`), et la sortie le dit, avec
+  l'heure réelle du scellement (`scelle_le_utc`). Un sceau à la date du jour échouait au journal sans explication.
+- **Message `ecart_marqueur`** : il dit que le champ va dans `resolution`.
+- **Apostrophe typographique** : « s’intensifie » vaut « s'intensifie » (l'événement était refusé comme inconnu).
+- **Chemin du skill** : `SKILL.md` dit comment trouver le dossier d'installation.
+
+---
+
+## 21. Décision d'auteur : la classe alternative, scellée et scorée (0.7.43)
+
+**Le problème.** Depuis 0.7.41, V4 se lit contre la vue extérieure. Or le choix de la classe de référence décide du
+chiffre : sur T7 (§20), toutes les fenêtres de 4 mois donnaient 0,87, les seules fenêtres juillet–octobre 0,50. Une barre
+que l'analyste choisit est le point le plus manipulable du dispositif.
+
+**La décision (option a, 2026-11-03, avant le premier épisode prospectif).** Chaque événement d'un dossier déclare,
+dans `vue_exterieure`, une **classe alternative** plausible : sa fréquence, sa classe, sa source, et pourquoi elle est
+écartée. Le champ est obligatoire ; `null` est admis avec `motif_sans_alternative`, ce qui reste visible. Les deux
+classes sont scellées ensemble, avant le calcul.
+
+- **Calcul** : la sortie affiche l'alternative et l'écart entre les deux classes, en points.
+- **Journal** : `vue_exterieure_alternative`, requis depuis 0.7.43 (null sans alternative), égal au calcul figé,
+  recopié par `squelette`.
+- **Score** : `brier_vue_alternative` par question ; bilan descriptif ; `v4_vue_alternative` ; et
+  `v4_robustesse_classe`, qui compare le statut V4 contre la classe retenue et contre l'alternative. **V4 décide sur
+  la classe retenue.** Si les deux statuts divergent, le verdict dépend du choix de la classe, et il se publie ainsi.
+
+**Option écartée (b).** Décider contre la plus défavorable au moteur des deux classes. La barre serait plus dure et
+impossible à manipuler, mais biaisée : le meilleur de deux taux, choisi une fois l'issue connue, bat mécaniquement chacun
+d'eux, et V4 conclurait trop souvent que l'alphabet n'apporte rien. L'option a suffit contre la manipulation, puisque les
+deux classes sont scellées avant le calcul et publiées côte à côte.
+
+**Ce qui ne change pas.** Aucune probabilité (clôture vérifiée) ; le contrôle a priori (§15) porte sur la classe retenue ;
+les énoncés C et A gardent leurs bras.
+
+---
+
+## 22. Test P-0001 : quand les sources ne portent pas la contrainte (0.7.44)
+
+**Le test.** Le 2026-11-03, sur la 0.7.43, événement tiré au sort parmi trois candidats : « une frappe militaire de
+l'Inde ou du Pakistan sur le territoire de l'autre, reconnue par l'État qui frappe ou par les deux, a-t-elle lieu au
+moins une fois entre le 2026-07-01 et le 2026-09-30 ? ». Date d'information 2026-06-30. État : POLARITÉ@7[f]
+(CONTRAINTE@7 rejetée par le moteur, A7). Marqué `rejeu` : des résultats de septembre 2026 sont apparus pendant la
+récolte. Issue retenue : 0.
+
+| Bras | p | Brier |
+|---|---|---|
+| Classe alternative (3 trimestres sur 100, 2001–2026) | 0,03 | 0,0009 |
+| Moteur sans cartes | 0,05 | 0,0025 |
+| Jugement scellé | 0,06 | 0,0036 |
+| Vue extérieure retenue (3 sur 40, 2016–2026) | 0,075 | 0,0056 |
+| Moteur avec cartes | 0,087 | 0,0075 |
+
+**Le diagnostic de l'auteur.** Le fond et la forme ne coïncident pas : le dispositif a appliqué ses règles, mais la
+documentation choisie pour l'état initial et pour l'issue ne portait pas les éléments de la contrainte. Ce n'est pas une
+erreur de dispositif, mais de choix des sources. Ce qui relève du dispositif : il contrôlait la **forme** d'une source
+(présente, nommée, datée), pas son **adéquation** à la question ; l'écart passait donc sans bruit. Trois écarts :
+
+1. **La source déclarée n'a pas tranché.** Le dossier annonçait les communiqués du ministère indien de la Défense et de
+   l'ISPR ; l'issue a été établie par Polymarket (qui ne couvre que les frappes indiennes), un aperçu ACLED et une
+   publication rétrospective, **par absence de preuve**.
+2. **La classe ne compte pas ce que la question compte.** La question inclut l'artillerie lourde et les raids ; des tirs
+   d'artillerie à travers la ligne de contrôle ont eu lieu presque chaque trimestre entre 2016 et 2021. Appliqué au passé,
+   le critère de résolution aurait dit « oui » bien plus souvent que 3 fois sur 40 : le taux de base décrivait un
+   événement plus étroit que celui prévu. Et les communiqués déclarés ne rapportent pas ces échanges : le critère était
+   plus large que ce que sa propre source peut constater.
+3. **Une classe qui commence juste avant un épisode** (juillet 2016, deux mois avant les frappes de septembre) gonfle
+   le taux. La classe alternative l'a rendu visible, et c'est elle qui a gagné : la 0.7.43 a servi.
+
+Et un défaut de dispositif : T6 (§18) et P-0001 posent la même question, même dyade, même fenêtre, sous deux
+identifiants d'épisode ; en V4, ils compteraient comme deux épisodes indépendants.
+
+**Décision d'auteur : un parcours obligatoire sur les sources.** Aucun paramètre touché, clôture vérifiée.
+- **Avant le calcul** : `vue_exterieure.ecart_critere`, obligatoire, dit en quoi ce que compte la classe diffère du
+  critère de résolution (« identique : … » sinon). L'adéquation ne se vérifie pas automatiquement ; elle ne passe plus
+  sans avoir été écrite.
+- **Après l'échéance** : `fiche-resultat` exige `--source-utilisee`, `--source-conforme oui|non` (et `--ecart-source`
+  si non) et `--mode positif|absence`. La fiche le dit en clair ; `ingerer` et `scorer` comptent les résolutions par
+  absence et hors source (`resolutions`, `ids_fragiles`). Une telle résolution n'est pas fausse ; elle est plus fragile,
+  et se voit. Les lignes antérieures restent valides (« non renseignées »).
+- **À l'ingestion** : `episodes_suspects` signale deux prévisions sur le même événement, à fenêtres chevauchantes,
+  sous des épisodes différents. Signalé, non corrigé : seul l'analyste sait si ce sont deux épisodes.
+
+Le point 3 reste du jugement ; la classe alternative le traite déjà.
+
+---
+
+## 23. Test FR-RU : le moteur sans cas rend une constante (0.7.45)
+
+**Le test.** Le 2026-11-03, sur la 0.7.44 : « la France et la Russie procèdent-elles à des expulsions de diplomates en
+miroir entre le 2026-07-01 et le 2026-09-30 ? ». RÉCIPROCITÉ@7, au moins une fois, date d'information 2026-06-30 (limite
+de connaissance du modèle : aveugle sur l'issue). État : CONTRAINTE@7[f] (sanctions de l'UE en vigueur ; ancrage de
+mémoire, en f). Résolution figée : une expulsion, et une réponse présentée comme telle, dans la fenêtre ; convocations et
+sanctions exclues. Issue : 0, par absence de trace ; épisode le plus proche, la convocation du chargé d'affaires russe le
+17 juillet (cyberactivités du 16e Centre du FSB), sans expulsion.
+
+| Bras | p | Brier |
+|---|---|---|
+| Vue extérieure (environ 2 trimestres sur 48, 2014–2025, de mémoire) | 0,04 | 0,0016 |
+| Moteur, avec et sans cartes | 0,05 | 0,0025 |
+| Jugement scellé | 0,06 | 0,0036 |
+| Classe alternative (un État de l'UE quelconque, 2022–2025) | 0,50 | 0,25 |
+
+**Ce qu'il montre.**
+1. **Le moteur a rendu sa fréquence par défaut** : `apport_cartes` = 0, produit des λ = 1, aucun cas, ρ4. Il n'existe
+   pas d'arête CONTRAINTE@7 → RÉCIPROCITÉ@7, alors que le marqueur local de RÉCIPROCITÉ@7 inclut les « sanctions en
+   miroir » ; versé au journal des lacunes (lacune 4), sans arête ajoutée (P1). Sans cas réel actif, la strate 7
+   chiffre des constantes : c'est le constat principal de la série, et la condition pour qu'un test devienne
+   informatif est un premier cas réel actif.
+2. **Le choix de classe pèse cent fois plus que tout le reste** (0,0016 contre 0,25). L'alternative n'était pas une
+   classe plausible pour la même question (un autre couple d'États) : la classe alternative doit être une autre façon
+   de compter **le même événement**, pas un événement voisin. À relire en relecture de dossier ; pas de règle.
+3. **Une question à 5 % qui ne se réalise pas ne prouve rien** : c'est l'issue attendue 95 fois sur 100.
+4. **Indicateur de bascule réalisé sans bascule** : l'attribution d'espionnage du 17 juillet n'a pas entraîné
+   d'expulsion ; Paris a choisi convocation et sanctions. Une donnée pour la vraisemblance de cet indicateur, une seule.
+
+**Corrections (aucun paramètre touché, clôture vérifiée).**
+- **Étape 0** : `SKILL.md` commence par localiser le skill (`find`), au lieu d'une remarque entre parenthèses.
+- **`corroboration`** : valeurs exactes écrites dans `SKILL.md` (`"independantes"` ou `"unique"`).
+- **`sceller-jugement`** rend aussi `question` et `evenement`, à recopier mot pour mot.
+- **Requêtes A7** : `executee` (true/false) et `date_execution` obligatoires ; une requête non lancée ne couvre rien
+  (dossier Spéculatif). Auparavant, une requête marquée « non exécutée » dans son texte passait pour faite.
+- **Mode test** : `mode_test` (`prospectif` ou `regressif`) requis au journal depuis 0.7.45 ; `regressif` exige
+  `date_limite_connaissance` au plus égale à la date d'information. Hors V4 par construction ; bilan séparé
+  (`registre_regressif`) dans `scorer` et `ingerer`. Il ne se confond plus avec une prévision simplement non publiée.
+- **Vue extérieure et p** : la sortie dit qu'elle ne modifie pas p (bras de référence de V4, indépendant du moteur), et
+  comment faire entrer une fréquence sourcée dans le calcul (`--fref`, `--references`). C'est voulu : si elle nourrissait
+  p₀, le moteur et sa référence seraient le même chiffre.
+- **Cosmétique** : extraits coupés au mot, sans parenthèse ouverte ; message d'un dossier refusé sans l'identifiant de
+  fiche interne ; `ingerer` affiche moteur contre jugement et le bilan régressif.

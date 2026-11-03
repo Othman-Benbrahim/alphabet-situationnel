@@ -1,9 +1,23 @@
 # Alphabet situationnel — Journal des versions
 
-> Version : 0.7.46
+> Version : 0.7.47
 
 > Les commits cités sont ceux des dépôts **audités**. Une entrée ne peut pas citer le commit qui la
 > contient, créé après elle : une version livrée se retrouve par son étiquette `vX.Y.Z`.
+
+## 0.7.47 — 2026-11-03 · tests du codeur : la fiche ou le nom
+
+Décision d'auteur, d'après Halterman et Keith 2025 (*Political Analysis*, arXiv 2407.10747) : des modèles de langage
+codent d'après le nom d'une catégorie plutôt que sa définition. **Aucun paramètre touché, aucune probabilité changée,
+aucune règle ajoutée.**
+
+- **Test des noms neutres** (`validation.md` §25.1) : même cas codé avec des fiches aux noms remplacés par C01–C16,
+  signatures retirées, puis `depouiller` contre le codage normal ; table de correspondance fournie.
+- **Test du recouvrement lexical** (§25.2) : racine du nom de la carte cherchée dans le passage de chaque ancrage F ;
+  un recouvrement rend l'ancrage suspect, pas faux ; verdicts au journal des lacunes. Un signal du moteur attendra des
+  données.
+- Tests de l'ordre des fiches et de l'exclusion fictive non retenus (§25.3). `SKILL.md` : paragraphe et ligne de table.
+- 167 autotests.
 
 ## 0.7.46 — 2026-11-03 · sources indépendantes : l'attestation et le récit
 

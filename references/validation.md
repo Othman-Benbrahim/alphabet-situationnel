@@ -1,6 +1,6 @@
 # Alphabet situationnel — Validation (couche 6)
 
-> Version : 0.7.46
+> Version : 0.7.47
 
 > Contrat du journal, scores et limites d'évaluation. Règles V1–V4. Le scoreur valide les données
 > avant calcul et ne prononce jamais une certification scientifique automatique.
@@ -1779,3 +1779,86 @@ indépendantes d'une même scène alignent des représentations ; deux variantes
 « nuisance » propre à cette observation. Le papier ne porte ni sur un alphabet construit à la main ni sur la
 prévision ; il fournit seulement l'analogie qui a suggéré le test. La règle tient sans lui : c'est le principe ancien
 de la multiplicité des sources indépendantes.
+
+## 25. Tests du codeur : suit-il la fiche ou le nom ? (0.7.47)
+
+**Décision d'auteur.** Le codeur du skill est le plus souvent un modèle de langage, et les fiches de `cartes.md` sont
+son livre de codes. Halterman et Keith (2025, *Political Analysis* ; arXiv 2407.10747) montrent que des modèles de
+langage codant des événements politiques suivent souvent le **nom** de la catégorie plutôt que sa définition, et
+choisissent une catégorie parce que son nom figure dans le texte (« rally » → RALLY). A4 mesure l'accord entre codeurs
+mais exige un humain ; ces deux tests vérifient le codeur **sans second codeur**. Ce sont des tests, pas des règles :
+aucun paramètre, aucune probabilité ; descriptifs, hors V4, hors registre des prévisions. Leurs chiffres (modèles de 7
+à 8 milliards de paramètres, en 2024) ne se transposent pas ; seule la méthode est reprise.
+
+### 25.1 Noms neutres
+
+**Question.** Le codeur ancre-t-il une carte parce que ses marqueurs sont remplis, ou parce que son nom évoque la
+situation ?
+
+**Procédure.**
+1. Choisir un cas réel et ses pièces. Préparer une copie de `cartes.md` où chaque nom de carte est remplacé par son code
+   neutre (table ci-dessous), **partout** (titres, « À ne pas confondre avec », garanties), et où la ligne
+   **Signature** est supprimée : ses mots (CYCLE, LIMITE…) trahissent la carte. Vérifier ensuite qu'aucun nom ne
+   subsiste (`grep -i` sur chaque nom).
+2. Coder le cas deux fois, dans deux sessions séparées, avec **les mêmes pièces et les mêmes références** : la session
+   normale lit `cartes.md` ; la session neutre lit la copie neutre. Aucune des deux ne charge `equivalences/`,
+   `dynamiques.md`, `exemples.md` ni `antagonismes.md`, qui nomment les cartes ; l'ancrage se fait par les marqueurs
+   du noyau (f au plus, comme une case Vide). Le codeur neutre code avec les codes C01–C16.
+3. Retraduire le codage neutre vers les noms (table), puis `python3 scripts/moteur.py depouiller --premier normal.jsonl
+   --second neutre.jsonl`.
+
+| Code | Carte | Code | Carte | Code | Carte | Code | Carte |
+|---|---|---|---|---|---|---|---|
+| C01 | SEUIL | C05 | ÉMERGENCE | C09 | INCERTITUDE | C13 | TRACE · MÉMOIRE |
+| C02 | RÉCIPROCITÉ | C06 | HIÉRARCHIE | C10 | CONTRAINTE | C14 | CROISSANCE |
+| C03 | PÉRIODICITÉ | C07 | RÉSEAU | C11 | PROPORTION | C15 | COMMUNAUTÉ |
+| C04 | RÉCURSIVITÉ | C08 | POLARITÉ | C12 | TRANSFORMATION | C16 | RÉSONANCE |
+
+L'ordre des codes suit celui de `cartes.md` ; il n'est pas une information à cacher. Pour qu'un codeur humain ne puisse
+pas reconstituer les noms, mélanger l'ordre des fiches dans la copie neutre (les codes restent les mêmes).
+
+**Lire le résultat.** Lire d'abord l'accord spécifique positif et les deux taux de manque, pas le PABAK, gonflé par les
+cartes qu'aucune session n'ancre (§24).
+- **Accord élevé** : pour ce cas, le codeur suit les marqueurs ; le nom ne fait pas le travail.
+- **Carte ancrée en session normale seulement** (case b) : le nom a peut-être porté l'ancrage. Relire la ligne de
+  marqueurs de cette carte : est-elle remplie par un fait précis, ou seulement « évoquée » ?
+- **Carte ancrée en session neutre seulement** (case c) : le nom a peut-être **écarté** une carte dont les marqueurs
+  étaient remplis. C'est aussi un défaut, plus rare et plus intéressant.
+- Comme au §24, l'écart mêle l'effet du nom et l'instabilité du codeur. Contrôle : un troisième codage, en session
+  normale ; si normal contre normal' s'accorde autant que normal contre neutre, le nom n'y est pour rien.
+
+### 25.2 Recouvrement lexical
+
+**Question.** Un ancrage tient-il à un mot de la source qui ressemble au nom de la carte ?
+
+**Procédure.** Pour chaque ancrage **F** d'un codage (lecture, fiche ou cas), relire le passage cité et chercher les
+racines ci-dessous, sans tenir compte des accents ni de la casse. Les racines sont volontairement étroites : la famille
+morphologique du nom, pas ses synonymes.
+
+| Carte | Racines | Carte | Racines |
+|---|---|---|---|
+| SEUIL | seuil | CONTRAINTE | contrain |
+| RÉCIPROCITÉ | récipro | PROPORTION | proportion |
+| PÉRIODICITÉ | périod | TRANSFORMATION | transform |
+| RÉCURSIVITÉ | récurs | TRACE · MÉMOIRE | trace, mémoire, mémori |
+| ÉMERGENCE | émerg | CROISSANCE | croiss, croît |
+| HIÉRARCHIE | hiérarch | COMMUNAUTÉ | communaut |
+| RÉSEAU | réseau | RÉSONANCE | réson |
+| POLARITÉ | polar, pôle | INCERTITUDE | incertain, incertitude |
+
+**Lire le résultat.** Un recouvrement ne rend pas l'ancrage faux : une source peut écrire « seuil » à bon droit. Il le
+rend **suspect**, et oblige à une vérification : en retirant le mot du passage, le fait remplit-il encore un marqueur
+de la carte ? Si oui, l'ancrage tient ; sinon, le mot a fait le travail, et l'ancrage descend à f ou tombe (A7, portée à
+juger). Consigner chaque recouvrement et son verdict dans `assets/journal-lacunes.md`. Si les recouvrements suspects
+reviennent souvent, ce sera la donnée qui justifiera un signal du moteur, comme celui des requêtes A7 formées sur le nom
+d'une carte (0.7.2) ; pas avant.
+
+### 25.3 Ce que ces tests ne mesurent pas
+
+Ni la justesse d'une lecture, ni l'accord entre deux humains (A4 reste requis), ni la sensibilité du codeur à l'ordre
+des fiches ou aux critères d'exclusion, que Halterman et Keith testent aussi et que la 0.7.47 n'a pas retenus (coût
+élevé, gain moindre). Les explications écrites par un modèle (garantie, ligne A6) ne prouvent pas qu'il a raisonné
+ainsi : les tests portent sur ses décisions, pas sur ses justifications.
+
+**Où consigner.** Dans cette section, à la suite des tests, comme au §24 : cas, pièces, sortie de `depouiller` (25.1),
+liste des recouvrements et verdicts (25.2).

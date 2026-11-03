@@ -3,7 +3,7 @@ name: alphabet-situationnel
 description: "Lecture structurelle et exploration conditionnelle de situations par 16 cartes transversales candidates et 13 strates (dont la politique intérieure). Utiliser pour lire une situation factuelle, explorer ses suites à un horizon défini, coder un cas historique ou scorer un journal. Modes LIRE, PRÉVOIR, CODER, SCORER. Le moteur calcule des probabilités expérimentales quand les entrées sont recevables ; aucune performance prédictive n'est acquise. Ne pas utiliser pour un tirage symbolique, un diagnostic, une décision sur une personne, ou transformer un ressenti seul en fait. Une lecture sans prévision est explicitement admise."
 license: MIT
 metadata:
-  version: '0.7.46'
+  version: '0.7.47'
   author: Othman Ben Brahim
 ---
 
@@ -23,7 +23,7 @@ ce `SKILL.md`), puis `python3 scripts/moteur.py audit`.
 
 ## Contrôle d'intégrité
 
-Version 0.7.46. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
+Version 0.7.47. Conserver `scripts/moteur.py`, `assets/parametres.json`, les 20 références principales,
 les 13 fichiers `references/equivalences/strate-NN.md`, les bases, journaux et dossier d'exemple.
 Prérequis : Python ≥ 3.8, bibliothèque standard seule (aucune installation). Exécuter depuis le dossier
 du skill ; `--base`, `--journal` et `--references` sont relatifs au dossier courant. *Le dossier du skill est celui qui
@@ -72,6 +72,7 @@ prévision chiffrée est limitée à la strate 7 (`strates_prevision`, décision
 | Pourquoi une règle 0.6.x ou 0.7.x existe (garantie et son support, option, barreau, jugement scellé, sensibilité, corroboration, passage, résolution des questions, répétabilité, rivaux) | `apports-theoriques.md` |
 | Modifier le skill, comparer deux versions, évaluer une règle nouvelle | `validation.md` §9 (banc d'essai) |
 | La lecture tient-elle à l'événement ou au récit ? Deux sources indépendantes, un même cas | `validation.md` §24 |
+| Le codeur suit-il la fiche ou le nom de la carte ? Noms neutres, recouvrement lexical | `validation.md` §25 |
 | Politique intérieure (gouvernement, Parlement, partis, élections, mobilisations) | strate 13 : `strates.md` §2 et §4, `equivalences/strate-13.md` |
 
 Lire par rubrique (`rg -n '^##|^\*\*[OAGBTSV][0-9]' references/protocole.md`, ou `grep -nE` avec le même
@@ -202,6 +203,12 @@ le même cas deux fois, chaque codage ne lisant qu'une source indépendante au c
 deux fichiers. Un accord faible dit que la lecture suit la source. Descriptif, hors V4. `validation.md` §24. Et un
 équivalent **Attesté** exige désormais deux cas réels d'événements distincts, sur des faits corroborés par des sources
 indépendantes (`protocole.md` A3).
+
+**Tests du codeur (0.7.47, facultatifs).** Le codeur suit-il la fiche ou le nom de la carte ? Deux tests sans second
+codeur. *Noms neutres* : coder un cas avec des fiches où les noms sont remplacés par C01–C16, puis `depouiller` contre
+le codage normal. *Recouvrement lexical* : pour chaque ancrage F, chercher dans le passage cité la racine du nom de la
+carte ; si elle y est, vérifier que le fait remplit encore un marqueur sans ce mot. Descriptifs, hors V4.
+`validation.md` §25.
 
 **Requêtes exécutées, test régressif déclaré (0.7.45).** Chaque requête de `recherches` porte `executee` (true ou false)
 et, si elle a été lancée, `date_execution` : une requête non lancée est consignée mais ne couvre rien, et le dossier reste

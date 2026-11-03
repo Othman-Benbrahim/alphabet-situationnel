@@ -1,6 +1,6 @@
 # Alphabet situationnel — Feuille de route
 
-> Version : 0.7.46
+> Version : 0.7.47
 
 > Ce qui reste à faire pour que le skill passe de cadre cohérent à instrument éprouvé, dans l'ordre,
 > avec qui fait quoi et à quoi l'on reconnaît qu'une étape est terminée. Les étapes mesurables sont
@@ -44,6 +44,7 @@ carte, une définition abstraite commune et ce que chaque traduction locale en c
 |---|---|---|---|
 | 0.6.0 (faite) | Déclarer et mesurer | barreau, garantie et option, questions, jugement scellé, sensibilité, difficulté, angles morts, rabbits | — |
 | 0.7.0 (faite) | Prouver et décomposer | tests de preuve du process tracing (F exige un fait suffisant) ; décomposition de Murphy du Brier | — |
+| 0.7.47 (faite) | Tests du codeur : la fiche ou le nom | décision d'auteur d'après Halterman et Keith 2025 : test des noms neutres (C01–C16, `depouiller`) et du recouvrement lexical (racines du nom dans le passage d'un ancrage F) ; descriptifs, hors V4 ; aucune règle ni probabilité touchée | — |
 | 0.7.46 (faite) | Sources indépendantes : l'attestation et le récit | décision d'auteur : Attesté exige deux cas d'événements distincts sur des faits corroborés par des sources indépendantes (contrôlé par `audit`) ; test facultatif « deux sources, un événement » (`depouiller`, descriptif, hors V4) ; aucune probabilité touchée | — |
 | 0.7.45 (faite) | Test FR-RU | étape 0 (localiser le skill) ; requêtes exécutées et datées ; mode de test régressif déclaré et bilan séparé ; sceau qui rend question et événement ; vue extérieure sans effet sur p, dit en sortie ; lacune 4 ; aucune probabilité touchée | — |
 | 0.7.44 (faite) | Sources : ce qu'elles peuvent constater | décision d'auteur après P-0001 : écart classe/critère obligatoire ; source utilisée, conformité et mode de résolution obligatoires ; résolutions fragiles comptées ; épisodes en double signalés ; aucune probabilité touchée | — |

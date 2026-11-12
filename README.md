@@ -6,6 +6,11 @@ Auteur : Othman Ben Brahim · Licence MIT (`LICENSE`) · Skill Claude, moteur Py
 
 Version 0.7.74 · historique complet dans `CHANGELOG.md`
 
+**Mise à l'épreuve, en public :** le bot qui joue l'alphabet sur le tournoi Metaculus,
+[Othman-Benbrahim/metac-bot-template](https://github.com/Othman-Benbrahim/metac-bot-template), et le banc d'essai à
+résolution rapide, [Othman-Benbrahim/alphabet-chaine](https://github.com/Othman-Benbrahim/alphabet-chaine).
+Calibration en cours : aucune performance n'est revendiquée.
+
 ---
 
 ## Ce que fait l'outil
